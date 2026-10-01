@@ -1071,17 +1071,23 @@ function getThemeStorageKey(userId) {
   return `novafix_theme_${String(userId || "").trim()}`;
 }
 
-function applyTheme(theme, userId = "") {
+function applyTheme(theme, userId = "", options = {}) {
   const normalized = normalizeTheme(theme) || DEFAULT_THEME;
+  const persist = options.persist !== false;
+  const updateChoices = options.updateChoices !== false;
   document.documentElement.dataset.theme = normalized;
-  try {
-    localStorage.setItem("novafix_theme_last", normalized);
-    if (userId) localStorage.setItem(getThemeStorageKey(userId), normalized);
-  } catch (_) {}
-  document.querySelectorAll(".theme-choice").forEach((choice) => {
-    choice.classList.toggle("selected", choice.dataset.theme === normalized);
-    choice.setAttribute("aria-checked", choice.dataset.theme === normalized ? "true" : "false");
-  });
+  if (persist) {
+    try {
+      localStorage.setItem("novafix_theme_last", normalized);
+      if (userId) localStorage.setItem(getThemeStorageKey(userId), normalized);
+    } catch (_) {}
+  }
+  if (updateChoices) {
+    document.querySelectorAll(".theme-choice").forEach((choice) => {
+      choice.classList.toggle("selected", choice.dataset.theme === normalized);
+      choice.setAttribute("aria-checked", choice.dataset.theme === normalized ? "true" : "false");
+    });
+  }
   return normalized;
 }
 
@@ -1100,6 +1106,27 @@ function showThemeToast(message) {
   uxToastText.innerText = String(message || "");
   uxToast.setAttribute("aria-live", "polite");
   uxToast.style.setProperty("display", "flex", "important");
+}
+
+function revealDashboardForSetupOverlay() {
+  if (!dashboard) return;
+  dashboard.style.display = "grid";
+  dashboard.classList.remove("preload-shell");
+  setInitialLoadingStates();
+  updateClearDataButtonState();
+}
+
+function canPreviewInitialThemeOnDesktop() {
+  if (IS_MOBILE_DEVICE) return false;
+  return !!window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
+}
+
+function previewInitialTheme(theme) {
+  if (!canPreviewInitialThemeOnDesktop()) return;
+  if (!themeSetupResolve || themeSetupModal?.style?.display !== "flex") return;
+  const normalized = normalizeTheme(theme);
+  if (!normalized) return;
+  applyTheme(normalized, "", { persist: false, updateChoices: false });
 }
 
 function renderThemeChoices(container) {
@@ -1153,6 +1180,7 @@ async function selectTheme(theme, options = {}) {
 function openThemeSetupModal(userId = "") {
   if (!themeSetupModal) return Promise.resolve(false);
   themeSetupUserId = String(userId || auth.currentUser?.uid || "").trim();
+  revealDashboardForSetupOverlay();
   themeSetupModal.style.display = "flex";
   ensureAppBackGuardState("theme-setup", true);
   return new Promise((resolve) => {
@@ -1160,7 +1188,17 @@ function openThemeSetupModal(userId = "") {
   });
 }
 
-function bindThemeChoiceEvents(container) {
+function bindThemeChoiceEvents(container, options = {}) {
+  const previewOnHover = options.previewOnHover === true;
+  if (previewOnHover) {
+    const previewChoice = (event) => {
+      const choice = event.target.closest(".theme-choice");
+      if (!choice || !container?.contains(choice)) return;
+      previewInitialTheme(choice.dataset.theme);
+    };
+    container?.addEventListener("pointerover", previewChoice);
+    container?.addEventListener("focusin", previewChoice);
+  }
   container?.addEventListener("click", (event) => {
     const choice = event.target.closest(".theme-choice");
     if (!choice) return;
@@ -1170,7 +1208,7 @@ function bindThemeChoiceEvents(container) {
 
 renderThemeChoices(themeSetupOptions);
 renderThemeChoices(accountThemeOptions);
-bindThemeChoiceEvents(themeSetupOptions);
+bindThemeChoiceEvents(themeSetupOptions, { previewOnHover: true });
 bindThemeChoiceEvents(accountThemeOptions);
 applyTheme(getStoredTheme(""));
 const guideNextBtn = document.getElementById("guideNextBtn");
@@ -4198,12 +4236,9 @@ function openTosModal(userId = "") {
   tosPendingUserId = String(userId || "").trim();
   showTosError("");
   if (tosAgreeBtn) tosAgreeBtn.disabled = false;
-  // Keep auth modal hidden and show dashboard shell behind TOS gate.
+  // Keep auth modal hidden and reveal the dashboard shell beneath the TOS gate.
   if (signInModal) signInModal.style.display = "none";
-  if (dashboard) {
-    dashboard.style.display = "grid";
-    dashboard.classList.add("preload-shell");
-  }
+  revealDashboardForSetupOverlay();
   setPageTitle("dashboard");
   tosModal.style.display = "flex";
   ensureAppBackGuardState("tos-gate", true);
