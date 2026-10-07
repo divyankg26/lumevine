@@ -1,4 +1,4 @@
-NovaFix (View-Only Repository)
+Lumevine (View-Only Repository)
 
 Copyright (c) 2026 NovaFix / Divyank Goyal. All rights reserved.
 
@@ -46,4 +46,4 @@ For permissions, licensing inquiries, or collaborations, contact:
 
 Divyank Goyal
 
-support.novafix@gmail.com
+support.lumevine@gmail.com
