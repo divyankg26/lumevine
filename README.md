@@ -1,9 +1,9 @@
 Lumevine (View-Only Repository)
 
-Copyright (c) 2026 NovaFix / Divyank Goyal. All rights reserved.
+Copyright (c) 2026 Lumevine / Divyank Goyal. All rights reserved.
 
 Overview
-This repository is made publicly accessible strictly for viewing and reference purposes. It showcases the structure, design, and implementation of the NovaFix application.
+This repository is made publicly accessible strictly for viewing and reference purposes. It showcases the structure, design, and implementation of the Lumevine application.
 
 No rights are granted to use this code beyond what is explicitly stated.
 
