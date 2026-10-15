@@ -28,6 +28,14 @@ You may not:
 * Reverse engineer, decompile, or extract underlying logic for reuse
 * Incorporate any part of the Software into other projects or systems
 
+Wellness scores, mood-risk estimates, burnout forecasts, trends, and suggested
+recovery actions are estimates based on information available in the app. They
+may be incomplete, inaccurate, or out of date. They are for general
+informational and self-reflection purposes only—not medical assessments,
+diagnoses, or treatment recommendations, and not a substitute for advice from a
+qualified healthcare professional. Do not use them to make medical decisions.
+If you have health concerns, seek advice from a qualified professional.
+
 No Implied Rights
 No licenses or rights are granted by implication, estoppel, or otherwise, except as expressly stated in the LICENSE file.
 
