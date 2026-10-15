@@ -39,6 +39,10 @@ textarea:focus-visible{
   font-weight:700;
 }
 
+:root[data-theme="burgundy"] .limit-note.show[data-live-countdown="1"]{
+  color:#8bd5ff;
+}
+
 .soft-note{
   margin:8px 0 0;
   font-size:12px;
@@ -194,6 +198,9 @@ textarea:focus-visible{
 }
 
 #reminderUnit,
+#dailyRoutineActivitySelect,
+#dailyRoutineTimeSelect,
+#dailyRoutineStartTimeSelect,
 #mood,
 #gCurrency{
   -webkit-appearance:none;
@@ -212,17 +219,49 @@ textarea:focus-visible{
   background-repeat:no-repeat;
 }
 
-#reminderUnit{
+#reminderUnit,
+#dailyRoutineActivitySelect,
+#dailyRoutineTimeSelect,
+#dailyRoutineStartTimeSelect{
   box-sizing:border-box;
   font-size:14px;
   line-height:1.35;
   padding:10px 36px 10px 10px;
 }
 
+#dailyRoutineActivitySelect,
+#dailyRoutineTimeSelect,
+#dailyRoutineStartTimeSelect{
+  min-height:42px;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:10px;
+  background-color:rgba(7,16,30,.42);
+  color:#fff;
+  cursor:pointer;
+  transition:border-color .2s ease, background-color .2s ease;
+}
+
+#dailyRoutineActivitySelect:hover,
+#dailyRoutineTimeSelect:hover,
+#dailyRoutineStartTimeSelect:hover{
+  border-color:rgba(255,255,255,.42);
+  background-color:rgba(7,16,30,.58);
+}
+
+#dailyRoutineActivitySelect:focus-visible,
+#dailyRoutineTimeSelect:focus-visible,
+#dailyRoutineStartTimeSelect:focus-visible{
+  border-color:rgba(255,255,255,.7);
+}
+
 #reminderUnit option,
+#dailyRoutineActivitySelect option,
+#dailyRoutineTimeSelect option,
+#dailyRoutineStartTimeSelect option,
 #mood option,
 #gCurrency option{
   color:#111;
+  background:#fff;
 }
 
 #gCurrency{
@@ -295,11 +334,24 @@ textarea:focus-visible{
   scrollbar-color:var(--primary) transparent;
 }
 
+.burnout-scroll-card{
+  height:430px;
+  max-height:430px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:var(--primary) transparent;
+}
+
 .sleep-card::-webkit-scrollbar{
   width:6px;
 }
 
 .startup-scroll-card::-webkit-scrollbar{
+  width:6px;
+}
+
+.burnout-scroll-card::-webkit-scrollbar{
   width:6px;
 }
 
@@ -313,6 +365,11 @@ textarea:focus-visible{
   border-radius:999px;
 }
 
+.burnout-scroll-card::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+}
+
 .sleep-card::-webkit-scrollbar-thumb{
   background:var(--primary);
   border-radius:999px;
@@ -320,6 +377,12 @@ textarea:focus-visible{
 }
 
 .startup-scroll-card::-webkit-scrollbar-thumb{
+  background:var(--primary);
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.burnout-scroll-card::-webkit-scrollbar-thumb{
   background:var(--primary);
   border-radius:999px;
   border:1px solid rgba(255,255,255,.18);
@@ -666,4 +729,33 @@ textarea:focus-visible{
 .insight-axis-line{
   stroke:rgba(255,255,255,.95);
   stroke-width:1.5;
+}
+
+.dashboard .card{
+  height:430px;
+  max-height:430px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:var(--primary) transparent;
+}
+
+.dashboard .card::-webkit-scrollbar{
+  width:6px;
+}
+
+.dashboard .card::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+}
+
+.dashboard .card::-webkit-scrollbar-thumb{
+  background:var(--primary);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+}
+
+.dashboard .card.inner-scroll-card{
+  overflow-y:hidden;
 }

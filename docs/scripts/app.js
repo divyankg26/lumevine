@@ -31,7 +31,7 @@
     const status = scoreEl?.dataset?.status || statusEl?.textContent?.trim() || meta.status;
 
     if (categoryEl) categoryEl.innerText = meta.category;
-    if (scoreLineEl) scoreLineEl.innerText = calculated ? `Score: ${meta.score}/100` : "Score: waiting for today’s first log";
+    if (scoreLineEl) scoreLineEl.innerText = calculated ? `Score: ${meta.score}/100` : "Score: Waiting for today’s first log";
     if (statusLineEl) statusLineEl.innerText = `Status: ${status}`;
     modal.style.display = "flex";
   };
@@ -57,13 +57,13 @@ const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onA
 
 // 🔥 Your Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyCirCkRGlsODEExB9VLVY08Zw7b84zm_Qc",
-  authDomain: "novaafix-86912.firebaseapp.com",
-  projectId: "novaafix-86912",
-  storageBucket: "novaafix-86912.firebasestorage.app",
-  messagingSenderId: "699084708640",
-  appId: "1:699084708640:web:401f5d6990d818551e1545",
-  measurementId: "G-WHHXFW3N7R"
+  apiKey: "AIzaSyDcY5jwzhQFJhoPQX69emeqykcK_C1UYmk",
+  authDomain: "lumevine-wellness.firebaseapp.com",
+  projectId: "lumevine-wellness",
+  storageBucket: "lumevine-wellness.firebasestorage.app",
+  messagingSenderId: "727413601145",
+  appId: "1:727413601145:web:b78f9764c602fffa6435a8",
+  measurementId: "G-VQLJHHJ0ZB"
 };
 
 // 🔥 Initialize Firebase
@@ -76,11 +76,11 @@ googleProvider.setCustomParameters({
   prompt: "select_account"
 });
 
-const TRANSFER_APP_NAME = "novafix-transfer";
+const TRANSFER_APP_NAME = "lumevine-transfer";
 let transferAuth = null;
 let transferDb = null;
 const IMPORT_SECURITY_ALERT_TYPE = "source_snapshot_imported";
-const PENDING_REQUEST_LOGIN_ALERT_FLAG_KEY = "novafix_pending_request_login_alert";
+const PENDING_REQUEST_LOGIN_ALERT_FLAG_KEY = "lumevine_pending_request_login_alert";
 
 let pendingRequestLoginAlertArmedMemory = false;
 
@@ -186,7 +186,10 @@ const FIRESTORE_SCHEMAS = {
       text: 'string',
       completed: 'boolean',
       completedAt: 'timestamp',
-      time: 'timestamp'
+      time: 'timestamp',
+      scheduledStartAtMs: 'number',
+      scheduledEndAtMs: 'number',
+      scheduleLabel: 'string'
     }
   },
   reminders: {
@@ -389,15 +392,17 @@ const FIRESTORE_SCHEMAS = {
   },
   startupUsage: {
     types: {
-      planDateKey: 'string',
-      planCount: 'number',
       reportWeekKey: 'string',
       reportCount: 'number',
       updatedAt: 'timestamp'
     }
   },
-  startupPack: {
+  dailyRoutine: {
     types: {
+      source: 'string',
+      poolId: 'string',
+      entries: 'array',
+      preferences: 'object',
       updatedAt: 'timestamp'
     }
   },
@@ -1022,6 +1027,12 @@ const addFriendCancelBtn = document.getElementById("addFriendCancelBtn");
 const addFriendsBtn = document.getElementById("addFriendsBtn");
 const reverseFriendRequestModal = document.getElementById("reverseFriendRequestModal");
 const reverseFriendRequestPreview = document.getElementById("reverseFriendRequestPreview");
+const appDialogModal = document.getElementById("appDialogModal");
+const appDialogTitle = document.getElementById("appDialogTitle");
+const appDialogMessage = document.getElementById("appDialogMessage");
+const appDialogInput = document.getElementById("appDialogInput");
+const appDialogCancelBtn = document.getElementById("appDialogCancelBtn");
+const appDialogConfirmBtn = document.getElementById("appDialogConfirmBtn");
 const friendRequestsList = document.getElementById("friendRequestsList");
 const sentRequestsList = document.getElementById("sentRequestsList");
 const currentFriendsList = document.getElementById("currentFriendsList");
@@ -1041,7 +1052,7 @@ const guideStepTip = document.getElementById("guideStepTip");
 const guideDots = document.getElementById("guideDots");
 const guidePrevBtn = document.getElementById("guidePrevBtn");
 
-const NOVAFIX_THEMES = {
+const LUMEVINE_THEMES = {
   burgundy: {
     label: "Burgundy",
     description: "Warm, bold, and classic",
@@ -1064,11 +1075,11 @@ let themeSetupResolve = null;
 
 function normalizeTheme(theme) {
   const normalized = String(theme || "").trim().toLowerCase();
-  return Object.prototype.hasOwnProperty.call(NOVAFIX_THEMES, normalized) ? normalized : "";
+  return Object.prototype.hasOwnProperty.call(LUMEVINE_THEMES, normalized) ? normalized : "";
 }
 
 function getThemeStorageKey(userId) {
-  return `novafix_theme_${String(userId || "").trim()}`;
+  return `lumevine_theme_${String(userId || "").trim()}`;
 }
 
 function applyTheme(theme, userId = "", options = {}) {
@@ -1078,7 +1089,7 @@ function applyTheme(theme, userId = "", options = {}) {
   document.documentElement.dataset.theme = normalized;
   if (persist) {
     try {
-      localStorage.setItem("novafix_theme_last", normalized);
+      localStorage.setItem("lumevine_theme_last", normalized);
       if (userId) localStorage.setItem(getThemeStorageKey(userId), normalized);
     } catch (_) {}
   }
@@ -1093,7 +1104,7 @@ function applyTheme(theme, userId = "", options = {}) {
 
 function getStoredTheme(userId) {
   try {
-    const key = userId ? getThemeStorageKey(userId) : "novafix_theme_last";
+    const key = userId ? getThemeStorageKey(userId) : "lumevine_theme_last";
     return normalizeTheme(localStorage.getItem(key));
   } catch (_) {
     return "";
@@ -1131,7 +1142,7 @@ function previewInitialTheme(theme) {
 
 function renderThemeChoices(container) {
   if (!container) return;
-  container.innerHTML = Object.entries(NOVAFIX_THEMES).map(([themeKey, theme]) => `
+  container.innerHTML = Object.entries(LUMEVINE_THEMES).map(([themeKey, theme]) => `
     <button type="button" class="theme-choice" data-theme="${themeKey}" role="radio" aria-label="${theme.label}">
       <span class="theme-choice-swatch" style="background:${theme.swatch}"></span>
       <span class="theme-choice-label">${theme.label}</span>
@@ -1152,7 +1163,7 @@ async function selectTheme(theme, options = {}) {
   const userId = String(options.userId || auth.currentUser?.uid || themeSetupUserId || "").trim();
   if (!userId) return false;
   applyTheme(normalized, userId);
-  if (!options.silent) showThemeToast(`${NOVAFIX_THEMES[normalized].label} theme applied.`);
+  if (!options.silent) showThemeToast(`${LUMEVINE_THEMES[normalized].label} theme applied.`);
   try {
     const activeProviderIds = Array.isArray(auth.currentUser?.providerData)
       ? auth.currentUser.providerData.map((entry) => String(entry?.providerId || "").trim().toLowerCase())
@@ -1162,7 +1173,7 @@ async function selectTheme(theme, options = {}) {
       googleIdentitySetupCompleted: activeProviderIds.includes("google.com"),
       updatedAt: serverTimestamp()
     }, "profile", { merge: true });
-    if (!options.silent) showThemeToast(`${NOVAFIX_THEMES[normalized].label} theme applied.`);
+    if (!options.silent) showThemeToast(`${LUMEVINE_THEMES[normalized].label} theme applied.`);
     if (themeSetupResolve) {
       const resolve = themeSetupResolve;
       themeSetupResolve = null;
@@ -1172,8 +1183,14 @@ async function selectTheme(theme, options = {}) {
     return true;
   } catch (err) {
     structuredLog("warn", "theme.save", err?.message || String(err), { userId, theme: normalized });
-    if (!options.silent) showThemeToast("Theme applied here, but could not sync to your account.");
-    return false;
+    if (!options.silent) showThemeToast("Theme applied on this device, but could not sync to your account.");
+    if (themeSetupResolve) {
+      const resolve = themeSetupResolve;
+      themeSetupResolve = null;
+      themeSetupModal.style.display = "none";
+      resolve(true);
+    }
+    return true;
   }
 }
 
@@ -1219,6 +1236,7 @@ const crashRiskValue = document.getElementById("crashRiskValue");
 const crashRiskFill = document.getElementById("crashRiskFill");
 const crashRiskLevel = document.getElementById("crashRiskLevel");
 const crashRiskReason = document.getElementById("crashRiskReason");
+const crashRescueStartBtn = document.querySelector(".crash-rescue-btn");
 const crashRescuePlan = document.getElementById("crashRescuePlan");
 const weeklyRange = document.getElementById("weeklyRange");
 const weeklyImproved = document.getElementById("weeklyImproved");
@@ -1291,6 +1309,21 @@ const sleepSaveBtn = document.getElementById("sleepSaveBtn");
 const bedtimeTimeInput = document.getElementById("bedtimeTimeInput");
 const bedtimeSetBtn = document.getElementById("bedtimeSetBtn");
 const bedtimeInputError = document.getElementById("bedtimeInputError");
+const dailyRoutineEditorModal = document.getElementById("dailyRoutineEditorModal");
+const dailyRoutineEditorTitle = document.getElementById("dailyRoutineEditorTitle");
+const dailyRoutineStepCounter = document.getElementById("dailyRoutineStepCounter");
+const dailyRoutineActivityStep = document.getElementById("dailyRoutineActivityStep");
+const dailyRoutineTimeStep = document.getElementById("dailyRoutineTimeStep");
+const dailyRoutineActivityHint = document.getElementById("dailyRoutineActivityHint");
+const dailyRoutineActivitySelect = document.getElementById("dailyRoutineActivitySelect");
+const dailyRoutineTimeSelect = document.getElementById("dailyRoutineTimeSelect");
+const dailyRoutineTimeInput = document.getElementById("dailyRoutineTimeInput");
+const dailyRoutineEditorError = document.getElementById("dailyRoutineEditorError");
+const dailyRoutineEditorDots = document.getElementById("dailyRoutineEditorDots");
+const dailyRoutineEditorNextBtn = document.getElementById("dailyRoutineEditorNextBtn");
+const dailyRoutineCustomActivityModal = document.getElementById("dailyRoutineCustomActivityModal");
+const dailyRoutineCustomInput = document.getElementById("dailyRoutineCustomInput");
+const dailyRoutineCustomError = document.getElementById("dailyRoutineCustomError");
 const sleepResetCountdown = document.getElementById("sleepResetCountdown");
 const sleepLimitError = document.getElementById("sleepLimitError");
 const sleepFriendInsight = document.getElementById("sleepFriendInsight");
@@ -1340,14 +1373,147 @@ const insightGraphScroll = document.getElementById("insightGraphScroll");
 const uxToast = document.getElementById("uxToast");
 const uxToastText = document.getElementById("uxToastText");
 const uxToastAction = document.getElementById("uxToastAction");
-const startupDailyPlanList = document.getElementById("startupDailyPlanList");
-const startupPlanMeta = document.getElementById("startupPlanMeta");
-const startupRefreshPlanBtn = document.getElementById("startupRefreshPlanBtn");
+const dailyRoutineList = document.getElementById("dailyRoutineList");
+const dailyRoutineMeta = document.getElementById("dailyRoutineMeta");
+const dailyRoutineGenerateBtn = document.getElementById("dailyRoutineGenerateBtn");
+const dailyRoutineAddBtn = document.getElementById("dailyRoutineAddBtn");
+const dailyRoutineReplaceBtn = document.getElementById("dailyRoutineReplaceBtn");
+const dailyRoutineClearBtn = document.getElementById("dailyRoutineClearBtn");
+const dailyRoutineStartTimeSelect = document.getElementById("dailyRoutineStartTimeSelect");
 const startupWeeklyReportText = document.getElementById("startupWeeklyReportText");
 const startupGenerateReportBtn = document.getElementById("startupGenerateReportBtn");
 const startupBehaviorMemory = document.getElementById("startupBehaviorMemory");
-const startupPlanResetCountdown = document.getElementById("startupPlanResetCountdown");
 const startupReportResetCountdown = document.getElementById("startupReportResetCountdown");
+
+const appDialogQueue = [];
+let activeAppDialog = null;
+
+function showAppDialog(message, options = {}) {
+  const type = ["alert", "confirm", "prompt"].includes(options.type) ? options.type : "alert";
+  return new Promise((resolve) => {
+    appDialogQueue.push({
+      message: String(message ?? ""),
+      initialMessage: String(message ?? ""),
+      title: String(options.title || (type === "confirm" ? "Please confirm" : type === "prompt" ? "Enter a value" : "Notice")),
+      type,
+      defaultValue: String(options.defaultValue ?? ""),
+      inputFormat: options.inputFormat === "bedtime" ? "bedtime" : "",
+      confirmText: String(options.confirmText || (type === "confirm" ? "Continue" : type === "prompt" ? "Save" : "OK")),
+      cancelText: String(options.cancelText || "Cancel"),
+      resolve
+    });
+    presentNextAppDialog();
+  });
+}
+
+function presentNextAppDialog() {
+  if (activeAppDialog || !appDialogQueue.length || !appDialogModal) return;
+  activeAppDialog = appDialogQueue.shift();
+  appDialogTitle.textContent = activeAppDialog.title;
+  appDialogMessage.textContent = activeAppDialog.message;
+  appDialogInput.type = "text";
+  appDialogInput.value = activeAppDialog.defaultValue;
+  appDialogInput.placeholder = activeAppDialog.inputFormat === "bedtime" ? "HH:MM (24-hour)" : "";
+  if (activeAppDialog.inputFormat === "bedtime") {
+    appDialogInput.maxLength = 5;
+  } else {
+    appDialogInput.removeAttribute("maxlength");
+  }
+  appDialogInput.hidden = activeAppDialog.type !== "prompt";
+  appDialogCancelBtn.hidden = activeAppDialog.type === "alert";
+  appDialogCancelBtn.textContent = activeAppDialog.cancelText;
+  appDialogConfirmBtn.textContent = activeAppDialog.confirmText;
+  appDialogModal.style.display = "flex";
+  appDialogModal.setAttribute("aria-hidden", "false");
+  ensureAppBackGuardState("app-dialog", true);
+  (activeAppDialog.type === "prompt" ? appDialogInput : appDialogConfirmBtn).focus();
+}
+
+function closeAppDialog(confirmed = false) {
+  if (!activeAppDialog) return false;
+  const dialog = activeAppDialog;
+  let promptValue = appDialogInput.value;
+  if (confirmed && dialog.type === "prompt" && dialog.inputFormat === "bedtime") {
+    const match = promptValue.trim().match(/^(\d{1,2}):(\d{2})$/);
+    const hour = match ? Number(match[1]) : NaN;
+    const minute = match ? Number(match[2]) : NaN;
+    if (!match || hour > 23 || minute > 59) {
+      appDialogMessage.textContent = "Enter a valid 24-hour time from 00:00 to 23:59.";
+      appDialogInput.focus();
+      return false;
+    }
+    const parsed = parseBedtimeInput(promptValue);
+    if (!parsed.ok) {
+      appDialogMessage.textContent = parsed.message;
+      appDialogInput.focus();
+      return false;
+    }
+    promptValue = parsed.formattedTime;
+  }
+  const result = dialog.type === "prompt"
+    ? (confirmed ? promptValue : null)
+    : dialog.type === "confirm" ? !!confirmed : true;
+  activeAppDialog = null;
+  appDialogModal.style.display = "none";
+  appDialogModal.setAttribute("aria-hidden", "true");
+  dialog.resolve(result);
+  queueMicrotask(presentNextAppDialog);
+  return true;
+}
+
+function appDialogKeydown(event) {
+  if (!activeAppDialog) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeAppDialog(false);
+  } else if (event.key === "Enter" && activeAppDialog.type !== "alert") {
+    event.preventDefault();
+    closeAppDialog(true);
+  }
+}
+
+function appAlert(message, options = {}) {
+  return showAppDialog(message, { ...options, type: "alert" });
+}
+
+function appConfirm(message, options = {}) {
+  return showAppDialog(message, { ...options, type: "confirm" });
+}
+
+function appPrompt(message, defaultValue = "", options = {}) {
+  return showAppDialog(message, { ...options, type: "prompt", defaultValue });
+}
+
+appDialogConfirmBtn?.addEventListener("click", () => closeAppDialog(true));
+appDialogCancelBtn?.addEventListener("click", () => closeAppDialog(false));
+appDialogModal?.addEventListener("keydown", appDialogKeydown);
+appDialogInput?.addEventListener("input", () => {
+  if (activeAppDialog?.inputFormat !== "bedtime") return;
+  appDialogMessage.textContent = activeAppDialog.initialMessage;
+  const raw = appDialogInput.value;
+  if (!/^\d*:?[\d]*$/.test(raw)) return;
+  const digits = raw.replace(":", "");
+  if (digits.length > 4) return;
+  if (raw.includes(":")) return;
+  if (digits.length === 3) {
+    const firstTwo = Number(digits.slice(0, 2));
+    appDialogInput.value = firstTwo <= 23
+      ? `${digits.slice(0, 2)}:${digits.slice(2)}`
+      : `${digits.slice(0, 1)}:${digits.slice(1)}`;
+  } else if (digits.length === 4) {
+    appDialogInput.value = `${digits.slice(0, 2)}:${digits.slice(2)}`;
+  }
+});
+appDialogModal?.addEventListener("click", (event) => {
+  if (event.target === appDialogModal) closeAppDialog(false);
+});
+dailyRoutineStartTimeSelect?.addEventListener("change", () => {
+  handleDailyRoutineStartTimeChange().catch((err) => {
+    structuredLog("error", "dailyRoutine.startTime", err?.message || String(err));
+    renderDailyRoutine();
+    showToast("Could not update the routine start time. Please try again.");
+  });
+});
 
 // ---------- SPLASH + AUTH CHECK ----------
 document.body.style.overflow = "hidden";
@@ -1373,6 +1539,11 @@ function ensureAppBackGuardState(reason = "guard", forcePush = false) {
 }
 
 function closeTopLayerForSystemBack() {
+  if (activeAppDialog) {
+    closeAppDialog(false);
+    return true;
+  }
+
   if (isEditableElementActive()) {
     const active = document.activeElement;
     if (active && typeof active.blur === "function") active.blur();
@@ -1674,9 +1845,13 @@ document.addEventListener("keydown", (event) => {
 });
 
 if (aiInput) {
+  aiInput.addEventListener("input", () => {
+    updateAiLimitUI();
+  });
   aiInput.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
     event.preventDefault();
+    if (aiInput.value.length > AI_MAX_MESSAGE_LENGTH) return;
     void aiChat();
   });
 }
@@ -1756,7 +1931,7 @@ const FINANCE_CURRENCY_OPTIONS = {
   aud: { label: "AUD", symbol: "$" },
   cny: { label: "CNY", symbol: "¥" }
 };
-const FINANCE_CURRENCY_STORAGE_KEY = "novaFix.financeCurrency";
+const FINANCE_CURRENCY_STORAGE_KEY = "lumevine.financeCurrency";
 
 function initializeFinanceCurrency() {
   if (!gCurrency) return;
@@ -1841,14 +2016,14 @@ if (bedtimeTimeInput) {
 async function clearAllAccountData() {
   const user = auth.currentUser;
   if (!user) {
-    alert("Please sign in first.");
+    await appAlert("Please sign in first.");
     return;
   }
 
-  const warningOne = confirm("⚠️ Warning: Clear All Data also removes your friends, incoming/outgoing friend requests, and related social data. It will permanently delete your NovaFix app data (tasks, mood, water, sleep, gratitude, reminders, AI chats, and insights). All STREAKS will also be cleared. Daily limits for AI, mood, sleep, water, tasks, reminders, and gratitude will NOT be reset. Continue?");
+  const warningOne = await appConfirm("⚠️ Warning: Clear All Data also removes your friends, incoming/outgoing friend requests, and related social data. It will permanently delete your Lumevine app data (tasks, mood, water, sleep, gratitude, reminders, AI chats, and insights). All STREAKS will also be cleared. Daily limits for AI, mood, sleep, water, tasks, reminders, and gratitude will NOT be reset. Continue?");
   if (!warningOne) return;
 
-  const warningTwo = confirm("Final warning: this cannot be undone. Your account will stay signed in, but all app data and social links (friends, sent requests, pending requests) will be erased. Proceed?");
+  const warningTwo = await appConfirm("Final warning: this cannot be undone. Your account will stay signed in, but all app data and social links (friends, sent requests, pending requests) will be erased. Proceed?");
   if (!warningTwo) return;
 
   const pendingToastId = showPendingToast("Hang on, clearing data...");
@@ -2014,6 +2189,7 @@ async function clearAllAccountData() {
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "weeklyTargets")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/weeklyTargets` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "habitQuest")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/habitQuest` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "startupPack")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/startupPack` }));
+    await fsDeleteDoc(doc(db, "users", user.uid, "settings", "dailyRoutine")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/dailyRoutine` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "startupUsage")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/startupUsage` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "insights", "barGraphs")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/insights/barGraphs` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "social", "profile")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/social/profile` }));
@@ -2150,14 +2326,14 @@ async function clearAllAccountData() {
       loadRescueEvents(user.uid),
       loadHabitQuest(user.uid),
       loadStartupUsageState(user.uid),
-      loadStartupFeatureState(user.uid)
+      loadDailyRoutine(user.uid)
     ]);
 
     updateClearDataButtonState();
     updateCrashPreventionUI();
 
     closeAccountPanel();
-    alert("✅ All account data cleared. You are still signed in.");
+    await appAlert("✅ All account data cleared. You are still signed in.");
   } catch (err) {
     notifyFirestoreError(err);
   } finally {
@@ -2257,7 +2433,6 @@ try {
         clearWaterGoalResetSchedule();
         clearSleepDailyResetSchedule();
         clearMoodDailyResetSchedule();
-        clearTaskDailyResetSchedule();
         clearBedtimeReminderSchedule();
         closeBedtimeReminderModal(null, true);
         bedtimeSettings = { timeText: "", enabled: false };
@@ -2302,7 +2477,8 @@ try {
         if (crashRiskFill) crashRiskFill.style.width = "0%";
         if (crashRiskLevel) crashRiskLevel.innerText = "Low Risk";
         if (crashRiskReason) crashRiskReason.innerText = "Log your first entries to generate risk analysis.";
-        if (crashRescuePlan) crashRescuePlan.innerHTML = "";
+        activeCrashRescue = null;
+        renderCrashRescuePlan();
         rescueEvents.length = 0;
         habitQuests.length = 0;
         burnoutRecoveryPlan.length = 0;
@@ -2315,12 +2491,11 @@ try {
         weeklyQuestUsedIds = [];
         questCompletedDateKeys = [];
         weeklyTargets = { waterGoal: 0, sleepTarget: 8, taskTarget: 5 };
-        startupFeatureState = getDefaultStartupFeatureState();
-        startupCurrentPlan = [];
         startupWeeklyReportCache = "";
-        startupPlanGeneratedOnce = false;
         startupReportGeneratedOnce = false;
         startupUsageState = getDefaultStartupUsageState();
+        dailyRoutineState = getDefaultDailyRoutineState();
+        renderDailyRoutine();
         refreshStartupFeatures();
         if (weeklyRange) weeklyRange.innerText = "Last 7 days review";
         if (weeklyTargetsDisplay) weeklyTargetsDisplay.innerText = "Targets: Water -, Sleep -, Tasks -";
@@ -2377,6 +2552,7 @@ try {
         aiUsageStateLoaded = false;
         aiAbuseStrikeCount = 0;
         aiAbuseCooldownUntilMs = 0;
+        aiAbuseCooldownTemplate = "";
         stopAiAbuseCooldownTicker();
         dailyUsageDateKey = "";
         moodDailyUsageCount = 0;
@@ -2537,7 +2713,7 @@ function validateSignupDisplayName(displayNameValue) {
   }
 
   const normalizedKey = raw.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const reservedNames = new Set(["admin", "administrator", "owner", "support", "system", "novafix", "mod", "moderator"]);
+  const reservedNames = new Set(["admin", "administrator", "owner", "support", "system", "lumevine", "mod", "moderator"]);
   if (reservedNames.has(normalizedKey)) {
     return { ok: false, message: "That display name is reserved. Choose another one.", normalized: "" };
   }
@@ -2711,9 +2887,9 @@ bindAuthEnterSubmit(usernameInput);
 bindAuthEnterSubmit(displayNameInput);
 
 const PAGE_TITLES = {
-  dashboard: "NovaFix - Dashboard",
-  signup: "NovaFix - Sign Up",
-  signin: "NovaFix - Sign In"
+  dashboard: "Lumevine - Dashboard",
+  signup: "Lumevine - Sign Up",
+  signin: "Lumevine - Sign In"
 };
 
 function setPageTitle(view = "signin") {
@@ -3140,7 +3316,7 @@ async function initializeAuthenticatedSession(user) {
     loadRescueEvents(user.uid),
     loadHabitQuest(user.uid),
     loadStartupUsageState(user.uid),
-    loadStartupFeatureState(user.uid),
+    loadDailyRoutine(user.uid),
     loadWaterData(user.uid),
     loadSleepData(user.uid),
     loadMusicSessions(user.uid),
@@ -3164,11 +3340,9 @@ async function initializeAuthenticatedSession(user) {
   scheduleWaterGoalReset(user.uid);
   scheduleSleepDailyReset(user.uid);
   scheduleMoodDailyReset(user.uid);
-  scheduleTaskDailyReset(user.uid);
   void Promise.allSettled(initialDataLoadPromises).then(async () => {
     const activeUser = auth.currentUser;
     if (!activeUser?.uid || activeUser.uid !== user.uid) return;
-    await ensureStartupPlanAuto(activeUser.uid);
     updateCrashPreventionUI();
     await forceSyncFriendProfileFromLocalSnapshot(activeUser);
     await loadFriendsInsights(activeUser.uid);
@@ -3379,7 +3553,7 @@ const AUTH_BACKOFF_FAIL_THRESHOLD = 3;
 const AUTH_SIGNIN_BACKOFF_FAIL_THRESHOLD = 7;
 const AUTH_BACKOFF_BASE_MS = 15 * 1000;
 const AUTH_BACKOFF_MAX_MS = 10 * 60 * 1000;
-const AUTH_BACKOFF_STORAGE_PREFIX = "novafix_auth_backoff_";
+const AUTH_BACKOFF_STORAGE_PREFIX = "lumevine_auth_backoff_";
 const DEVICE_INFO_SOURCE = String(
   navigator.userAgentData?.platform
   || navigator.platform
@@ -3401,10 +3575,10 @@ const CARD_SHORTCUTS = [
   { cardIndex: 0, keys: ["a", "i"], label: "AI Companion" },
   { cardIndex: 1, keys: ["r", "e"], label: "Reminders" },
   { cardIndex: 2, keys: ["p", "r"], label: "Productivity" },
-  { cardIndex: 3, keys: ["g", "f"], label: "Grocery Financing" },
+  { cardIndex: 6, keys: ["g", "f"], label: "Grocery Financing" },
   { cardIndex: 4, keys: ["m", "t"], label: "Mood Tracker" },
   { cardIndex: 5, keys: ["w", "t"], label: "Water Intake" },
-  { cardIndex: 6, keys: ["s", "l"], label: "Sleep" },
+  { cardIndex: 3, keys: ["s", "l"], label: "Sleep" },
   { cardIndex: 7, keys: ["m", "u"], label: "Wellness Music" },
   { cardIndex: 8, keys: ["t", "m"], label: "Time Traveller Mirror" },
   { cardIndex: 9, keys: ["q", "t"], label: "Motivational Quotes" },
@@ -3416,7 +3590,7 @@ const CARD_SHORTCUTS = [
   { cardIndex: 15, keys: ["h", "q"], label: "Adaptive Habit Quest" },
   { cardIndex: 16, keys: ["b", "r"], label: "Predictive Burnout Radar" },
   { cardIndex: 17, keys: ["i", "s"], label: "Insights & Streaks" },
-  { cardIndex: 18, keys: ["d", "p"], label: "Personalized Daily Plan" },
+  { cardIndex: 18, keys: ["d", "r"], label: "Daily Routine" },
   { cardIndex: 19, keys: ["s", "r"], label: "Weekly Startup Report" },
   { cardIndex: 20, keys: ["b", "g"], label: "Behavior Memory Graph" }
 ];
@@ -3599,13 +3773,13 @@ const WELCOME_GUIDE_STEPS = [
   },
   {
     title: "Keyboard Shortcuts",
-    text: "All dashboard cards have shortcuts. Hold {shortcut_mod}, then press two letters quickly to jump to a card, including Personalized Daily Plan, Weekly Startup Report, and Behavior Memory Graph.",
+    text: "All dashboard cards have shortcuts. Hold {shortcut_mod}, then press two letters quickly to jump to a card, including Daily Routine, Weekly Startup Report, and Behavior Memory Graph.",
     tip: "Shortcut list is shown below.",
     showShortcutList: true
   },
   {
     title: "Bug Reporting",
-    text: "Found a bug or glitch? Report it any time at <span class=\"support-email-highlight\">support.novafix@gmail.com</span>.",
+    text: "Found a bug or glitch? Report it any time at <span class=\"support-email-highlight\">support.lumevine@gmail.com</span>.",
     tip: "Tip: Include what happened and what you expected so we can fix it faster."
   }
 ];
@@ -3669,7 +3843,7 @@ function renderKeyboardShortcutsBox() {
   if (IS_MOBILE_DEVICE) return;
 
   if (keyboardShortcutsSubtitle) {
-    keyboardShortcutsSubtitle.innerText = `Showing ${IS_MAC_OS ? "macOS" : "Windows/Linux"} shortcuts for this device. Hold ${SHORTCUT_MOD_LABEL}, then press the two letters. Includes Personalized Daily Plan, Weekly Startup Report, and Behavior Memory Graph shortcuts.`;
+    keyboardShortcutsSubtitle.innerText = `Showing ${IS_MAC_OS ? "macOS" : "Windows/Linux"} shortcuts for this device. Hold ${SHORTCUT_MOD_LABEL}, then press the two letters. Includes Daily Routine, Weekly Startup Report, and Behavior Memory Graph shortcuts.`;
   }
   if (!keyboardShortcutsList) return;
   const visibleShortcuts = keyboardShortcutsExpanded ? CARD_SHORTCUTS : CARD_SHORTCUTS.slice(0, 3);
@@ -3688,7 +3862,7 @@ function renderKeyboardShortcutsBox() {
 }
 
 function getVerificationSentStorageKey(email) {
-  return `novafix_verification_sent_${String(email || "").toLowerCase()}`;
+  return `lumevine_verification_sent_${String(email || "").toLowerCase()}`;
 }
 
 function getVerificationLastSentMs(email) {
@@ -3878,7 +4052,7 @@ function startVerificationCooldown(seconds = 110) {
 
 function getAuthActionUrl() {
   return window.location.protocol === "file:"
-    ? "https://novaafix-86912.firebaseapp.com"
+    ? "https://lumevine-wellness.firebaseapp.com"
     : window.location.origin;
 }
 
@@ -3972,7 +4146,7 @@ async function showPendingImportSecurityWarnings(userId) {
 
     if (!pending.length) return;
 
-    alert("⚠️ Security warning: your data snapshot was imported into another account. If this wasn't you, change your password from Account → Change Password.");
+    await appAlert("⚠️ Security warning: your data snapshot was imported into another account. If this wasn't you, change your password from Account → Change Password.");
 
     await Promise.all(pending.map((docSnap) => fsUpdateDoc(docSnap.ref, {
       seen: true,
@@ -4361,7 +4535,7 @@ function closeReportRedirectConfirm(event, force = false) {
 
 function continueReportRedirect() {
   closeReportRedirectConfirm(null, true);
-  window.open("https://mail.google.com/mail/?view=cm&fs=1&to=support.novafix@gmail.com", "_blank", "noopener,noreferrer");
+  window.open("https://mail.google.com/mail/?view=cm&fs=1&to=support.lumevine@gmail.com", "_blank", "noopener,noreferrer");
 }
 
 async function maybeShowWelcomeGuide(userId) {
@@ -4389,23 +4563,11 @@ async function maybeShowWelcomeGuide(userId) {
     }
     
     if (!data.welcomeGuideCompleted) {
-      const [waterSnap, weeklySnap] = await Promise.all([
-        fsGetDoc(doc(db, "users", activeUserId, "settings", "water"), 'water'),
-        fsGetDoc(doc(db, "users", activeUserId, "settings", "weeklyTargets"), 'weeklyTargets')
-      ]);
-
-      if (!waterSnap.exists) {
-        await fsSetDoc(doc(db, "users", activeUserId, "settings", "water"), {
-          goal: 8,
-          goalDateKey: getTodayKey(),
-          lastResetDateKey: getTodayKey(),
-          updatedAt: serverTimestamp()
-        }, 'water', { merge: true });
-      }
+      const weeklySnap = await fsGetDoc(doc(db, "users", activeUserId, "settings", "weeklyTargets"), 'weeklyTargets');
 
       if (!weeklySnap.exists) {
         await fsSetDoc(doc(db, "users", activeUserId, "settings", "weeklyTargets"), {
-          waterGoal: 8,
+          waterGoal: 0,
           sleepTarget: 8,
           taskTarget: 5,
           updatedAt: serverTimestamp()
@@ -4459,7 +4621,7 @@ function toggleAuth(){
   const toggleText=document.getElementById("toggleText");
   hideAuthModalError();
   if(authMode==="signup"){
-    title.innerText="Create a NovaFix Account 🌟";
+    title.innerText="Create a Lumevine Account 🌟";
     button.innerText="Sign Up";
     googleAuthButton.innerText = "Sign Up with Google";
     toggleText.innerText="Already have an account? Sign In";
@@ -4468,7 +4630,7 @@ function toggleAuth(){
     if (resetPasswordButton) resetPasswordButton.style.display = "none";
     setPageTitle("signup");
   } else {
-    title.innerText="Welcome to NovaFix 🌟";
+    title.innerText="Welcome to Lumevine 🌟";
     button.innerText="Sign In";
     googleAuthButton.innerText = "Sign In with Google";
     toggleText.innerText="Don't have an account? Sign Up";
@@ -4650,7 +4812,7 @@ async function handleAuth() {
       const title = document.getElementById("modalTitle");
       const button = document.getElementById("actionButton");
       const toggleText = document.getElementById("toggleText");
-      title.innerText = "Welcome to NovaFix 🌟";
+      title.innerText = "Welcome to Lumevine 🌟";
       button.innerText = "Sign In";
       googleAuthButton.innerText = "Sign In with Google";
       toggleText.innerText = "Don't have an account? Sign Up";
@@ -4765,7 +4927,7 @@ async function handleAuth() {
 }
 
 async function signOutUser() {
-  const shouldSignOut = confirm("Sign out of your account now?");
+  const shouldSignOut = await appConfirm("Sign out of your account now?");
   if (!shouldSignOut) return;
 
   const signingOutUserId = String(auth.currentUser?.uid || lastAuthenticatedUserId || "").trim();
@@ -4959,29 +5121,30 @@ async function editAccountDisplayName() {
   let nextDisplayName = "";
   let promptSeed = currentDisplayName;
   while (true) {
-    const nextRaw = prompt(
+    const nextRaw = await appPrompt(
       "Enter display name (1-20 chars; letters, numbers, spaces, underscores, dashes).",
-      promptSeed
+      promptSeed,
+      { title: "Edit display name", confirmText: "Save" }
     );
     if (nextRaw === null) return;
 
     const nextTrimmed = String(nextRaw || "").trim();
     if (!nextTrimmed) {
-      alert("Display name is required.");
+      await appAlert("Display name is required.");
       promptSeed = "";
       continue;
     }
 
     const validation = validateSignupDisplayName(nextTrimmed);
     if (!validation.ok) {
-      alert(validation.message || "Invalid display name.");
+      await appAlert(validation.message || "Invalid display name.");
       promptSeed = nextTrimmed;
       continue;
     }
 
     nextDisplayName = validation.normalized || normalizeDisplayNameValue(nextTrimmed);
     if (!nextDisplayName) {
-      alert("Display name is required.");
+      await appAlert("Display name is required.");
       promptSeed = nextTrimmed;
       continue;
     }
@@ -5110,7 +5273,7 @@ async function openReverseFriendRequestPrompt(requestEntry) {
       email: entry.fromEmail,
       name: entry.fromName
     }, "Friend");
-    const shouldAcceptNow = confirm(`${fallbackSenderName} has already sent you a friend request. Accept it now?`);
+    const shouldAcceptNow = await appConfirm(`${fallbackSenderName} has already sent you a friend request. Accept it now?`);
     if (shouldAcceptNow) {
       await respondToFriendRequest(entry, "accept");
       return "accept";
@@ -6564,7 +6727,7 @@ function renderCurrentFriends(rows) {
     unfriendBtn.innerText = "Unfriend";
     unfriendBtn.onclick = async () => {
       const confirmText = `Remove ${friendDisplayName.replace(/&amp;/g, "&")} from your friends list?`;
-      if (!confirm(confirmText)) return;
+      if (!await appConfirm(confirmText, { title: "Remove friend", confirmText: "Remove" })) return;
       await unfriendByUid(String(entry.friendUid || ""));
     };
 
@@ -6714,7 +6877,7 @@ function renderSentFriendRequests(rows) {
     cancelBtn.className = "import-transfer-cancel";
     cancelBtn.innerText = "Cancel Request";
     cancelBtn.onclick = async () => {
-      if (!confirm(`Cancel request to ${friendDisplayName.replace(/&amp;/g, "&")}?`)) return;
+      if (!await appConfirm(`Cancel request to ${friendDisplayName.replace(/&amp;/g, "&")}?`, { title: "Cancel friend request", confirmText: "Cancel request" })) return;
       await cancelSentFriendRequest(entry);
     };
 
@@ -7589,7 +7752,7 @@ async function loadFriendRequests(userId, showLoginAlert = false) {
     renderFriendRequests(rows);
     if (rows.length && showLoginAlert && !friendRequestLoginAlertShown) {
       friendRequestLoginAlertShown = true;
-      alert(`You have ${rows.length} pending friend request${rows.length === 1 ? "" : "s"}. Open Account -> Friend Requests to accept or decline.`);
+      await appAlert(`You have ${rows.length} pending friend request${rows.length === 1 ? "" : "s"}. Open Account → Friend Requests to accept or decline.`, { title: "Friend requests" });
     }
   } catch (err) {
     notifyFirestoreError(err);
@@ -8820,6 +8983,7 @@ let wellnessTaskCompletionCache = {
 };
 const gratitudeEntries=[];
 const rescueEvents=[];
+let activeCrashRescue = null;
 const habitQuests=[];
 const burnoutRecoveryPlan=[];
 let burnoutPlanActive=false;
@@ -8827,69 +8991,69 @@ const burnoutRecoveryCompletedSteps=new Set();
 
 const CRASH_RESCUE_PROTOCOLS = [
   {
-    title: "60-second downshift",
-    focus: "lower the body alarm first, then choose one tiny next action",
+    title: "Quick reset",
+    focus: "Take a minute to pause, then choose one small next step.",
     steps: [
-      "Do 6 slow breathing rounds: inhale 4s, hold 2s, exhale 6s.",
-      "Drop your shoulders, unclench your jaw, and look away from the screen for 20 seconds.",
-      "Drink water before deciding what to do next.",
-      "Pick one 10-minute task that is easy to finish.",
-      "After 20 minutes, log your mood again."
+      "Take six slow breaths, making each exhale a little longer.",
+      "Relax your shoulders and look away from the screen for a moment.",
+      "Have a glass of water if you feel like one.",
+      "Choose one small thing you can finish in ten minutes.",
+      "Check in with yourself again when you’re ready."
     ]
   },
   {
-    title: "grounding rescue",
-    focus: "get out of the spiral by naming what is real and controllable",
+    title: "Clear your head",
+    focus: "Notice what’s around you and pick one thing you can do next.",
     steps: [
-      "Name 5 things you can see and 3 things you can physically feel.",
-      "Take one slow breath after each item you name.",
-      "Write the next useful action in one short sentence.",
-      "Do only that action for 10 minutes.",
-      "Check back in after 20 minutes and log your mood."
+      "Notice five things you can see and three things you can feel.",
+      "Take a slow breath and let your shoulders drop.",
+      "Write down one thing you’d like to get done next.",
+      "Spend a few minutes getting started on it.",
+      "Pause and see how you’re feeling."
     ]
   },
   {
-    title: "low-energy rescue",
-    focus: "reduce friction instead of forcing intensity",
+    title: "A gentler pace",
+    focus: "Make the next step small enough to feel manageable.",
     steps: [
-      "Sit or stand somewhere more comfortable and take 3 steady breaths.",
-      "Drink water or eat a small snack if you have not eaten recently.",
-      "Shrink your next task until it can be started in 2 minutes.",
-      "Set a 10-minute finish line, not a perfect-finish line.",
-      "Log mood again after the 20-minute check-in."
+      "Get comfortable and take three unhurried breaths.",
+      "If you haven’t eaten or had a drink in a while, grab something simple.",
+      "Pick a task and make the first step take two minutes or less.",
+      "Give it a few minutes; it doesn’t need to be perfect.",
+      "Take a break and check in with yourself."
     ]
   },
   {
-    title: "overwhelm rescue",
-    focus: "remove pressure before choosing the next move",
+    title: "When it feels like a lot",
+    focus: "Get everything out of your head, then choose just one thing.",
     steps: [
-      "Write down the top 3 things pulling your attention.",
-      "Circle only one that matters before tonight.",
-      "Park the other two for later; do not solve them now.",
-      "Do a 10-minute first pass on the circled item.",
-      "Come back after 20 minutes and log your mood."
+      "Write down what’s been taking up your attention.",
+      "Pick one item you’d like to make a little progress on today.",
+      "Leave the rest for later; you don’t have to solve everything now.",
+      "Spend a few minutes on the one you picked.",
+      "Pause and see what would feel useful next."
     ]
   },
   {
-    title: "anger reset",
-    focus: "discharge tension before responding or deciding",
+    title: "Take a pause",
+    focus: "Give yourself a little space before responding or deciding.",
     steps: [
-      "Step away from the trigger for one minute if you can.",
-      "Exhale longer than you inhale for 6 breaths.",
-      "Write what you want to avoid making worse.",
-      "Choose one neutral action: water, walk, or tidy one small thing.",
-      "Re-check mood after 20 minutes."
+      "If you can, step away from what’s frustrating you for a moment.",
+      "Take six steady breaths at a pace that feels comfortable.",
+      "Think about what would help keep the situation from getting harder.",
+      "Get a drink, take a short walk, or tidy one small thing.",
+      "When you’re ready, decide what you want to do next."
     ]
   },
   {
-    title: "control rebuild",
-    focus: "create one visible win so the day stops feeling lost",
+    title: "One small win",
+    focus: "Do one small thing to make the day feel a bit more manageable.",
     steps: [
-      "Clear one tiny surface, tab, or notification.",
-      "Drink water and take 3 slower breaths.",
-      "Choose a task that can be finished in one small checkbox.",
-      "Work for 10 minutes and stop when the timer ends.",
-      "Log your mood again after the check-in."
+      "Clear one small spot or close a tab you don’t need.",
+      "Take a few slow breaths and get comfortable.",
+      "Choose one task you can finish or make progress on quickly.",
+      "Give it a few minutes, then stop if you need to.",
+      "Take a moment to notice that you got started."
     ]
   }
 ];
@@ -9034,6 +9198,7 @@ const aiSessionState = {
   userEmotion: "",
   userEmotionDetailed: "neutral",
   lastUserMessage: "",
+  awaitingCheckIn: false,
   turnCount: 0,
   userFacts: {
     name: "",
@@ -9042,6 +9207,7 @@ const aiSessionState = {
     dislikes: []
   },
   lastSnapshot: null,
+  lastAssistantQuestion: "",
   conversationSummary: "",
   topicHistory: [],
   memoryPairs: []
@@ -9063,8 +9229,8 @@ const AI_RESPONSE_REPEAT_HISTORY_LIMIT = 120;
 const AI_RESPONSE_SIGNATURE_HISTORY_LIMIT = 150;
 const AI_RESPONSE_SIGNATURE_COMPARE_WINDOW = 80;
 const CRASH_ALERT_BANNER_MIN_RISK = 45;
-const CRASH_ALERT_DISMISS_STORAGE_PREFIX = "novafixCrashAlertDismissedDate:";
-const CRASH_ALERT_TRIGGERED_STORAGE_PREFIX = "novafixCrashAlertTriggeredDate:";
+const CRASH_ALERT_DISMISS_STORAGE_PREFIX = "lumevineCrashAlertDismissedDate:";
+const CRASH_ALERT_TRIGGERED_STORAGE_PREFIX = "lumevineCrashAlertTriggeredDate:";
 const CRASH_ALERT_RECOVERY_SCORE = 50;
 const challengeDates=[];
 let dailyChallengeCompleted=false;
@@ -9089,7 +9255,6 @@ let insightsPersistTimer=null;
 let waterGoalResetTimeoutId = null;
 let sleepDailyResetTimeoutId = null;
 let moodDailyResetTimeoutId = null;
-let taskDailyResetTimeoutId = null;
 let insightMetricIndex = 0;
 let questDateKey = "";
 let questXp = 0;
@@ -9112,6 +9277,7 @@ let weeklyTargets = {
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "local";
 const FIRESTORE_CRASH_MESSAGE = "Something went wrong. Please try again later.";
 const AI_DAILY_LIMIT = 20;
+const AI_MAX_MESSAGE_LENGTH = 1200;
 const MOOD_DAILY_LIMIT = 20;
 const REMINDER_DAILY_LIMIT = 30;
 const TASK_DAILY_LIMIT = 50;
@@ -9124,7 +9290,6 @@ const FRIEND_REQUEST_EXPIRY_MS = 3 * 24 * 60 * 60 * 1000;
 const REMINDER_MAX_MINUTES = 525600;
 const REMINDER_MAX_TEXT_LENGTH = 140;
 const SLEEP_DAILY_LIMIT = 8;
-const STARTUP_PLAN_DAILY_LIMIT = 1;
 const STARTUP_REPORT_WEEKLY_LIMIT = 1;
 const MAX_REMINDER_ENTRIES = 500;
 const MAX_TASK_ENTRIES = 1500;
@@ -9170,6 +9335,7 @@ let aiChatSubmitting = false;
 let aiAbuseStrikeCount = 0;
 let aiAbuseCooldownUntilMs = 0;
 let aiAbuseCooldownIntervalId = null;
+let aiAbuseCooldownTemplate = "";
 let reminderSubmitting = false;
 let taskSubmitting = false;
 let moodSubmitting = false;
@@ -9274,19 +9440,88 @@ const REMINDER_ALERT_REPEAT_GAP_MS = 700;
 const AI_ABUSE_COOLDOWN_MS = 2 * 60 * 1000;
 const AI_ABUSE_TERMS = ["fuck", "fuk", "fucc", "shit", "bitch", "asshole", "bastard", "motherfucker", "niga", "fucker"];
 
-function getDefaultStartupFeatureState() {
+let startupWeeklyReportCache = "";
+let startupReportGeneratedOnce = false;
+let startupUsageState = getDefaultStartupUsageState();
+
+function getDefaultDailyRoutineState() {
   return {
-    dailyPlanItems: [],
-    dailyPlanKey: ""
+    entries: [],
+    source: "",
+    poolId: "",
+    preferences: {}
   };
 }
 
-let startupFeatureState = getDefaultStartupFeatureState();
-let startupCurrentPlan = [];
-let startupWeeklyReportCache = "";
-let startupPlanGeneratedOnce = false;
-let startupReportGeneratedOnce = false;
-let startupUsageState = getDefaultStartupUsageState();
+let dailyRoutineState = getDefaultDailyRoutineState();
+let routineEditorMode = "add";
+let routineEditorStep = 0;
+let routinePendingActivity = null;
+
+const DAILY_ROUTINE_ACTIVITIES = [
+  "Workout", "Walking", "Stretching", "Yoga", "Meditation", "Reading",
+  "Study", "Deep work", "Meal break", "Hydration break", "Journaling",
+  "Creative time", "Outdoor break", "Tidy up", "Family time", "Chores",
+  "Commute", "Planning", "Wind down"
+];
+
+const DAILY_ROUTINE_STARTER_POOL = [
+  {
+    id: "steady-start",
+    entries: [
+      { startHour: 7.5, endHour: 8, label: "Start", action: "Wake up, drink water, and choose one priority." },
+      { startHour: 8.5, endHour: 9, label: "Gentle movement", action: "Stretch or take a short walk to wake up your body." },
+      { startHour: 9.5, endHour: 10.5, label: "Focus block", action: "Work on one important task without switching contexts." },
+      { startHour: 12.5, endHour: 13, label: "Meal break", action: "Pause for a meal and a few minutes away from screens." },
+      { startHour: 17.5, endHour: 18, label: "Reset", action: "Take a relaxed walk or do a short breathing break." },
+      { startHour: 21, endHour: 21.5, label: "Wind down", action: "Dim the lights and prepare one small thing for tomorrow." }
+    ]
+  },
+  {
+    id: "balanced-day",
+    entries: [
+      { startHour: 8, endHour: 8.5, label: "Morning check-in", action: "Drink water and pick a realistic goal for today." },
+      { startHour: 9, endHour: 10, label: "Priority work", action: "Give your most meaningful task a focused first block." },
+      { startHour: 11.5, endHour: 11.75, label: "Hydration break", action: "Refill your water and take a brief screen break." },
+      { startHour: 14, endHour: 14.5, label: "Movement", action: "Get outside or stretch at a comfortable pace." },
+      { startHour: 18, endHour: 18.25, label: "Daily review", action: "Notice one win and choose the next small step." },
+      { startHour: 21.5, endHour: 22, label: "Evening reset", action: "Slow down and make space for a steady night of sleep." }
+    ]
+  },
+  {
+    id: "gentle-momentum",
+    entries: [
+      { startHour: 8.5, endHour: 9, label: "Easy start", action: "Start gently with water and a little natural light." },
+      { startHour: 9.5, endHour: 10, label: "Plan the day", action: "Write down one essential task and one optional task." },
+      { startHour: 10.5, endHour: 11.25, label: "Focus sprint", action: "Work for 25 minutes, then take a short pause." },
+      { startHour: 13, endHour: 13.5, label: "Recharge", action: "Eat, hydrate, and give yourself a screen-free pause." },
+      { startHour: 16, endHour: 16.5, label: "Fresh-air break", action: "Step outside or move around at a comfortable pace." },
+      { startHour: 20.5, endHour: 21, label: "Close out", action: "Put away one thing and make tomorrow's start easier." }
+    ]
+  }
+];
+
+const DAILY_ROUTINE_ACTIVITY_ACTIONS = {
+  workout: "Do a short workout at a pace that feels sustainable.",
+  walking: "Take a walk at a comfortable pace.",
+  stretching: "Spend a few minutes stretching gently.",
+  yoga: "Do a short, comfortable yoga session.",
+  meditation: "Take a few quiet minutes to focus on your breathing.",
+  reading: "Read a few pages without distractions.",
+  study: "Study one topic in a focused block, then take a short break.",
+  "deep work": "Work on one important task with notifications off.",
+  "meal break": "Pause for a meal and a few minutes away from screens.",
+  "hydration break": "Refill your water and take a brief screen break.",
+  journaling: "Write a few lines about how the day is going.",
+  "creative time": "Spend a little time making or practicing something you enjoy.",
+  "outdoor break": "Step outside for fresh air and a change of scene.",
+  "tidy up": "Tidy one small area to make your space feel calmer.",
+  "family time": "Spend a little focused time with someone you care about.",
+  chores: "Complete one small household task, then stop.",
+  commute: "Leave enough time to travel without rushing.",
+  planning: "Choose one priority and make its first step clear.",
+  "wind down": "Dim the lights and make space for a steady night of sleep."
+};
 
 function getStartupWeekKey(dateValue = getServerNowDate()) {
   const date = toDateSafe(dateValue) || getServerNowDate();
@@ -9298,8 +9533,6 @@ function getStartupWeekKey(dateValue = getServerNowDate()) {
 
 function getDefaultStartupUsageState() {
   return {
-    planDateKey: getTodayKey(),
-    planCount: 0,
     reportWeekKey: getStartupWeekKey(),
     reportCount: 0
   };
@@ -9308,16 +9541,10 @@ function getDefaultStartupUsageState() {
 function normalizeStartupUsageState(input) {
   const source = input && typeof input === "object" ? input : {};
   const normalized = {
-    planDateKey: String(source.planDateKey || getTodayKey()),
-    planCount: Math.max(0, Number(source.planCount) || 0),
     reportWeekKey: String(source.reportWeekKey || getStartupWeekKey()),
     reportCount: Math.max(0, Number(source.reportCount) || 0)
   };
 
-  if (normalized.planDateKey !== getTodayKey()) {
-    normalized.planDateKey = getTodayKey();
-    normalized.planCount = 0;
-  }
   if (normalized.reportWeekKey !== getStartupWeekKey()) {
     normalized.reportWeekKey = getStartupWeekKey();
     normalized.reportCount = 0;
@@ -9348,9 +9575,7 @@ async function loadStartupUsageState(userId) {
     if (snapshot.exists) {
       const raw = snapshot.data || {};
       startupUsageState = normalizeStartupUsageState(raw);
-      changed = String(raw?.planDateKey || "") !== startupUsageState.planDateKey
-        || Number(raw?.planCount) !== startupUsageState.planCount
-        || String(raw?.reportWeekKey || "") !== startupUsageState.reportWeekKey
+      changed = String(raw?.reportWeekKey || "") !== startupUsageState.reportWeekKey
         || Number(raw?.reportCount) !== startupUsageState.reportCount;
     } else {
       changed = true;
@@ -9368,14 +9593,7 @@ async function ensureStartupUsageCurrent(userId) {
   if (!userId) return;
   let changed = false;
 
-  const todayKey = getTodayKey();
   const weekKey = getStartupWeekKey();
-
-  if (startupUsageState.planDateKey !== todayKey) {
-    startupUsageState.planDateKey = todayKey;
-    startupUsageState.planCount = 0;
-    changed = true;
-  }
 
   if (startupUsageState.reportWeekKey !== weekKey) {
     startupUsageState.reportWeekKey = weekKey;
@@ -9630,6 +9848,10 @@ function setInitialLoadingStates() {
   if (questListEl) setLoadingState(questListEl, "Preparing today’s habit quests...");
 }
 
+function isActiveDataLoadUser(userId) {
+  return String(auth.currentUser?.uid || "") === String(userId || "");
+}
+
 function hasAnyClearableData() {
   const hasAiChats = !!chat?.querySelector?.(".chat-message");
   const hasReminders = !!reminders?.querySelector?.(".item-row");
@@ -9676,7 +9898,7 @@ function notifyFirestoreError(err) {
   }
   const now = Date.now();
   if (now - lastFirestoreErrorAlertAt > 4000) {
-    alert(FIRESTORE_CRASH_MESSAGE);
+    void appAlert(FIRESTORE_CRASH_MESSAGE, { title: "Something went wrong" });
     lastFirestoreErrorAlertAt = now;
   }
 }
@@ -9759,9 +9981,9 @@ function getAiAbuseCooldownRemainingMs() {
 
 function buildAiAbuseCooldownMessage(remainingMs = getAiAbuseCooldownRemainingMs()) {
   const remaining = formatCountdownClock(remainingMs);
-  const template = pickNonRepeatingVariant(AI_ABUSE_COOLDOWN_POOL, "abuse_cooldown")
+  aiAbuseCooldownTemplate = aiAbuseCooldownTemplate || pickNonRepeatingVariant(AI_ABUSE_COOLDOWN_POOL, "abuse_cooldown")
     || AI_ABUSE_COOLDOWN_BASE[0];
-  return template.replaceAll("{remaining}", remaining);
+  return aiAbuseCooldownTemplate.replaceAll("{remaining}", remaining);
 }
 
 function stopAiAbuseCooldownTicker() {
@@ -9778,6 +10000,7 @@ function ensureAiAbuseCooldownTicker() {
     if (remaining <= 0) {
       aiAbuseCooldownUntilMs = 0;
       aiAbuseStrikeCount = 0;
+      aiAbuseCooldownTemplate = "";
       stopAiAbuseCooldownTicker();
     }
     updateAiLimitUI();
@@ -9915,6 +10138,7 @@ function updateSleepLimitUI() {
 function updateAiLimitUI() {
   const dailyLimit = getCurrentAiDailyLimit();
   const limited = aiUsageCount >= dailyLimit;
+  const messageTooLong = String(aiInput?.value || "").length > AI_MAX_MESSAGE_LENGTH;
   applyLimitState(aiLimitError, [aiInput, aiTalkBtn], limited, `Daily AI limit reached (${dailyLimit}/${dailyLimit}). Resets in countdown.`);
 
   const abuseCooldownRemainingMs = getAiAbuseCooldownRemainingMs();
@@ -9934,6 +10158,19 @@ function updateAiLimitUI() {
   } else {
     stopAiAbuseCooldownTicker();
     if (aiTalkBtn && !limited) aiTalkBtn.title = "";
+  }
+
+  if (messageTooLong) {
+    if (aiLimitError) {
+      aiLimitError.innerText = `Message too long. Keep it under ${AI_MAX_MESSAGE_LENGTH} characters.`;
+      aiLimitError.classList.add("show");
+      delete aiLimitError.dataset.liveCountdown;
+      delete aiLimitError.dataset.baseMessage;
+    }
+    if (aiTalkBtn) {
+      aiTalkBtn.disabled = true;
+      aiTalkBtn.title = `Message limit: ${AI_MAX_MESSAGE_LENGTH} characters`;
+    }
   }
 
   const editButtons = chat?.querySelectorAll?.(".chat-edit-btn") || [];
@@ -10323,6 +10560,7 @@ function getWeekRanges() {
 function computeWeekMetrics(startDate, endDate) {
   const dayKeys = buildWeekDayKeys(startDate, 7);
   const moodByDay = buildMoodAverageByDayMap(new Set(dayKeys));
+  const sleepDayKeys = new Set();
   const moodDailyValues = dayKeys
     .map((key) => Number(moodByDay.get(key)) || 0)
     .filter((value) => value > 0);
@@ -10334,6 +10572,8 @@ function computeWeekMetrics(startDate, endDate) {
     if (!isInRange(sleepDate, startDate, endDate)) return;
     sleepSum += Number(entry) || 0;
     sleepCount += 1;
+    const dayKey = dateToKey(sleepDate);
+    if (dayKey) sleepDayKeys.add(dayKey);
   });
 
   const waterByDay = new Map();
@@ -10350,8 +10590,13 @@ function computeWeekMetrics(startDate, endDate) {
     return isInRange(taskDate, startDate, endDate);
   });
   const completedInPeriod = tasksInPeriod.filter((entry) => !!entry.completed).length;
+  const taskDayKeys = new Set(tasksInPeriod.map((entry) => dateToKey(entry.time)).filter(Boolean));
 
   const rescuesInPeriod = rescueEvents.filter((entry) => isInRange(entry.time, startDate, endDate)).length;
+  const rescueDayKeys = new Set(rescueEvents
+    .filter((entry) => isInRange(entry.time, startDate, endDate))
+    .map((entry) => dateToKey(entry.time))
+    .filter(Boolean));
 
   return {
     moodScore: moodDailyValues.length ? safeAvg(moodDailyValues) : 0,
@@ -10359,7 +10604,12 @@ function computeWeekMetrics(startDate, endDate) {
     waterDailyAvg: waterByDay.size ? [...waterByDay.values()].reduce((a, b) => a + b, 0) / 7 : 0,
     taskCompletion: tasksInPeriod.length ? completedInPeriod / tasksInPeriod.length : 0,
     rescues: rescuesInPeriod,
-    taskCount: tasksInPeriod.length
+    taskCount: tasksInPeriod.length,
+    moodDays: moodDailyValues.length,
+    sleepDays: sleepDayKeys.size,
+    waterDays: waterByDay.size,
+    taskDays: taskDayKeys.size,
+    rescueDays: rescueDayKeys.size
   };
 }
 
@@ -10459,18 +10709,19 @@ function updateWeeklyReview() {
   }
 
   const improved = [];
-  if (current.sleepAvg > previous.sleepAvg + 0.2) improved.push(`Sleep improved to ${current.sleepAvg.toFixed(1)}h avg.`);
-  if (current.waterDailyAvg > previous.waterDailyAvg + 0.4) improved.push(`Hydration improved to ${current.waterDailyAvg.toFixed(1)} glasses/day.`);
-  if (current.taskCompletion > previous.taskCompletion + 0.08) improved.push(`Task completion improved to ${Math.round(current.taskCompletion * 100)}%.`);
-  if (current.moodScore > previous.moodScore + 0.15) improved.push("Mood trend improved this week.");
-  if (current.rescues < previous.rescues) improved.push("Fewer rescue triggers than last week.");
+  const hasEnoughCurrentDays = (metricDays) => Number(metricDays) >= 3;
+  if (hasEnoughCurrentDays(current.sleepDays) && current.sleepAvg > previous.sleepAvg + 0.2) improved.push(`Sleep improved to ${current.sleepAvg.toFixed(1)}h avg.`);
+  if (hasEnoughCurrentDays(current.waterDays) && current.waterDailyAvg > previous.waterDailyAvg + 0.4) improved.push(`Hydration improved to ${current.waterDailyAvg.toFixed(1)} glasses/day.`);
+  if (hasEnoughCurrentDays(current.taskDays) && current.taskCompletion > previous.taskCompletion + 0.08) improved.push(`Task completion improved to ${Math.round(current.taskCompletion * 100)}%.`);
+  if (hasEnoughCurrentDays(current.moodDays) && current.moodScore > previous.moodScore + 0.15) improved.push("Mood trend improved this week.");
+  if (hasEnoughCurrentDays(current.rescueDays) && current.rescues < previous.rescues) improved.push("Fewer rescue triggers than last week.");
 
   const dropped = [];
-  if (current.sleepAvg < previous.sleepAvg - 0.2) dropped.push(`Sleep dropped to ${current.sleepAvg.toFixed(1)}h avg.`);
-  if (current.waterDailyAvg < previous.waterDailyAvg - 0.4) dropped.push(`Hydration dipped to ${current.waterDailyAvg.toFixed(1)} glasses/day.`);
-  if (current.taskCompletion < previous.taskCompletion - 0.08) dropped.push(`Task completion dropped to ${Math.round(current.taskCompletion * 100)}%.`);
-  if (current.moodScore < previous.moodScore - 0.15) dropped.push("Mood trend dipped this week.");
-  if (current.rescues > previous.rescues) dropped.push("Rescue triggers increased this week.");
+  if (hasEnoughCurrentDays(current.sleepDays) && current.sleepAvg < previous.sleepAvg - 0.2) dropped.push(`Sleep dropped to ${current.sleepAvg.toFixed(1)}h avg.`);
+  if (hasEnoughCurrentDays(current.waterDays) && current.waterDailyAvg < previous.waterDailyAvg - 0.4) dropped.push(`Hydration dipped to ${current.waterDailyAvg.toFixed(1)} glasses/day.`);
+  if (hasEnoughCurrentDays(current.taskDays) && current.taskCompletion < previous.taskCompletion - 0.08) dropped.push(`Task completion dropped to ${Math.round(current.taskCompletion * 100)}%.`);
+  if (hasEnoughCurrentDays(current.moodDays) && current.moodScore < previous.moodScore - 0.15) dropped.push("Mood trend dipped this week.");
+  if (hasEnoughCurrentDays(current.rescueDays) && current.rescues > previous.rescues) dropped.push("Rescue triggers increased this week.");
 
   const actions = [];
   if (current.sleepAvg < 7) actions.push("Set wind-down reminder 60 minutes before sleep for 5 nights.");
@@ -10559,8 +10810,81 @@ async function loadWeeklyTargets(userId) {
   updateWeeklyReview();
 }
 
+function renderCrashRescuePlan() {
+  if (!crashRescuePlan) return;
+  crashRescuePlan.innerHTML = "";
+  const hasActiveRescue = !!(activeCrashRescue && !activeCrashRescue.completed);
+  if (crashRescueStartBtn) {
+    crashRescueStartBtn.disabled = hasActiveRescue;
+    crashRescueStartBtn.setAttribute("aria-disabled", String(hasActiveRescue));
+    crashRescueStartBtn.title = hasActiveRescue ? "Finish the current reset checklist first." : "";
+  }
+  if (!activeCrashRescue || activeCrashRescue.completed) return;
+
+  const done = new Set(activeCrashRescue.completedSteps || []);
+  const orderedSteps = activeCrashRescue.steps
+    .map((text, index) => ({ text, index, completed: done.has(index) }))
+    .sort((left, right) => Number(left.completed) - Number(right.completed));
+
+  orderedSteps.forEach(({ text, index, completed }) => {
+    const item = document.createElement("li");
+    item.className = completed ? "crash-step is-complete" : "crash-step";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "crash-step-toggle";
+    toggle.setAttribute("aria-label", completed ? `Mark ${text} incomplete` : `Mark ${text} complete`);
+    toggle.setAttribute("aria-pressed", String(completed));
+    toggle.disabled = activeCrashRescue.updating === true;
+    toggle.textContent = completed ? "✓" : "";
+    toggle.addEventListener("click", () => {
+      void toggleCrashRescueStep(index);
+    });
+
+    const label = document.createElement("span");
+    label.className = "crash-step-label";
+    label.textContent = text;
+    item.append(toggle, label);
+    crashRescuePlan.appendChild(item);
+  });
+}
+
+async function toggleCrashRescueStep(stepIndex) {
+  const user = auth.currentUser;
+  const rescue = activeCrashRescue;
+  if (!user || !rescue || rescue.completed || rescue.updating || !Number.isInteger(stepIndex)) return;
+
+  const previouslyCompletedSteps = [...rescue.completedSteps];
+  rescue.updating = true;
+  rescue.completedSteps = rescue.completedSteps.includes(stepIndex)
+    ? rescue.completedSteps.filter((index) => index !== stepIndex)
+    : [...rescue.completedSteps, stepIndex];
+  rescue.completed = rescue.completedSteps.length === rescue.steps.length;
+  renderCrashRescuePlan();
+
+  try {
+    await updateDoc(doc(db, "users", user.uid, "rescueEvents", rescue.id), {
+      completedSteps: rescue.completedSteps,
+      completed: rescue.completed
+    });
+    rescue.updating = false;
+    renderCrashRescuePlan();
+    if (rescue.completed) {
+      activeCrashRescue = null;
+      renderCrashRescuePlan();
+      showToast("All done. Your reset checklist is clear.");
+    }
+  } catch (err) {
+    rescue.completedSteps = previouslyCompletedSteps;
+    rescue.completed = false;
+    rescue.updating = false;
+    renderCrashRescuePlan();
+    notifyFirestoreError(err);
+  }
+}
+
 async function loadRescueEvents(userId) {
   rescueEvents.length = 0;
+  activeCrashRescue = null;
   try {
     const snap = await getDocs(collection(db, "users", userId, "rescueEvents"));
     snap.docs.forEach((docSnap) => {
@@ -10570,12 +10894,22 @@ async function loadRescueEvents(userId) {
       rescueEvents.push({
         id: docSnap.id,
         time,
-        level: data.level || ""
+        level: data.level || "",
+        protocol: data.protocol || "",
+        steps: Array.isArray(data.steps) ? data.steps.filter((step) => typeof step === "string") : [],
+        completedSteps: Array.isArray(data.completedSteps)
+          ? data.completedSteps.filter((index) => Number.isInteger(index))
+          : [],
+        completed: data.completed === true
       });
     });
+    activeCrashRescue = [...rescueEvents]
+      .filter((entry) => entry.steps.length && !entry.completed)
+      .sort((left, right) => right.time.getTime() - left.time.getTime())[0] || null;
   } catch (err) {
     notifyFirestoreError(err);
   }
+  renderCrashRescuePlan();
   updateWeeklyReview();
   updateClearDataButtonState();
 }
@@ -11167,7 +11501,7 @@ async function completeHabitQuest(index) {
 
   const validation = validateHabitQuestCompletion(quest);
   if (!validation.valid) {
-    alert(`❌ ${validation.message}`);
+    await appAlert(validation.message, { title: "Quest not complete" });
     return;
   }
 
@@ -11363,7 +11697,7 @@ function updateBurnoutRadarUI() {
 async function applyRecoverySchedule() {
   const user = auth.currentUser;
   if (!user) {
-    alert("Please sign in first.");
+    await appAlert("Please sign in first.");
     return;
   }
 
@@ -11389,7 +11723,7 @@ async function applyRecoverySchedule() {
   if (burnoutReasonEl) burnoutReasonEl.innerText = "Tick off these steps inside this card before adding more work. No reminders were created.";
   renderBurnoutRecoveryPlan({ interactive: true });
 
-  alert("✅ Simple recovery plan started inside this card. Check off each step here.");
+  await appAlert("Simple recovery plan started. Check off each step in the card.", { title: "Recovery plan started" });
 }
 
 function pickChallengeForDate(dateKey) {
@@ -11621,6 +11955,16 @@ function queueInsightsPersist(payload) {
           ...payload.barGraphs,
           updatedAt: serverTimestamp()
         }, { merge: true });
+      }
+
+      if (payload.dailyRoutine && typeof payload.dailyRoutine === "object") {
+        const importedRoutine = normalizeDailyRoutineState(payload.dailyRoutine);
+        if (importedRoutine.entries.length) {
+          await setDoc(doc(db, "users", user.uid, "settings", "dailyRoutine"), {
+            ...importedRoutine,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
       }
 
       if (payload?.socialProfile) {
@@ -11884,7 +12228,9 @@ async function ensureDateBoundResetCatchup(userId) {
   await ensureDailyUsageCurrent(userId, { skipReminderRefresh: true });
   await Promise.allSettled([
     ensureWaterDayCurrent(userId),
-    ensureDailyChallengeCurrent(userId)
+    ensureDailyChallengeCurrent(userId),
+    ensureSleepDayCurrent(userId),
+    ensureTaskDayCurrent(userId)
   ]);
 }
 
@@ -12248,6 +12594,7 @@ async function runDailySystemReset(userId, options = {}) {
     await ensureServerClockCurrent(userId);
     const todayKey = getTodayKey();
     if (!options.force && dailySystemResetKey === todayKey) return;
+    const utcDayChanged = !!dailySystemResetKey && dailySystemResetKey !== todayKey;
     dailySystemResetKey = todayKey;
     clearCrashAlertDismissal(userId);
 
@@ -12255,7 +12602,8 @@ async function runDailySystemReset(userId, options = {}) {
       ensureDailyUsageCurrent(userId),
       ensureAiUsageCurrent(userId),
       ensureWaterDayCurrent(userId, todayKey),
-      ensureDailyChallengeCurrent(userId, todayKey)
+      ensureDailyChallengeCurrent(userId, todayKey),
+      ...(utcDayChanged ? [resetTaskDayData(userId)] : [])
     ]);
 
     await Promise.allSettled([
@@ -12298,6 +12646,16 @@ async function scheduleDailySystemReset(userId) {
     void runDailySystemReset(userId);
   }, 60000);
 }
+
+function reconcileDailyResetOnReturn() {
+  const userId = String(auth.currentUser?.uid || "").trim();
+  if (!userId || (document.visibilityState === "hidden" && !document.hasFocus())) return;
+  void runDailySystemReset(userId);
+}
+
+document.addEventListener("visibilitychange", reconcileDailyResetOnReturn);
+window.addEventListener("focus", reconcileDailyResetOnReturn);
+window.addEventListener("pageshow", reconcileDailyResetOnReturn);
 
 function clearDailyChallengeResetSchedule() {
   if (dailyChallengeResetTimeoutId) {
@@ -12417,15 +12775,6 @@ function updateStartupResetCountdownNotes() {
     wellnessScoreResetCountdown.innerText = `Daily wellness score reset in ${formatCountdownClock(dailyRemaining)}`;
   }
 
-  if (startupPlanResetCountdown) {
-    const planLimited = (Number(startupUsageState?.planCount) || 0) >= STARTUP_PLAN_DAILY_LIMIT;
-    if (planLimited) {
-      const dailyRemaining = getMillisecondsUntilNextMidnight();
-      startupPlanResetCountdown.innerText = `Daily planner reset in ${formatCountdownClock(dailyRemaining)}`;
-    } else {
-      startupPlanResetCountdown.innerText = "";
-    }
-  }
   if (startupReportResetCountdown) {
     const reportLimited = (Number(startupUsageState?.reportCount) || 0) >= STARTUP_REPORT_WEEKLY_LIMIT;
     if (reportLimited) {
@@ -12455,15 +12804,7 @@ function stopStartupResetCountdown() {
   if (gratitudeResetCountdown) gratitudeResetCountdown.innerText = "";
   if (dailyChallengeResetCountdown) dailyChallengeResetCountdown.innerText = "";
   if (wellnessScoreResetCountdown) wellnessScoreResetCountdown.innerText = "";
-  if (startupPlanResetCountdown) startupPlanResetCountdown.innerText = "";
   if (startupReportResetCountdown) startupReportResetCountdown.innerText = "";
-}
-
-function clearTaskDailyResetSchedule() {
-  if (taskDailyResetTimeoutId) {
-    clearTimeout(taskDailyResetTimeoutId);
-    taskDailyResetTimeoutId = null;
-  }
 }
 
 function startWeeklyGraphResetCountdown() {
@@ -12604,6 +12945,7 @@ async function resetSleepDayData(userId) {
       bedtimeEnabled: false,
       bedtimeTime: "",
       bedtimeMeridiem: "",
+      lastResetDateKey: getTodayKey(),
       updatedAt: serverTimestamp(),
       updatedAtMs: Date.now()
     }, 'sleep', { merge: true });
@@ -12612,6 +12954,27 @@ async function resetSleepDayData(userId) {
   }
 
   await loadSleepData(userId);
+}
+
+async function ensureSleepDayCurrent(userId) {
+  if (!userId || !auth.currentUser?.uid || auth.currentUser.uid !== userId) return;
+  try {
+    const sleepRef = doc(db, "users", userId, "settings", "sleep");
+    const snapshot = await fsGetDoc(sleepRef, 'sleep');
+    if (!snapshot.exists) return;
+    const data = snapshot.data || {};
+    const todayKey = getTodayKey();
+    const lastResetDateKey = String(data.lastResetDateKey || "");
+    if (lastResetDateKey && lastResetDateKey !== todayKey) {
+      await resetSleepDayData(userId);
+      return;
+    }
+    if (!lastResetDateKey) {
+      await fsSetDoc(sleepRef, { lastResetDateKey: todayKey }, 'sleep', { merge: true });
+    }
+  } catch (err) {
+    notifyFirestoreError(err);
+  }
 }
 
 async function scheduleSleepDailyReset(userId) {
@@ -12669,21 +13032,10 @@ async function resetTaskDayData(userId) {
   updateTaskLimitUI();
 }
 
-function scheduleTaskDailyReset(userId) {
-  clearTaskDailyResetSchedule();
-
-  const runReset = async () => {
-    const activeUser = auth.currentUser;
-    if (!activeUser || activeUser.uid !== userId) {
-      scheduleTaskDailyReset(userId);
-      return;
-    }
-
-    await resetTaskDayData(userId);
-    scheduleTaskDailyReset(userId);
-  };
-
-  taskDailyResetTimeoutId = setTimeout(runReset, getMillisecondsUntilNextMidnight());
+async function ensureTaskDayCurrent(userId) {
+  if (!userId || !auth.currentUser?.uid || auth.currentUser.uid !== userId) return;
+  await loadWellnessTaskCompletionCache(userId);
+  updateTaskLimitUI();
 }
 
 function getWellnessScoreMeta(scoreValue = 0) {
@@ -12758,7 +13110,7 @@ function openWellnessScoreInfoModal() {
   const meta = calculated ? getWellnessScoreMeta(score) : { category: "Not Yet Calculated", score: null, status: "Waiting" };
   const status = String(wellnessScoreEl?.dataset?.status || wellnessStatusEl?.innerText || meta.status || "Waiting");
   if (wellnessInfoCategory) wellnessInfoCategory.innerText = meta.category;
-  if (wellnessInfoScore) wellnessInfoScore.innerText = calculated ? `Score: ${meta.score}/100` : "Score: waiting for today’s first log";
+  if (wellnessInfoScore) wellnessInfoScore.innerText = calculated ? `Score: ${meta.score}/100` : "Score: Waiting for today’s first log";
   if (wellnessInfoStatus) wellnessInfoStatus.innerText = calculated
     ? `Status: ${status}`
     : "Status: Log one mood, water, sleep, task, gratitude, or challenge item to calculate today’s score.";
@@ -13341,7 +13693,7 @@ async function runCrashRescueFlow(options = {}) {
   const showAlert = options.showAlert !== false;
   const user = auth.currentUser;
   if (!user) {
-    if (showAlert) alert("Please sign in first.");
+    if (showAlert) await appAlert("Please sign in first.");
     return { ok: false, message: "Please sign in first." };
   }
 
@@ -13352,43 +13704,43 @@ async function runCrashRescueFlow(options = {}) {
   ) || CRASH_RESCUE_PROTOCOLS[0];
   const steps = protocol.steps;
 
-  if (crashRescuePlan) {
-    crashRescuePlan.innerHTML = steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("");
-  }
-
   try {
-    const reminderLabel = `${protocol.title} check-in (${snapshot.level})`;
-    const targetAtMs = getServerNowDate().getTime() + (20 * 60 * 1000);
-    const ref = await addDoc(collection(db, "users", user.uid, "reminders"), {
-      text: reminderLabel,
-      minutes: 20,
-      targetAtMs,
-      createdAt: serverTimestamp()
-    });
-    renderReminder({ id: ref.id, text: reminderLabel, minutes: 20, targetAtMs }, { insertAtTop: true });
-
     const rescueReason = (snapshot.reasons && snapshot.reasons[0]) || protocol.focus || "General resilience support";
     const rescueRef = await addDoc(collection(db, "users", user.uid, "rescueEvents"), {
       level: snapshot.level,
       reason: rescueReason,
       protocol: protocol.title,
+      steps,
+      completedSteps: [],
+      completed: false,
       time: serverTimestamp()
     });
-    rescueEvents.push({ id: rescueRef.id, time: getServerNowDate(), level: snapshot.level, protocol: protocol.title });
+    activeCrashRescue = {
+      id: rescueRef.id,
+      time: getServerNowDate(),
+      level: snapshot.level,
+      protocol: protocol.title,
+      steps: [...steps],
+      completedSteps: [],
+      completed: false
+    };
+    rescueEvents.push(activeCrashRescue);
+    renderCrashRescuePlan();
 
     wellnessActionBoost = Math.min(20, (Number(wellnessActionBoost) || 0) + 2);
     updateWellnessScore();
     updateCrashPreventionUI();
     updateWeeklyReview();
     if (showAlert) {
-      alert(`✅ ${protocol.title} started. A 20-minute recovery reminder is now set.`);
+      await appAlert(`${protocol.title} is ready. Pick any step that feels manageable and take it from there.`, { title: "Quick reset ready" });
     }
     return {
       ok: true,
       level: snapshot.level,
       reason: rescueReason,
       title: protocol.title,
-      focus: protocol.focus
+      focus: protocol.focus,
+      steps
     };
   } catch (err) {
     notifyFirestoreError(err);
@@ -13558,90 +13910,662 @@ function updateInsights() {
   updateClearDataButtonState();
 }
 
-function normalizeStartupFeatureState(input) {
+function normalizeDailyRoutineState(input) {
   const source = input && typeof input === "object" ? input : {};
-  const rawItems = Array.isArray(source.dailyPlanItems) ? source.dailyPlanItems : [];
-  const dailyPlanItems = rawItems
-    .map((item) => String(item || "").trim())
+  const entries = (Array.isArray(source.entries) ? source.entries : [])
+    .map((entry, index) => {
+      const label = String(entry?.label || "").trim().slice(0, 64);
+      const action = String(entry?.action || "").trim().slice(0, 240);
+      const startHour = Number(entry?.startHour);
+      const endHour = Number(entry?.endHour);
+      if (!label || !Number.isFinite(startHour) || startHour < 0 || startHour >= 24
+        || !Number.isFinite(endHour) || endHour <= startHour || endHour > startHour + 24) return null;
+      return {
+        id: String(entry?.id || `daily-routine-${index}-${Math.round(startHour * 60)}`),
+        label,
+        action,
+        startHour,
+        endHour
+      };
+    })
     .filter(Boolean)
-    .slice(0, 5);
-  const dailyPlanKey = String(source.dailyPlanKey || "").trim();
+    .sort((left, right) => left.startHour - right.startHour);
   return {
-    dailyPlanItems,
-    dailyPlanKey
+    entries,
+    source: String(source.source || ""),
+    poolId: String(source.poolId || ""),
+    preferences: source.preferences && typeof source.preferences === "object" && !Array.isArray(source.preferences)
+      ? source.preferences
+      : {}
   };
 }
 
-async function saveStartupFeatureState(userId) {
-  if (!userId) return;
-  try {
-    await setDoc(doc(db, "users", userId, "settings", "startupPack"), {
-      ...startupFeatureState,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-  } catch (err) {
-    notifyFirestoreError(err);
-  }
-}
-
-async function loadStartupFeatureState(userId) {
-  startupFeatureState = getDefaultStartupFeatureState();
+async function loadDailyRoutine(userId) {
+  dailyRoutineState = getDefaultDailyRoutineState();
   if (!userId) {
-    refreshStartupFeatures();
+    renderDailyRoutine();
     return;
   }
 
   try {
-    const snapshot = await fsGetDoc(doc(db, "users", userId, "settings", "startupPack"), 'startupPack');
-    if (snapshot.exists) {
-      startupFeatureState = normalizeStartupFeatureState(snapshot.data || {});
-    }
+    const snapshot = await fsGetDoc(doc(db, "users", userId, "settings", "dailyRoutine"), "dailyRoutine");
+    if (snapshot.exists) dailyRoutineState = normalizeDailyRoutineState(snapshot.data || {});
   } catch (err) {
     notifyFirestoreError(err);
   }
-
-  const todayKey = getTodayKey();
-  if (startupFeatureState.dailyPlanKey === todayKey && startupFeatureState.dailyPlanItems.length) {
-    startupCurrentPlan = [...startupFeatureState.dailyPlanItems];
-    startupPlanGeneratedOnce = true;
-  }
-
-  refreshStartupFeatures();
+  renderDailyRoutine();
 }
 
-function buildStartupPlanItems() {
+async function saveDailyRoutine(userId, nextState) {
+  const normalized = normalizeDailyRoutineState(nextState);
+  await fsSetDoc(doc(db, "users", userId, "settings", "dailyRoutine"), {
+    ...normalized,
+    updatedAt: serverTimestamp()
+  }, "dailyRoutine", { merge: true });
+  dailyRoutineState = normalized;
+  renderDailyRoutine();
+}
+
+function renderDailyRoutine() {
+  if (!dailyRoutineList) return;
+  const entries = dailyRoutineState.entries;
+  syncDailyRoutineStartTimeControls();
+  if (!entries.length) {
+    dailyRoutineList.innerHTML = "<li>Generate a routine or add an activity to get started.</li>";
+  } else {
+    const routineStart = Number(dailyRoutineState.preferences?.startHour);
+    const orderedEntries = [...entries].sort((left, right) => {
+      const start = Number.isFinite(routineStart) ? routineStart : entries[0].startHour;
+      return ((left.startHour - start + 24) % 24) - ((right.startHour - start + 24) % 24);
+    });
+    dailyRoutineList.innerHTML = orderedEntries.map((entry) => `
+      <li class="daily-routine-item">
+        <strong>${formatRoutineHour(entry.startHour, "24")}–${formatRoutineHour(entry.endHour, "24")} · ${escapeHtml(entry.label)}</strong>
+        <span>${escapeHtml(entry.action)}</span>
+      </li>
+    `).join("");
+  }
+
+  if (dailyRoutineMeta) {
+    if (!entries.length) {
+      dailyRoutineMeta.innerText = "Your routine is saved to your account and stays here after refresh.";
+    } else if (dailyRoutineState.source === "personalized") {
+      dailyRoutineMeta.innerText = "Personalized using your recent task, mood, sleep, and hydration data.";
+    } else if (dailyRoutineState.source === "starter") {
+      dailyRoutineMeta.innerText = "Starter routine selected because there are no wellness logs yet. Generate again for a different routine.";
+    } else {
+      dailyRoutineMeta.innerText = "Your routine is saved to your account and stays here after refresh.";
+    }
+  }
+  if (dailyRoutineReplaceBtn) dailyRoutineReplaceBtn.disabled = !entries.length;
+  if (dailyRoutineClearBtn) dailyRoutineClearBtn.disabled = !entries.length;
+}
+
+function syncDailyRoutineStartTimeControls() {
+  if (!dailyRoutineStartTimeSelect) return;
+  const entries = dailyRoutineState.entries;
+  const configuredStart = Number(dailyRoutineState.preferences?.startHour);
+  const currentStart = Number.isFinite(configuredStart) && configuredStart >= 0 && configuredStart < 24
+    ? configuredStart
+    : entries[0]?.startHour ?? 7;
+  const selectedTime = formatRoutineTimeValue(currentStart);
+  populateDailyRoutineTimeOptions("", dailyRoutineStartTimeSelect, false);
+  if (!dailyRoutineStartTimeSelect.querySelector(`option[value="${selectedTime}"]`)) {
+    dailyRoutineStartTimeSelect.insertBefore(
+      new Option(selectedTime, selectedTime),
+      dailyRoutineStartTimeSelect.options[dailyRoutineStartTimeSelect.options.length - 1]
+    );
+  }
+  dailyRoutineStartTimeSelect.value = selectedTime;
+  Array.from(dailyRoutineStartTimeSelect.options).forEach((option) => {
+    if (option.value !== "__custom__") option.textContent = option.value;
+  });
+}
+
+async function handleDailyRoutineStartTimeChange() {
+  if (!dailyRoutineStartTimeSelect) return;
+  if (dailyRoutineStartTimeSelect.value === "__custom__") {
+    const customTime = await appPrompt(
+      "Enter the routine start time in 24-hour HH:MM format.",
+      "",
+      { title: "Custom routine start time", confirmText: "Save", inputFormat: "bedtime" }
+    );
+    if (customTime === null) {
+      renderDailyRoutine();
+      return;
+    }
+    await saveDailyRoutineStartTime(customTime);
+    return;
+  }
+  await saveDailyRoutineStartTime(dailyRoutineStartTimeSelect.value);
+}
+
+async function saveDailyRoutineStartTime(timeText) {
+  const strictTimeText = String(timeText ?? "").trim();
+  if (!/^\d{2}:\d{2}$/.test(strictTimeText)) {
+    await appAlert(
+      "Enter the time in 24-hour HH:MM format, from 00:00 to 23:59. Do not use AM or PM.",
+      { title: "Invalid start time" }
+    );
+    renderDailyRoutine();
+    return;
+  }
+  const parsed = parseBedtimeInput(strictTimeText);
+  if (!parsed.ok) {
+    await appAlert(parsed.message, { title: "Invalid start time" });
+    renderDailyRoutine();
+    return;
+  }
+  const startHour = parsed.hour + parsed.minute / 60;
+  const user = auth.currentUser;
+  if (!user) {
+    renderDailyRoutine();
+    showToast("Please sign in first.");
+    return;
+  }
+  try {
+    const entries = dailyRoutineState.entries;
+    let nextEntries = entries;
+    if (entries.length) {
+      const configuredStart = Number(dailyRoutineState.preferences?.startHour);
+      const previousStart = Number.isFinite(configuredStart) && configuredStart >= 0 && configuredStart < 24
+        ? configuredStart
+        : entries[0].startHour;
+      const shift = startHour - previousStart;
+      nextEntries = entries.map((entry) => {
+        const duration = entry.endHour - entry.startHour;
+        const shiftedStart = ((entry.startHour + shift) % 24 + 24) % 24;
+        return { ...entry, startHour: shiftedStart, endHour: shiftedStart + duration };
+      });
+    }
+    await saveDailyRoutine(user.uid, {
+      ...dailyRoutineState,
+      entries: nextEntries,
+      preferences: {
+        ...dailyRoutineState.preferences,
+        startHour,
+        startCustomized: true,
+        timeFormat: "24"
+      }
+    });
+    showToast("Routine start time saved.");
+  } catch (err) {
+    notifyFirestoreError(err);
+    renderDailyRoutine();
+    showToast("Could not save the routine start time. Please try again.");
+  }
+}
+
+function hasRoutineHistoryData() {
+  return taskEntries.length > 0
+    || moodDates.length > 0
+    || waterDates.length > 0
+    || sleepDates.length > 0
+    || gratitudeEntries.length > 0;
+}
+
+function buildDataPersonalizedRoutine() {
+  const snapshot = getWellnessSnapshot();
+  const trends = buildTrendSignals();
+  const sleepNeedsProtection = (snapshot.sleepToday > 0 && snapshot.sleepToday < 7)
+    || trends.sleepDelta < -0.35;
+  const hydrationNeedsAttention = trends.waterDelta < -0.25
+    || (snapshot.hasWaterGoal && snapshot.waterToday < snapshot.todayGoal * 0.5);
+  const moodNeedsReset = trends.moodDelta < -0.25
+    || /\b(low|stressed|angry|sad|anxious|overwhelmed)\b/i.test(String(snapshot.moodToday || ""));
+  const preferences = dailyRoutineState.preferences || {};
+  const storedStart = Number(preferences.startHour);
+  const startHour = preferences.startCustomized && Number.isFinite(storedStart) && storedStart >= 0 && storedStart < 24
+    ? storedStart
+    : 7.5;
+  const entries = [];
+  const append = (start, duration, label, action) => {
+    entries.push({
+      id: `daily-routine-${Date.now()}-${entries.length}`,
+      label,
+      action,
+      startHour: start,
+      endHour: start + duration
+    });
+    return start + duration;
+  };
+
+  let cursor = startHour;
+  cursor = append(cursor, 0.5, "Wake up", "Get out of bed, open the curtains, and drink a glass of water.");
+  cursor = append(cursor, 0.5, "Get ready", "Wash up, get dressed, and make your bed.");
+  cursor = append(cursor, 0.5, "Breakfast", "Have breakfast and take a few minutes to get ready for the day.");
+
+  const pendingTasks = taskEntries
+    .filter((entry) => !entry?.completed
+      && dateToKey(entry?.time) === getTodayKey()
+      && String(entry?.text || "").trim())
+    .sort((left, right) => getTaskSortTimestamp(left) - getTaskSortTimestamp(right));
+  const taskBlockCount = Math.min(pendingTasks.length, 6);
+  if (pendingTasks.length) {
+    cursor = Math.max(cursor, 9);
+    for (let index = 0; index < taskBlockCount; index += 1) {
+      const taskName = String(pendingTasks[index].text).trim().replace(/\s+/g, " ");
+      cursor = append(
+        cursor,
+        0.75,
+        `Task ${index + 1}: ${taskName.slice(0, 72)}`,
+        `Complete "${taskName.slice(0, 140)}". Focus on this task, then check it off in Productivity.`
+      );
+      if (index === 0 && hydrationNeedsAttention) {
+        cursor = append(cursor, 0.25, "Water break", "Refill your water and take a short screen break.");
+      } else if (index < taskBlockCount - 1 && (index + 1) % 2 === 0) {
+        cursor = append(cursor, 0.25, "Short break", "Stand up, stretch, and rest your eyes before the next task.");
+      }
+    }
+
+    if (pendingTasks.length > taskBlockCount) {
+      const remainingNames = pendingTasks
+        .slice(taskBlockCount)
+        .map((entry) => String(entry.text).trim().replace(/\s+/g, " "))
+        .filter(Boolean);
+      cursor = append(
+        cursor,
+        1,
+        `${remainingNames.length} more task${remainingNames.length === 1 ? "" : "s"}`,
+        `Continue and complete: ${remainingNames.map((name) => `"${name.slice(0, 70)}"`).join(", ")}.`
+      );
+    }
+  } else {
+    cursor = Math.max(cursor, 9);
+    cursor = append(cursor, 1, "Focus block", "Choose your most important task and work on it without distractions.");
+  }
+
+  const lunchStart = Math.max(cursor + 0.25, 12.5);
+  cursor = append(lunchStart, 0.75, "Lunch", "Take a proper meal break away from your work if you can.");
+  if (hydrationNeedsAttention) {
+    cursor = append(cursor, 0.25, "Hydration check", "Have a glass of water and keep a refill nearby.");
+  }
+  if (moodNeedsReset) {
+    cursor = append(cursor, 0.25, "Reset break", "Take a few slow breaths or step outside before returning to your day.");
+  }
+
+  const completedActivityTask = taskEntries
+    .filter((entry) => entry?.completed && String(entry?.text || "").trim())
+    .map((entry) => String(entry.text).trim())
+    .find((text) => /\b(walk|run|workout|exercise|yoga|stretch|cycle|swim|dance|meditat)\b/i.test(text));
+  const existingActivity = (Array.isArray(preferences.activities) ? preferences.activities : [])
+    .map((activity) => String(activity || "").trim())
+    .find(Boolean);
+  const activityName = existingActivity || (completedActivityTask
+    ? completedActivityTask.slice(0, 60)
+    : (trends.taskDelta < 0 || sleepNeedsProtection ? "Easy walk and stretch" : "Movement break"));
+  const activityAction = completedActivityTask
+    ? `Repeat an activity you have completed before: ${completedActivityTask.slice(0, 100)}. Keep it comfortable.`
+    : "Take a walk or do a little stretching at a comfortable pace.";
+  cursor = append(Math.max(cursor + 0.5, 15), 0.5, activityName, activityAction);
+
+  if (pendingTasks.length) {
+    cursor = append(cursor + 0.5, 0.75, "Finish today's tasks", "Review your task list, finish any remaining items, and check them off as you go.");
+  } else {
+    cursor = append(cursor + 0.5, 0.5, "Personal time", "Spend time on a hobby or something relaxing away from work.");
+  }
+  cursor = append(Math.max(cursor + 0.5, 18), 0.75, "Dinner and unwind", "Have dinner and take some unhurried time to relax.");
+  cursor = append(cursor + 0.5, 0.25, "Plan tomorrow", "Pick tomorrow's first task and set out anything you will need.");
+
+  let bedtimeHour = null;
+  if (bedtimeSettings.enabled && bedtimeSettings.timeText) {
+    const bedtime = parseBedtimeInput(bedtimeSettings.timeText);
+    if (bedtime.ok) bedtimeHour = bedtime.hour + bedtime.minute / 60;
+  }
+  const windDownStart = bedtimeHour === null ? Math.max(cursor + 0.5, 21) : Math.max(19, bedtimeHour - 1);
+  append(
+    windDownStart,
+    0.75,
+    "Wind down for bed",
+    sleepNeedsProtection
+      ? "Start winding down early, dim the lights, and protect a full night of sleep."
+      : "Dim the lights, put screens away, and get ready for bed."
+  );
+
+  return {
+    entries,
+    source: "personalized",
+    poolId: "",
+    preferences: {
+      ...preferences,
+      startHour,
+      endHour: bedtimeHour ?? 22,
+      timeFormat: "24"
+    }
+  };
+}
+
+function buildStarterDailyRoutine() {
+  const choices = DAILY_ROUTINE_STARTER_POOL.filter((routine) => routine.id !== dailyRoutineState.poolId);
+  const pool = choices.length ? choices : DAILY_ROUTINE_STARTER_POOL;
+  const selected = pool[Math.floor(Math.random() * pool.length)];
+  const preferences = dailyRoutineState.preferences || {};
+  const configuredStart = Number(preferences.startHour);
+  const startHour = preferences.startCustomized && Number.isFinite(configuredStart) && configuredStart >= 0 && configuredStart < 24
+    ? configuredStart
+    : selected.entries[0].startHour;
+  const shift = startHour - selected.entries[0].startHour;
+  return {
+    entries: selected.entries.map((entry, index) => {
+      const shiftedStart = ((entry.startHour + shift) % 24 + 24) % 24;
+      const duration = entry.endHour - entry.startHour;
+      return {
+        ...entry,
+        id: `starter-${selected.id}-${index}`,
+        startHour: shiftedStart,
+        endHour: shiftedStart + duration
+      };
+    }),
+    source: "starter",
+    poolId: selected.id,
+    preferences: { ...preferences, startHour, endHour: 22, timeFormat: "24" }
+  };
+}
+
+async function generateDailyRoutine() {
+  const user = auth.currentUser;
+  if (!user) {
+    showToast("Please sign in first.");
+    return false;
+  }
+
+  try {
+    const nextState = hasRoutineHistoryData()
+      ? buildDataPersonalizedRoutine()
+      : buildStarterDailyRoutine();
+    await saveDailyRoutine(user.uid, nextState);
+    showToast(nextState.source === "personalized"
+      ? "A routine based on your wellness data is ready."
+      : "A starter routine is ready. Generate again for another option.");
+    return true;
+  } catch (err) {
+    structuredLog("error", "dailyRoutine.generate", err?.message || String(err), { userId: user.uid });
+    showToast("Your routine could not be saved. Please try again.");
+    return false;
+  }
+}
+
+function setRoutineEditorError(message = "") {
+  if (!dailyRoutineEditorError) return;
+  dailyRoutineEditorError.innerText = String(message || "");
+  dailyRoutineEditorError.style.display = message ? "block" : "none";
+}
+
+function setRoutineCustomError(message = "") {
+  if (!dailyRoutineCustomError) return;
+  dailyRoutineCustomError.innerText = String(message || "");
+  dailyRoutineCustomError.style.display = message ? "block" : "none";
+}
+
+function renderRoutineEditorStep() {
+  const isActivityStep = routineEditorStep === 0;
+  if (dailyRoutineActivityStep) dailyRoutineActivityStep.hidden = !isActivityStep;
+  if (dailyRoutineTimeStep) dailyRoutineTimeStep.hidden = isActivityStep;
+  if (dailyRoutineStepCounter) dailyRoutineStepCounter.innerText = `Step ${routineEditorStep + 1}/2`;
+  if (dailyRoutineEditorNextBtn) {
+    dailyRoutineEditorNextBtn.innerText = isActivityStep ? "Next" : "Finish";
+  }
+  if (dailyRoutineEditorDots) {
+    dailyRoutineEditorDots.innerHTML = [0, 1].map((step) =>
+      `<span class="welcome-guide-dot${step === routineEditorStep ? " active" : ""}"></span>`
+    ).join("");
+  }
+}
+
+function openDailyRoutineEditor(mode = "add") {
+  if (!dailyRoutineEditorModal || !dailyRoutineActivitySelect) return;
+  routineEditorMode = mode === "replace" ? "replace" : "add";
+  if (routineEditorMode === "replace" && !dailyRoutineState.entries.length) {
+    showToast("Generate a routine before replacing an activity.");
+    return;
+  }
+  routineEditorStep = 0;
+  routinePendingActivity = null;
+  setRoutineEditorError("");
+  if (dailyRoutineEditorTitle) {
+    dailyRoutineEditorTitle.innerText = routineEditorMode === "replace" ? "Reschedule routine activity" : "Add to your routine";
+  }
+  if (dailyRoutineActivityHint) {
+    dailyRoutineActivityHint.innerText = routineEditorMode === "replace"
+      ? "Choose an activity from your current routine to move to a new time."
+      : "Choose a basic activity, or create a custom one.";
+  }
+
+  dailyRoutineActivitySelect.replaceChildren(new Option("Choose an activity", ""));
+  if (routineEditorMode === "replace") {
+    dailyRoutineState.entries.forEach((entry) => {
+      const time = `${formatRoutineHour(entry.startHour, "24")}–${formatRoutineHour(entry.endHour, "24")}`;
+      dailyRoutineActivitySelect.add(new Option(`${time} · ${entry.label}`, entry.id));
+    });
+  } else {
+    DAILY_ROUTINE_ACTIVITIES.forEach((activity) => dailyRoutineActivitySelect.add(new Option(activity, activity)));
+    dailyRoutineActivitySelect.add(new Option("Custom activity…", "__custom__"));
+  }
+
+  populateDailyRoutineTimeOptions();
+  if (dailyRoutineTimeInput) {
+    dailyRoutineTimeInput.value = "";
+    dailyRoutineTimeInput.hidden = true;
+  }
+  renderRoutineEditorStep();
+  dailyRoutineEditorModal.style.display = "flex";
+}
+
+function formatRoutineTimeValue(hourValue) {
+  const totalMinutes = Math.round((Number(hourValue) || 0) * 60);
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function populateDailyRoutineTimeOptions(selectedTime = "", selectElement = dailyRoutineTimeSelect, showTimeRange = true) {
+  if (!selectElement) return;
+  selectElement.replaceChildren();
+  for (let hour = 0; hour < 24; hour += 1) {
+    const nextHour = (hour + 1) % 24;
+    const startLabel = `${String(hour).padStart(2, "0")}:00`;
+    const endLabel = `${String(nextHour).padStart(2, "0")}:00`;
+    const time = `${String(hour).padStart(2, "0")}:00`;
+    selectElement.add(new Option(showTimeRange ? `${startLabel}–${endLabel}` : startLabel, time));
+  }
+  selectElement.add(new Option("Custom time…", "__custom__"));
+  selectElement.value = selectedTime || "09:00";
+}
+
+function closeDailyRoutineEditor(event) {
+  if (!dailyRoutineEditorModal || (event && event.target !== dailyRoutineEditorModal)) return;
+  dailyRoutineEditorModal.style.display = "none";
+  if (dailyRoutineCustomActivityModal) dailyRoutineCustomActivityModal.style.display = "none";
+  setRoutineEditorError("");
+}
+
+function closeDailyRoutineCustomActivity(event) {
+  if (!dailyRoutineCustomActivityModal || (event && event.target !== dailyRoutineCustomActivityModal)) return;
+  dailyRoutineCustomActivityModal.style.display = "none";
+  setRoutineCustomError("");
+  if (dailyRoutineCustomInput) dailyRoutineCustomInput.value = "";
+  if (dailyRoutineActivitySelect?.value === "__custom__") dailyRoutineActivitySelect.value = "";
+}
+
+function confirmDailyRoutineCustomActivity() {
+  const label = String(dailyRoutineCustomInput?.value || "").trim().replace(/\s+/g, " ");
+  if (!label) {
+    setRoutineCustomError("Enter a name for the custom activity.");
+    return;
+  }
+  const optionValue = `custom-${Date.now()}`;
+  dailyRoutineActivitySelect?.add(new Option(label, optionValue));
+  if (dailyRoutineActivitySelect) dailyRoutineActivitySelect.value = optionValue;
+  closeDailyRoutineCustomActivity();
+}
+
+function getDailyRoutineActivityFromSelection() {
+  const selectedValue = String(dailyRoutineActivitySelect?.value || "");
+  if (!selectedValue) return null;
+  if (routineEditorMode === "replace") {
+    const existing = dailyRoutineState.entries.find((entry) => entry.id === selectedValue);
+    return existing ? { ...existing, existingId: existing.id } : null;
+  }
+  const label = dailyRoutineActivitySelect?.selectedOptions?.[0]?.textContent?.trim() || "";
+  if (!label || selectedValue === "__custom__") return null;
+  return {
+    id: `daily-routine-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    label,
+    action: DAILY_ROUTINE_ACTIVITY_ACTIONS[label.toLowerCase()] || `Spend a focused block on ${label.toLowerCase()}.`,
+    startHour: 9,
+    endHour: 10
+  };
+}
+
+async function advanceDailyRoutineEditor() {
+  if (routineEditorStep === 0) {
+    const selected = getDailyRoutineActivityFromSelection();
+    if (!selected) {
+      setRoutineEditorError("Choose an activity to continue.");
+      return;
+    }
+    routinePendingActivity = selected;
+    if (dailyRoutineTimeInput) {
+      const currentStart = selected.existingId ? selected.startHour : 9;
+      const currentTime = formatRoutineTimeValue(currentStart);
+      dailyRoutineTimeInput.value = currentTime;
+      populateDailyRoutineTimeOptions(
+        dailyRoutineTimeSelect?.querySelector(`option[value="${currentTime}"]`) ? currentTime : "__custom__"
+      );
+      dailyRoutineTimeInput.hidden = dailyRoutineTimeSelect?.value !== "__custom__";
+    }
+    setRoutineEditorError("");
+    routineEditorStep = 1;
+    renderRoutineEditorStep();
+    (dailyRoutineTimeInput?.hidden ? dailyRoutineTimeSelect : dailyRoutineTimeInput)?.focus();
+    return;
+  }
+
+  const selectedTime = String(dailyRoutineTimeSelect?.value || "");
+  const timeText = selectedTime && selectedTime !== "__custom__"
+    ? selectedTime
+    : (dailyRoutineTimeInput?.value || "");
+  const normalizedTime = normalizeBedtimeTimeText(timeText);
+  if (dailyRoutineTimeInput && selectedTime === "__custom__") dailyRoutineTimeInput.value = normalizedTime;
+  const parsed = parseBedtimeInput(normalizedTime);
+  if (!parsed.ok) {
+    setRoutineEditorError(parsed.message);
+    return;
+  }
+  if (!routinePendingActivity) {
+    setRoutineEditorError("Choose an activity before setting its time.");
+    return;
+  }
+
+  const startHour = parsed.hour + parsed.minute / 60;
+  const duration = routinePendingActivity.existingId
+    ? Math.max(0.25, routinePendingActivity.endHour - routinePendingActivity.startHour)
+    : 1;
+  const updatedActivity = {
+    id: routinePendingActivity.existingId || routinePendingActivity.id,
+    label: routinePendingActivity.label,
+    action: routinePendingActivity.action,
+    startHour,
+    endHour: startHour + duration
+  };
+  const nextEntries = routineEditorMode === "replace"
+    ? dailyRoutineState.entries.map((entry) => entry.id === routinePendingActivity.existingId ? updatedActivity : entry)
+    : [...dailyRoutineState.entries, updatedActivity];
+  const nextState = {
+    ...dailyRoutineState,
+    entries: nextEntries.sort((left, right) => left.startHour - right.startHour),
+    source: "custom"
+  };
+  const user = auth.currentUser;
+  if (!user) {
+    showToast("Please sign in first.");
+    return;
+  }
+  try {
+    await saveDailyRoutine(user.uid, nextState);
+    closeDailyRoutineEditor();
+    showToast(routineEditorMode === "replace" ? "Routine activity rescheduled." : "Activity added to your routine.");
+  } catch (err) {
+    setRoutineEditorError("Your routine could not be saved. Please try again.");
+  }
+}
+
+async function clearDailyRoutine() {
+  const user = auth.currentUser;
+  if (!user) {
+    showToast("Please sign in first.");
+    return;
+  }
+  if (!dailyRoutineState.entries.length) return;
+  if (!await appConfirm("Clear your routine from this device and your Firebase account?", { title: "Clear routine", confirmText: "Clear routine" })) return;
+
+  try {
+    await fsDeleteDoc(doc(db, "users", user.uid, "settings", "dailyRoutine"));
+    dailyRoutineState = getDefaultDailyRoutineState();
+    renderDailyRoutine();
+    showToast("Routine cleared.");
+  } catch (err) {
+    showToast("Your routine could not be cleared. Please try again.");
+  }
+}
+
+if (dailyRoutineActivitySelect) {
+  dailyRoutineActivitySelect.addEventListener("change", () => {
+    setRoutineEditorError("");
+    if (routineEditorMode === "add" && dailyRoutineActivitySelect.value === "__custom__") {
+      setRoutineCustomError("");
+      if (dailyRoutineCustomInput) dailyRoutineCustomInput.value = "";
+      if (dailyRoutineCustomActivityModal) dailyRoutineCustomActivityModal.style.display = "flex";
+      dailyRoutineCustomInput?.focus();
+    }
+  });
+}
+
+if (dailyRoutineTimeInput) {
+  dailyRoutineTimeInput.addEventListener("input", () => {
+    dailyRoutineTimeInput.value = normalizeBedtimeTimeText(dailyRoutineTimeInput.value);
+    setRoutineEditorError("");
+  });
+  dailyRoutineTimeInput.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    advanceDailyRoutineEditor();
+  });
+}
+
+if (dailyRoutineTimeSelect) {
+  dailyRoutineTimeSelect.addEventListener("change", () => {
+    const useCustomTime = dailyRoutineTimeSelect.value === "__custom__";
+    dailyRoutineTimeInput.hidden = !useCustomTime;
+    if (useCustomTime) {
+      dailyRoutineTimeInput.value = "";
+      dailyRoutineTimeInput.focus();
+    } else if (dailyRoutineTimeSelect.value) {
+      dailyRoutineTimeInput.value = dailyRoutineTimeSelect.value;
+    }
+    setRoutineEditorError("");
+  });
+}
+
+if (dailyRoutineCustomInput) {
+  dailyRoutineCustomInput.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    confirmDailyRoutineCustomActivity();
+  });
+}
+
+function buildStartupReportFocusItems() {
   const snapshot = getWellnessSnapshot();
   const trends = buildTrendSignals();
   const board = buildPriorityBoard(snapshot, trends);
   return board.slice(0, 3).map((entry) => entry.action);
 }
 
-function renderStartupPlan() {
-  if (!startupDailyPlanList) return;
-  if (!startupPlanGeneratedOnce) {
-    startupDailyPlanList.innerHTML = "<li>Generate plan to see your personalized priorities.</li>";
-    if (startupPlanMeta) {
-      startupPlanMeta.innerText = "Generate plan to unlock your personalized priorities.";
-    }
-    return;
-  }
-
-  if (!startupCurrentPlan.length) startupCurrentPlan = buildStartupPlanItems();
-  startupDailyPlanList.innerHTML = startupCurrentPlan.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
-  if (startupPlanMeta) {
-    const trends = buildTrendSignals();
-    const signal = [
-      trends.taskDelta < 0 ? "Task trend dipped" : "Task trend stable",
-      trends.sleepDelta < 0 ? "Sleep needs protection" : "Sleep trend steady"
-    ].join(" • ");
-    startupPlanMeta.innerText = `Signal: ${signal}.`;
-  }
-}
-
 function buildStartupWeeklyReport() {
   const snapshot = getWellnessSnapshot();
   const trends = buildTrendSignals();
-  const plan = buildStartupPlanItems();
+  const focusItems = buildStartupReportFocusItems();
   const trendWord = (delta) => {
     const value = Number(delta) || 0;
     if (Math.abs(value) < 0.15) return "steady";
@@ -13652,9 +14576,9 @@ function buildStartupWeeklyReport() {
     `Wellness score today: ${snapshot.score}/100.`,
     `Today snapshot: water ${snapshot.waterToday}/${snapshot.todayGoal}, sleep ${snapshot.sleepToday || 0}h, tasks ${snapshot.doneTasks}/${snapshot.totalTasks}.`,
     `7-day trend: tasks ${trendWord(trends.taskDelta)}, sleep ${trendWord(trends.sleepDelta)}, water ${trendWord(trends.waterDelta)}, mood ${trendWord(trends.moodDelta)}.`,
-    `Focus 1: ${plan[0] || "Lock in one meaningful task."}`,
-    `Focus 2: ${plan[1] || "Protect sleep and hydration."}`,
-    `Focus 3: ${plan[2] || "End the day with a short reset and plan."}`
+    `Focus 1: ${focusItems[0] || "Lock in one meaningful task."}`,
+    `Focus 2: ${focusItems[1] || "Protect sleep and hydration."}`,
+    `Focus 3: ${focusItems[2] || "End the day with a short reset and plan."}`
   ];
 }
 
@@ -13755,18 +14679,7 @@ function renderStartupBehaviorMemory() {
 }
 
 function refreshStartupFeatures() {
-  renderStartupPlan();
   renderStartupBehaviorMemory();
-  if (startupRefreshPlanBtn) {
-    startupRefreshPlanBtn.innerText = startupPlanGeneratedOnce ? "Regenerate Plan" : "Generate Plan";
-    const planLimited = startupUsageState.planCount >= STARTUP_PLAN_DAILY_LIMIT;
-    startupRefreshPlanBtn.disabled = planLimited;
-    startupRefreshPlanBtn.title = planLimited ? buildDailyLimitCountdownMessage(`Daily planner limit reached (${STARTUP_PLAN_DAILY_LIMIT}/day)`) : "";
-  }
-  if (startupApplyPlanBtn) {
-    startupApplyPlanBtn.disabled = !startupPlanGeneratedOnce || !startupCurrentPlan.length;
-    startupApplyPlanBtn.title = startupApplyPlanBtn.disabled ? "Generate a plan first" : "";
-  }
   if (startupGenerateReportBtn) {
     startupGenerateReportBtn.innerText = startupReportGeneratedOnce ? "Regenerate Report" : "Generate Report";
     const reportLimited = startupUsageState.reportCount >= STARTUP_REPORT_WEEKLY_LIMIT;
@@ -13776,74 +14689,6 @@ function refreshStartupFeatures() {
   if (startupWeeklyReportText && !startupWeeklyReportCache) {
     startupWeeklyReportText.innerHTML = "<li>No report generated yet.</li>";
   }
-}
-
-async function refreshStartupPlan() {
-  const user = auth.currentUser;
-  if (!user) {
-    showToast("Please sign in first.");
-    return;
-  }
-
-  await ensureStartupUsageCurrent(user.uid);
-  if (startupUsageState.planCount >= STARTUP_PLAN_DAILY_LIMIT) {
-    showToast(buildDailyLimitCountdownMessage(`Daily planner limit reached (${STARTUP_PLAN_DAILY_LIMIT}/day)`));
-    refreshStartupFeatures();
-    return;
-  }
-
-  startupPlanGeneratedOnce = true;
-  startupCurrentPlan = buildStartupPlanItems();
-  startupUsageState.planCount += 1;
-  startupFeatureState.dailyPlanItems = [...startupCurrentPlan];
-  startupFeatureState.dailyPlanKey = getTodayKey();
-  await saveStartupUsageState(user.uid);
-  await saveStartupFeatureState(user.uid);
-  renderStartupPlan();
-  refreshStartupFeatures();
-}
-
-async function ensureStartupPlanAuto(userId) {
-  const safeUserId = String(userId || "").trim();
-  if (!safeUserId) return;
-  await ensureStartupUsageCurrent(safeUserId);
-
-  const todayKey = getTodayKey();
-  const hasStoredPlan = startupFeatureState.dailyPlanKey === todayKey
-    && Array.isArray(startupFeatureState.dailyPlanItems)
-    && startupFeatureState.dailyPlanItems.length > 0;
-  if (hasStoredPlan) {
-    startupCurrentPlan = [...startupFeatureState.dailyPlanItems];
-    startupPlanGeneratedOnce = true;
-    renderStartupPlan();
-    return;
-  }
-
-  startupPlanGeneratedOnce = false;
-  startupCurrentPlan = [];
-  renderStartupPlan();
-  refreshStartupFeatures();
-}
-
-async function applyStartupPlanAsTasks() {
-  const user = auth.currentUser;
-  if (!user) {
-    showToast("Please sign in first.");
-    return;
-  }
-
-  if (!startupPlanGeneratedOnce || !startupCurrentPlan.length) {
-    showToast("Generate your personalized plan first.");
-    refreshStartupFeatures();
-    return;
-  }
-
-  for (let index = 0; index < startupCurrentPlan.length; index += 1) {
-    const raw = startupCurrentPlan[index].trim();
-    task.value = raw.length > 90 ? `${raw.slice(0, 87)}...` : raw;
-    await addTask();
-  }
-  showToast("Startup plan added to tasks.");
 }
 
 async function generateStartupWeeklyReport() {
@@ -13880,7 +14725,7 @@ async function copyStartupWeeklyReport() {
     return;
   }
   try {
-    const reportText = ["NovaFix Weekly Report", ...startupWeeklyReportCache].map((line) => `- ${line}`).join("\n");
+    const reportText = ["Lumevine Weekly Report", ...startupWeeklyReportCache].map((line) => `- ${line}`).join("\n");
     await navigator.clipboard.writeText(reportText);
     showToast("Weekly report copied.");
   } catch (_) {
@@ -14260,10 +15105,33 @@ function sanitizeAiAddressName(nameValue, fallback = "there") {
   return candidate;
 }
 
+function rememberAssistantQuestion(responseText, isHtml = false) {
+  const plain = isHtml
+    ? String(responseText || "").replace(/<[^>]+>/g, " ")
+    : String(responseText || "");
+  const questionParts = plain.match(/[^.!?]*\?/g) || [];
+  aiSessionState.lastAssistantQuestion = String(questionParts[questionParts.length - 1] || "").trim();
+}
+
 function calculateExpressionFromText(text) {
-  const match = text.match(/(?:calculate|solve|what is|what's)\s*([\d+\-*/().%\s]+)/i);
-  if (!match || !match[1]) return null;
-  const expression = match[1].trim();
+  const raw = String(text || "").trim().replace(/,/g, "");
+  if (!raw) return null;
+
+  const commandMatch = raw.match(/^(?:calculate|calc|solve|compute|what(?:'s|\s+is)|how\s+much\s+is)\s+(.+?)\s*\??$/i);
+  let expression = commandMatch?.[1]?.trim() || raw;
+  if (/\b(?:algebra|calculus|derivative|integral|equation|solve\s+for|x\s*=)\b/i.test(expression)) return null;
+
+  expression = expression
+    .replace(/×/g, "*")
+    .replace(/÷/g, "/")
+    .replace(/\bpercent(?:age)?\b/gi, "%")
+    .replace(/\bof\b/gi, "*")
+    .replace(/\bx\b/gi, "*");
+  expression = expression.replace(/(\d+(?:\.\d+)?)\s*%/g, "($1/100)").trim();
+
+  const hasMathShape = /\d/.test(expression) && /[+\-*/%()]/.test(expression);
+  const isPlainNumber = /^\d+(?:\.\d+)?$/.test(expression);
+  if (!hasMathShape && !isPlainNumber) return null;
   if (!/^[\d+\-*/().%\s]+$/.test(expression)) return null;
 
   try {
@@ -14341,6 +15209,333 @@ function detectDetailedEmotionFromText(text) {
   if (/\b(tired|drained|exhausted|burnout|burned out|fatigue|meh|numb|worthless)\b/.test(normalized)) return "drained";
   if (/\b(good|great|awesome|amazing|happy|happiness|motivated|energized|fine|yay|let'?s\s*go|woo+|nice|pumped)\b/.test(normalized)) return "positive";
   return "neutral";
+}
+
+function parseRoutineActivityAdjustment(inputText, routine = {}) {
+  const text = normalizeLocalIntentText(inputText);
+  const knownActivities = [
+    ["yoga", "Yoga"], ["dance", "Dance"], ["sing(?:ing)?", "Singing"],
+    ["swim(?:ming)?", "Swimming"], ["trek(?:king)?", "Trekking"],
+    ["cycl(?:e|ing|ed)", "Cycling"], ["bik(?:e|ing)", "Biking"],
+    ["run(?:ning)?", "Running"], ["walk(?:ing)?", "Walking"],
+    ["stretch(?:ing)?", "Stretching"], ["meditat(?:e|ion|ing)", "Meditation"],
+    ["read(?:ing)?", "Reading"], ["draw(?:ing)?", "Drawing"],
+    ["paint(?:ing)?", "Painting"], ["guitar", "Guitar practice"],
+    ["basketball", "Basketball"], ["football", "Football"],
+    ["badminton", "Badminton"], ["tennis", "Tennis"]
+  ];
+  const previousActivities = Array.isArray(routine.activities) ? routine.activities : [];
+  let activity = previousActivities
+    .slice()
+    .sort((left, right) => String(right).length - String(left).length)
+    .find((candidate) => text.includes(String(candidate).toLowerCase())) || "";
+
+  if (!activity) {
+    const known = knownActivities.find(([pattern]) => new RegExp(`\\b${pattern}\\b`, "i").test(text));
+    if (known) activity = known[1];
+  }
+  if (!activity) {
+    const customTarget = text.match(/\b(?:add|include|with|make|want(?:\s+to)?(?:\s+(?:do|practice))?)\s+(.+?)\s+(?:from|to|at|in)\b/i);
+    if (customTarget?.[1]) {
+      activity = customTarget[1]
+        .replace(/\b(?:a|an|some|activity|activities|my|the)\b/gi, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    }
+  }
+  if (!activity) return null;
+
+  let startHour = null;
+  let endHour = null;
+  const explicitRange = parseTaskTiming(inputText);
+  if (explicitRange) {
+    const startDate = new Date(explicitRange.startAtMs);
+    const endDate = new Date(explicitRange.endAtMs);
+    startHour = startDate.getHours() + (startDate.getMinutes() / 60);
+    endHour = endDate.getHours() + (endDate.getMinutes() / 60);
+  }
+
+  const dayPart = text.match(/\b(morning|afternoon|noon|evening|night)\b/);
+  if (dayPart && !explicitRange) {
+    const dayPartHours = {
+      morning: 8,
+      noon: 12,
+      afternoon: 14,
+      evening: 18,
+      night: 21
+    };
+    startHour = dayPartHours[dayPart[1]];
+    endHour = startHour + 1;
+  }
+
+  if (startHour === null) {
+    const singleTime = text.match(/\b(?:to|at)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/);
+    if (singleTime) {
+      let hour = Number(singleTime[1]);
+      if (singleTime[3] === "pm" && hour < 12) hour += 12;
+      if (singleTime[3] === "am" && hour === 12) hour = 0;
+      startHour = hour + (Number(singleTime[2]) || 0) / 60;
+      endHour = startHour + 1;
+    }
+  }
+
+  if (startHour === null) return null;
+  return {
+    activity,
+    startHour,
+    endHour: endHour || startHour + 1
+  };
+}
+
+function parseFixedRoutineBlock(inputText) {
+  const source = String(inputText || "").trim();
+  const match = source.match(/\b(?:i\s+)?(?:already\s+)?(?:have|got|there\s+is|there's)\s+(.+?)\s+(?:from|between)\b/i);
+  const pendingMatch = source.match(/\b(?:i\s+)?(?:already\s+)?(?:have|got|there\s+is|there's)\s+(.+?)(?:\s+in\s+(?:my\s+)?routine)?$/i);
+  const range = parseTaskTiming(source);
+  const rawLabel = match?.[1] || pendingMatch?.[1] || "";
+  const label = rawLabel
+    .replace(/\b(?:a|an|the|some|fixed|block|activity|class|routine)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  if (!label) return null;
+  if (!range) return { label, needsTiming: true };
+  const startDate = new Date(range.startAtMs);
+  const endDate = new Date(range.endAtMs);
+  return {
+    label,
+    startHour: startDate.getHours() + (startDate.getMinutes() / 60),
+    endHour: endDate.getHours() + (endDate.getMinutes() / 60),
+    needsTiming: false
+  };
+}
+
+function parseRoutinePreferences(inputText, previousRoutine = null) {
+  const text = normalizeLocalIntentText(inputText)
+    .replace(/\b(\d{1,2})\s+(\d{2})(?=\s*(?:am|pm|to|and|until|-|–|$))/g, "$1:$2");
+  const timingText = String(inputText || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\b(\d{1,2})\s+(\d{2})(?=\s*(?:am|pm|to|and|until|-|–|$))/g, "$1:$2");
+  const previous = previousRoutine && typeof previousRoutine === "object" ? previousRoutine : {};
+  const preferences = {
+    startHour: Number.isFinite(Number(previous.startHour)) ? Number(previous.startHour) : 8,
+    startCustomized: !!previous.startCustomized,
+    endHour: Number.isFinite(Number(previous.endHour)) ? Number(previous.endHour) : 22,
+    endCustomized: !!previous.endCustomized,
+    timeFormat: previous.timeFormat === "24" ? "24" : "12",
+    focus: String(previous.focus || "balanced").trim().toLowerCase(),
+    duration: String(previous.duration || "full").trim().toLowerCase(),
+    include: Array.isArray(previous.include) ? [...previous.include] : [],
+    activities: Array.isArray(previous.activities)
+      ? [...previous.activities]
+      : (Array.isArray(previous.include) ? previous.include.filter((item) => !["movement", "reset"].includes(item)) : []),
+    activitySchedules: previous.activitySchedules && typeof previous.activitySchedules === "object"
+      ? { ...previous.activitySchedules }
+      : {},
+    fixedBlocks: Array.isArray(previous.fixedBlocks) ? [...previous.fixedBlocks] : [],
+    pendingFixedBlock: previous.pendingFixedBlock && typeof previous.pendingFixedBlock === "object"
+      ? { ...previous.pendingFixedBlock }
+      : null,
+    exclude: Array.isArray(previous.exclude) ? [...previous.exclude] : [],
+    schoolStart: Number.isFinite(Number(previous.schoolStart)) ? Number(previous.schoolStart) : null,
+    schoolEnd: Number.isFinite(Number(previous.schoolEnd)) ? Number(previous.schoolEnd) : null,
+    needsSchoolTimes: !!previous.needsSchoolTimes
+  };
+
+  const parseHour = (hourText, meridiem = "") => {
+    let hour = Number(hourText);
+    if (meridiem === "pm" && hour < 12) hour += 12;
+    if (meridiem === "am" && hour === 12) hour = 0;
+    return hour >= 0 && hour <= 23 ? hour : null;
+  };
+
+  const schoolMentioned = /\b(?:school|class(?:es)?)\b/.test(text);
+  const schoolTimes = [...timingText.matchAll(/\b(\d{1,2})(?::\d{2})?\s*(am|pm)?\b/g)]
+    .map((match) => parseHour(match[1], match[2] || ""))
+    .filter((hour) => hour !== null);
+  if ((schoolMentioned || previous.needsSchoolTimes) && schoolTimes.length >= 2) {
+    preferences.schoolStart = schoolTimes[0];
+    preferences.schoolEnd = schoolTimes[1];
+    preferences.needsSchoolTimes = false;
+  }
+
+  const normalizedTimingText = timingText.replace(/\b(\d{1,2})\s+(\d{2})(?=\s*(?:am|pm|to|and|until|-|–|$))/g, "$1:$2");
+  if (/\b(?:24\s*hour|24h|24\s*hr|military)\b/.test(text)) preferences.timeFormat = "24";
+  if (/\b(?:12\s*hour|12h|12\s*hr|standard)\b/.test(text)) preferences.timeFormat = "12";
+  const timeMatch = normalizedTimingText.match(/\b(?:start|wake(?:\s+up)?|begin)\s+(?:(?:at|from)\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/);
+  if (timeMatch) {
+    let hour = Number(timeMatch[1]);
+    const meridiem = timeMatch[3];
+    if (meridiem === "pm" && hour < 12) hour += 12;
+    if (meridiem === "am" && hour === 12) hour = 0;
+    if (hour >= 0 && hour <= 23) {
+      preferences.startHour = hour;
+      preferences.startCustomized = true;
+    }
+  }
+
+  const endMatch = normalizedTimingText.match(/\b(?:end|finish|sleep|bed(?:time)?)\s+(?:(?:at|from)\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/);
+  if (endMatch) {
+    let hour = Number(endMatch[1]);
+    const meridiem = endMatch[3];
+    if (meridiem === "pm" && hour < 12) hour += 12;
+    if (meridiem === "am" && hour === 12) hour = 0;
+    if (hour >= 0 && hour <= 23) {
+      preferences.endHour = hour;
+      preferences.endCustomized = true;
+    }
+  }
+
+  const continueUntilMatch = normalizedTimingText.match(/\b(?:until|till|through|up\s+to)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/);
+  if (continueUntilMatch) {
+    let hour = Number(continueUntilMatch[1]);
+    if (continueUntilMatch[3] === "pm" && hour < 12) hour += 12;
+    if (continueUntilMatch[3] === "am" && hour === 12) hour = 0;
+    if (hour >= 0 && hour <= 23) {
+      preferences.endHour = hour;
+      preferences.endCustomized = true;
+    }
+  }
+
+  if (/\b(short|quick|brief|busy|little time|15 minute|20 minute|30 minute)\b/.test(text)) preferences.duration = "short";
+  if (/\b(long|detailed|thorough|relaxed|full day|whole day)\b/.test(text)) preferences.duration = "full";
+  if (/\b(later|delay|push back)\b/.test(text)) {
+    preferences.startHour = Math.min(22, preferences.startHour + 1);
+    preferences.startCustomized = true;
+  }
+  if (/\b(earlier|move up|start sooner)\b/.test(text)) {
+    preferences.startHour = Math.max(5, preferences.startHour - 1);
+    preferences.startCustomized = true;
+  }
+  if (/\b(study|school|exam|learn|revision)\b/.test(text)) preferences.focus = "study";
+  if (/\b(work|project|deep work|career)\b/.test(text)) preferences.focus = "work";
+  if (/\b(exercise|workout|gym|fitness|movement|walk)\b/.test(text)) preferences.include.push("movement");
+  if (/\b(meditat|mindful|breath|calm)\b/.test(text)) preferences.include.push("reset");
+
+  const activityPatterns = [
+    ["yoga", "Yoga"], ["dance", "Dance"], ["sing(?:ing)?", "Singing"],
+    ["swim(?:ming)?", "Swimming"], ["trek(?:king)?", "Trekking"],
+    ["cycl(?:e|ing|ed)", "Cycling"], ["bik(?:e|ing)", "Biking"],
+    ["run(?:ning)?", "Running"], ["walk(?:ing)?", "Walking"],
+    ["stretch(?:ing)?", "Stretching"], ["meditat(?:e|ion|ing)", "Meditation"],
+    ["read(?:ing)?", "Reading"], ["draw(?:ing)?", "Drawing"],
+    ["paint(?:ing)?", "Painting"], ["music", "Music practice"],
+    ["guitar", "Guitar practice"], ["basketball", "Basketball"],
+    ["football", "Football"], ["badminton", "Badminton"], ["tennis", "Tennis"]
+  ];
+  const activityNames = new Map();
+  preferences.activities.forEach((name) => {
+    const rawName = String(name || "").trim();
+    const knownMatch = activityPatterns.find(([pattern]) => new RegExp(`^${pattern}(?:\\s|[:\\d]|$)`, "i").test(rawName));
+    const normalizedName = knownMatch ? knownMatch[1] : rawName;
+    const key = normalizedName.toLowerCase();
+    if (key && !activityNames.has(key)) activityNames.set(key, knownMatch ? knownMatch[1] : rawName);
+  });
+  activityPatterns.forEach(([pattern, label]) => {
+    if (new RegExp(`\\b${pattern}\\b`, "i").test(text)) activityNames.set(label.toLowerCase(), label);
+  });
+
+  const customActivityMatch = text.match(/\b(?:add|include|put|fit|schedule|with|want(?:\s+to)?(?:\s+(?:do|practice))?|do|practice)\s+(.+?)(?:\s+(?:in|into|to)\s+(?:my\s+)?routine\b|$)/i);
+  if (customActivityMatch?.[1]) {
+    const customText = customActivityMatch[1]
+      .replace(/\s+(?:from|between)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s+(?:to|and|-|until)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/i, "")
+      .replace(/\s+(?:to|at|in)\s+(?:morning|afternoon|noon|evening|night|\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i, "")
+      .trim();
+    const knownActivityCount = activityPatterns.reduce((count, [pattern]) => (
+      new RegExp(`\\b${pattern}\\b`, "i").test(customText) ? count + 1 : count
+    ), 0);
+    const hasSeparators = /,|\band\b|&|\+/.test(customText);
+    const startsWithKnownActivity = activityPatterns.some(([pattern]) => new RegExp(`^${pattern}(?:\\s|[:\\d]|$)`, "i").test(customText));
+    if (startsWithKnownActivity || (knownActivityCount > 1 && !hasSeparators)) {
+      preferences.activities = [...activityNames.values()];
+    } else {
+      customText
+      .replace(/\b(?:a|an|some|activity|activities)\b/gi, "")
+      .split(/\s*(?:,|\band\b|&|\+)\s*/i)
+      .map((item) => item.trim())
+      .filter((item) => item && item.length <= 40)
+      .forEach((item) => activityNames.set(item.toLowerCase(), item.replace(/\b\w/g, (letter) => letter.toUpperCase())));
+    }
+  }
+  preferences.activities = [...activityNames.values()]
+    .filter((name) => !["movement", "reset", "school"].includes(String(name).toLowerCase()));
+  const replacementMatch = text.match(/\b(?:replace|swap)\s+(.+?)\s+(?:with|by)\s+(.+?)(?:\s+in\s+(?:my\s+)?routine)?$/i);
+  if (replacementMatch) {
+    const oldName = replacementMatch[1].trim().toLowerCase();
+    const newName = replacementMatch[2].trim()
+      .replace(/\b(?:a|an|the|activity)\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    const oldActivity = preferences.activities.find((name) => String(name).toLowerCase() === oldName)
+      || preferences.activities.find((name) => String(name).toLowerCase().includes(oldName));
+    if (oldActivity && newName) {
+      const oldKey = String(oldActivity).toLowerCase();
+      const newKey = newName.toLowerCase();
+      const oldIndex = preferences.activities.findIndex((name) => String(name).toLowerCase() === oldKey);
+      const oldSchedule = preferences.activitySchedules[oldKey] || {
+        startHour: preferences.startHour + 6 + oldIndex,
+        endHour: preferences.startHour + 7 + oldIndex
+      };
+      preferences.activities = preferences.activities.filter((name) => String(name).toLowerCase() !== oldKey);
+      preferences.activities.push(newName);
+      preferences.activitySchedules[newKey] = oldSchedule;
+      delete preferences.activitySchedules[oldKey];
+    }
+  }
+  const activityAdjustment = parseRoutineActivityAdjustment(inputText, preferences);
+  if (activityAdjustment) {
+    if (!preferences.activities.some((name) => String(name).toLowerCase() === activityAdjustment.activity.toLowerCase())) {
+      preferences.activities.push(activityAdjustment.activity);
+    }
+    preferences.activitySchedules[activityAdjustment.activity.toLowerCase()] = {
+      startHour: activityAdjustment.startHour,
+      endHour: activityAdjustment.endHour
+    };
+  }
+  let fixedBlock = parseFixedRoutineBlock(inputText);
+  if (!fixedBlock && preferences.pendingFixedBlock && parseTaskTiming(inputText)) {
+    const range = parseTaskTiming(inputText);
+    const startDate = new Date(range.startAtMs);
+    const endDate = new Date(range.endAtMs);
+    fixedBlock = {
+      label: preferences.pendingFixedBlock.label,
+      startHour: startDate.getHours() + (startDate.getMinutes() / 60),
+      endHour: endDate.getHours() + (endDate.getMinutes() / 60),
+      needsTiming: false
+    };
+  }
+  if (fixedBlock?.needsTiming) {
+    preferences.pendingFixedBlock = { label: fixedBlock.label, needsTiming: true };
+  } else if (fixedBlock) {
+    const blockKey = fixedBlock.label.toLowerCase();
+    preferences.fixedBlocks = preferences.fixedBlocks
+      .filter((block) => String(block.label || "").toLowerCase() !== blockKey);
+    if (!/^(?:school|class|classes)$/i.test(fixedBlock.label)) {
+      preferences.fixedBlocks.push(fixedBlock);
+    }
+    preferences.pendingFixedBlock = null;
+  }
+  if (/\b(no|without|skip|remove|avoid)\s+(?:any\s+)?(exercise|workout|gym|movement|meditation|reset|breaks?|water|tasks?)\b/.test(text)) {
+    const excluded = text.match(/\b(?:no|without|skip|remove|avoid)\s+(?:any\s+)?(exercise|workout|gym|movement|meditation|reset|breaks?|water|tasks?)\b/)?.[1];
+    if (excluded) preferences.exclude.push(excluded.replace(/workout|gym/, "movement").replace(/meditation/, "reset").replace(/breaks?/, "break"));
+  }
+
+  preferences.include = [...new Set(preferences.include)];
+  preferences.exclude = [...new Set(preferences.exclude)];
+  return preferences;
+}
+
+function formatRoutineHour(hour, timeFormat = "12") {
+  const totalMinutes = Math.round((((Number(hour) % 24) + 24) % 24) * 60);
+  const normalizedHour = Math.floor(totalMinutes / 60) % 24;
+  const minutes = totalMinutes % 60;
+  if (timeFormat === "24") return `${String(normalizedHour).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  const suffix = normalizedHour >= 12 ? "PM" : "AM";
+  const displayHour = normalizedHour % 12 || 12;
+  return `${displayHour}:${String(minutes).padStart(2, "0")} ${suffix}`;
 }
 
 function lowerFirstAiVariantText(text) {
@@ -14509,25 +15704,25 @@ const AI_INTENT_CLARIFY_BASE = [
 ];
 
 const AI_IDENTITY_BASE = [
-  "I am NovaFix AI. I can help you plan, log, and stay on track.",
-  "I am NovaFix AI — here to help you plan, log, and stay consistent.",
-  "NovaFix AI here. I can help you plan, log, and stay on track.",
-  "I am NovaFix AI. I help you plan, log, and stay on track."
+  "I am Lumevine AI. I can help you plan, log, and stay on track.",
+  "I am Lumevine AI — here to help you plan, log, and stay consistent.",
+  "Lumevine AI here. I can help you plan, log, and stay on track.",
+  "I am Lumevine AI. I help you plan, log, and stay on track."
 ];
 
 const AI_CAPABILITIES_BASE = [
-  "I can help with tasks, water, mood, sleep, reminders, and quick app actions. Tell me what to do in one line.",
-  "I can log tasks, water, mood, sleep, set reminders, and run quick app actions. Tell me what to do.",
-  "I can help you log tasks, mood, water, sleep, set reminders, and handle quick app actions. Tell me what to do.",
-  "I can handle tasks, mood, water, sleep, reminders, and quick app actions. Tell me what to do in one line."
+  "I can help with tasks, water, mood, sleep, reminders, and quick app actions. Say “generate routine” to fill your Daily Routine card.",
+  "I can log tasks, water, mood, and sleep, set reminders, and run app actions. Say “generate routine” to create your schedule.",
+  "I can help you log tasks, mood, water, and sleep, set reminders, and use app actions. I can also fill in your Daily Routine card.",
+  "I can handle tasks, mood, water, sleep, reminders, and quick app actions. Ask me to generate a routine to update its card."
 ];
 
 const AI_FALLBACK_BASE = [
-  "Sorry, I didn’t understand that. Could you rephrase it?",
-  "Sorry, I missed what you meant. Please try saying it another way.",
-  "Sorry, I’m not sure what you’re asking yet. Could you rephrase it?",
-  "Sorry, I couldn’t match that to something I can do. Try asking again in a different way.",
-  "Sorry, I didn’t catch that. Please try a clearer version."
+  "Sorry, I’m not sure what you mean yet. Do you want advice, a task, a reminder, a log, or help understanding something? Say “generate routine” to fill in the Daily Routine card.",
+  "Sorry, I may have misunderstood. What would you like me to do? For example: “generate routine” or “add a task to study”.",
+  "I didn’t quite catch the request, and I don’t want to assume. Could you rephrase it or give me one more detail, such as the goal, time, or action you want?",
+  "Sorry, I can’t confidently match that to an action yet. You can log something, set a reminder, compare options, ask a general question, or say “generate routine” to fill its card.",
+  "I’m missing enough context to answer accurately. Should I explain something, generate a routine in its card, or perform an app action?"
 ];
 
 const AI_LOW_EMOTION_BASE = [
@@ -14620,19 +15815,36 @@ const AI_GREETING_BASE = [
 
 // Rich greeting templates (use placeholders: {name}, {score}, {pending}, {waterStatus}, {timeOfDay})
 const AI_GREETING_FULL_BASE = [
-  "Hey {name} — you’re at {score}/100. {waterStatus} {pending} task(s) left. Want a quick 3-step plan?",
-  "Hi {name}! Score: {score}/100. {waterStatus} You have {pending} pending task(s). Want a short plan?",
-  "Hello {name}, I see you're at {score}/100. {waterStatus} {pending} tasks remain. Need a 3-step plan?",
-  "Yo {name} — score ${score}/100. {waterStatus} {pending} task(s) left. Want a tiny plan?",
-  "Hiya {name}! You're at {score}/100. {waterStatus} {pending} remaining — quick plan?",
-  "{timeOfDay}, {name}! Score: {score}/100. {waterStatus} {pending} tasks left. Shall I suggest a plan?",
-  "Good to see you, {name}. You're at {score}/100. {waterStatus} {pending} tasks — need a quick plan?",
-  "Hey {name}, quick check: score {score}/100, {waterStatus} and {pending} tasks. Want a short plan?",
-  "Hello {name} — I'm here. Your dashboard: {score}/100, {waterStatus}, {pending} tasks. Ready for a quick plan?",
-  "Hi {name}, you're doing fine: {score}/100. {waterStatus} {pending} pending. Want a focused 3-step plan?"
+  "Hey {name}! How are you doing? 😊",
+  "Hi {name}, how’s your day going? 😊",
+  "Hello {name}! How are things? 😊",
+  "Hey {name}, good to see you. How’s it going? 😊",
+  "Hi {name}! How are you feeling today? 😊",
+  "Hello {name}, how have you been? 😊",
+  "Hey {name}! What’s new with you? 😊",
+  "Hi {name}, how’s everything going? 😊"
 ];
 
-const AI_GREETING_FULL_POOL = expandAiResponsePool(AI_GREETING_FULL_BASE, { min: 8, max: 48 });
+const AI_GREETING_FULL_POOL = expandAiResponsePool(AI_GREETING_FULL_BASE, {
+  min: AI_GREETING_FULL_BASE.length,
+  max: AI_GREETING_FULL_BASE.length,
+  frames: [(text) => text]
+});
+const AI_BYE_BASE = [
+  "See you later, {name}!",
+  "Bye for now, {name}!",
+  "Talk soon, {name}.",
+  "Take care, {name}!",
+  "Have a good one, {name}!",
+  "Catch you later, {name}!",
+  "Goodbye, {name}!",
+  "See you next time, {name}!"
+];
+const AI_BYE_POOL = expandAiResponsePool(AI_BYE_BASE, {
+  min: AI_BYE_BASE.length,
+  max: AI_BYE_BASE.length,
+  frames: [(text) => text]
+});
 
 // Friend comparison motivation pools
 const FRIEND_MOTIVATION_TIED_BASE = [
@@ -14677,34 +15889,39 @@ const FRIEND_MOTIVATION_TIED_POOL = expandAiResponsePool(FRIEND_MOTIVATION_TIED_
 const FRIEND_MOTIVATION_LEADING_POOL = expandAiResponsePool(FRIEND_MOTIVATION_LEADING_BASE, { min: FRIEND_MOTIVATION_LEADING_BASE.length, max: FRIEND_MOTIVATION_LEADING_BASE.length, frames: [(text) => text] });
 const FRIEND_MOTIVATION_BEHIND_POOL = expandAiResponsePool(FRIEND_MOTIVATION_BEHIND_BASE, { min: FRIEND_MOTIVATION_BEHIND_BASE.length, max: FRIEND_MOTIVATION_BEHIND_BASE.length, frames: [(text) => text] });
 const AI_BENEFIT_PLAN_OPENERS = [
-  "Here’s a plan based on what you’ve logged:",
-  "The clearest next steps are:",
-  "Here’s a simple plan for today:",
-  "I’d start with these steps:",
-  "Here’s what will help most right now:"
+  "Here’s one way to make today feel a little easier:",
+  "A few small ideas for today:",
+  "You might start with this:",
+  "Here are a few options to try:",
+  "If it helps, take these one at a time:"
 ];
 
 const AI_STRATEGIC_RESPONSE_BASE = [
-  `{name}, here are the next steps that fit your current data:
-1) {plan0}
-2) {plan1}
-3) {plan2}
-4) {plan3}{goalLine}{why}`,
-  `{name}, I’d do this next:
-1) {plan0}
-2) {plan1}
-3) {plan2}
-4) {plan3}{goalLine}{why}`,
-  `Here’s the most useful order for today:
-1) {plan0}
-2) {plan1}
-3) {plan2}
-4) {plan3}{goalLine}{why}`,
-  `{name}, start here:
-1) {plan0}
-2) {plan1}
-3) {plan2}
-4) {plan3}{goalLine}{why}`
+  `Here’s a simple place to start, {name}:
+- {plan0}
+- {plan1}
+- {plan2}
+- {plan3}{goalLine}{why}`,
+  `{name}, you could try this:
+- {plan0}
+- {plan1}
+- {plan2}
+- {plan3}{goalLine}{why}`,
+  `A few things that may help today:
+- {plan0}
+- {plan1}
+- {plan2}
+- {plan3}{goalLine}{why}`,
+  `Let’s keep it simple:
+- {plan0}
+- {plan1}
+- {plan2}
+- {plan3}{goalLine}{why}`,
+  `If it helps, take these one at a time:
+- {plan0}
+- {plan1}
+- {plan2}
+- {plan3}{goalLine}{why}`
 ];
 
 const AI_STRATEGIC_RESPONSE_POOL = expandAiResponsePool(AI_STRATEGIC_RESPONSE_BASE, { min: AI_RESPONSE_VARIANT_MIN, max: AI_RESPONSE_VARIANT_MAX });
@@ -14929,7 +16146,7 @@ function classifyIntent(input) {
     { key: "emotional-personal", score: /\b(i feel|i am feeling|feeling very|feeling really)\b.*\b(stuck|low|sad|angry|frustrated|lonely|empty|hopeless|scared|anxious|overwhelmed|lost|confused|unmotivated|drained)\b/.test(msg) ? 0.985 : 0 },
     { key: "identity", score: /who are you|what are you|your name|are you ai|are you real/.test(msg) ? 0.94 : 0 },
     { key: "analysis", score: /analyze|analysis|report|conclude|insight|summary|score|pattern|patterns|trend/.test(msg) ? 0.93 : 0 },
-    { key: "plan", score: /plan|routine|today|schedule|what should i do/.test(msg) ? 0.92 : 0 },
+    { key: "plan", score: /plan|today|what should i do/.test(msg) ? 0.92 : 0 },
     { key: "decision", score: /decide|choose|which should i|best option|priority|first/.test(msg) ? 0.925 : 0 },
     { key: "why", score: /why|reason|because|explain|what caused/.test(msg) ? 0.915 : 0 },
     { key: "optimize", score: /optimize|improve faster|maximize|best strategy|upgrade/.test(msg) ? 0.905 : 0 },
@@ -15203,17 +16420,10 @@ function buildCasualAiResponse(context) {
   switch (key) {
     case "greeting":
       {
-        // Prefer a full greeting template from the full pool; fallback to single-word pool
         const fullTpl = pickNonRepeatingVariant(AI_GREETING_FULL_POOL, 'greeting_full');
         if (fullTpl) {
-          const timeOfDay = getTimeOfDayGreeting();
-          const waterStatus = getAiWaterStatusText(snapshot);
           const filled = String(fullTpl || "")
-            .replaceAll('{name}', escapeHtml(name))
-            .replaceAll('{score}', String(Number(snapshot.score) || 0))
-            .replaceAll('{pending}', String(Number(pending) || 0))
-            .replaceAll('{waterStatus}', escapeHtml(waterStatus))
-            .replaceAll('{timeOfDay}', escapeHtml(timeOfDay));
+            .replaceAll('{name}', name);
           return { lastIntent: key, advice: coachingMoves.slice(0, 2), response: filled, isHtml: false };
         }
 
@@ -15221,7 +16431,7 @@ function buildCasualAiResponse(context) {
         return {
           lastIntent: key,
           advice: coachingMoves.slice(0, 2),
-          response: `${greetStart}, ${name} 👋 You are at ${snapshot.score}/100. ${pending} task${pending === 1 ? "" : "s"} left, and ${getAiWaterStatusText(snapshot)}. Want a quick 3-step plan?`,
+          response: `${greetStart}, ${name}! How are you doing? 😊`,
           isHtml: false
         };
       }
@@ -15263,7 +16473,14 @@ function buildCasualAiResponse(context) {
         return { lastIntent: key, advice: coachingMoves.slice(0, 1), response: pick, isHtml: false };
       }
     case "bye":
-      return { lastIntent: key, response: `cool, see ya ${name} 👋`, isHtml: false };
+      {
+        const farewell = pickNonRepeatingVariant(AI_BYE_POOL, "bye") || AI_BYE_BASE[0];
+        return {
+          lastIntent: key,
+          response: farewell.replaceAll("{name}", name),
+          isHtml: false
+        };
+      }
     case "joke":
       return { lastIntent: key, response: `why was the task calm? because it took things one checkbox at a time 😄`, isHtml: false };
     case "bored":
@@ -15536,6 +16753,11 @@ function isAppComplaintMessage(input) {
   return complaintWords.test(text) && appWords.test(text);
 }
 
+function isDirectAiCriticism(input) {
+  const text = normalizeLocalIntentText(String(input || ""));
+  return /\b(?:you\s+(?:are|r)|you['’]?re)\s+(?:(?:really|very|so|pretty)\s+)?(?:dumb|stupid|bad|terrible|awful|useless|unhelpful)\b|\byou\s+suck\b|\b(?:dumb|stupid|bad|terrible|awful|useless)\s+(?:ai|assistant|bot)\b/.test(text);
+}
+
 function buildActionCoaching(snapshot) {
   const actions = [];
   const hydration = buildHydrationPaceInsight(snapshot);
@@ -15559,17 +16781,17 @@ function buildDeepPlan(snapshot) {
   const waterLeft = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
   return [
     snapshot.pendingTasks > 0
-      ? "Block 1 (0-25 min): close one pending task with single-task focus."
-      : "Block 1 (0-25 min): define and start one meaningful task.",
+      ? "Pick one task that’s already on your list and spend a little time on it."
+      : "Choose one useful task and get started, even if it’s just for a few minutes.",
     waterLeft > 0
-      ? `Block 2 (25-35 min): drink ${Math.max(1, waterLeft)} glass(es) and reset posture/breathing.`
-      : "Block 2 (25-35 min): movement + posture reset.",
+      ? `Have a glass of water when you can; you’re about ${Math.max(1, waterLeft)} glass(es) short of your goal.`
+      : "Take a short stretch or walk to give yourself a change of pace.",
     snapshot.sleepToday < 7
-      ? "Block 3 (35-50 min): finish priority work and set a wind-down reminder."
-      : "Block 3 (35-50 min): second deep-focus sprint.",
+      ? "When the day winds down, give yourself a little time to get ready for bed."
+      : "If you have the energy, spend a few more minutes on something that matters to you.",
     snapshot.gratitudeToday
-      ? "Block 4 (50-60 min): quick reflection and tomorrow’s first action."
-      : "Block 4 (50-60 min): write one gratitude line and set tomorrow’s first action."
+      ? "Before you wrap up, choose one small thing to make tomorrow easier."
+      : "If you feel like it, jot down one good thing from today and a first step for tomorrow."
   ];
 }
 
@@ -16259,9 +17481,9 @@ function triggerReminderAttentionSignals(reminderTextValue = "") {
   try {
     if (typeof Notification === "function" && Notification.permission === "granted") {
       const body = String(reminderTextValue || "").trim() || "Time's up.";
-      const n = new Notification("NovaFix Reminder", {
+      const n = new Notification("Lumevine Reminder", {
         body,
-        tag: `novafix-reminder-${Date.now()}`,
+        tag: `lumevine-reminder-${Date.now()}`,
         renotify: true,
         requireInteraction: false
       });
@@ -16480,6 +17702,117 @@ async function createAutoPrepPlanFromAi(user, inputText) {
     addedTasks,
     addedReminders
   };
+}
+
+function parseTaskTiming(inputText) {
+  const source = String(inputText || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\b(\d{1,2})\s+(\d{2})(?=\s*(?:am|pm|to|and|until|-|–|$))/g, "$1:$2");
+  if (!source) return null;
+
+  const hourValue = (hourText, meridiem = "") => {
+    let hour = Number(hourText);
+    if (meridiem === "pm" && hour < 12) hour += 12;
+    if (meridiem === "am" && hour === 12) hour = 0;
+    return hour >= 0 && hour <= 23 ? hour : null;
+  };
+  const patterns = [
+    /\b(?:from|between)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+(?:to|and|-|until)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i,
+    /\b(?:at|time|timing|timings)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+(?:and|to|-|until)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i,
+    /\b(?:to|at|from)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+(?:to|and|-|until)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i,
+    /\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–]\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i,
+    /^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+(?:and|to|until)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i
+  ];
+
+  let match = null;
+  for (let index = 0; index < patterns.length; index += 1) {
+    match = source.match(patterns[index]);
+    if (match) break;
+  }
+  if (!match) return null;
+
+  const startMeridiem = match[3] || "";
+  const endMeridiem = match[6] || (startMeridiem === "pm" && Number(match[4]) < 12 ? "pm" : startMeridiem === "am" && Number(match[4]) === 12 ? "am" : "");
+  const startHour = hourValue(match[1], startMeridiem);
+  const endHour = hourValue(match[4], endMeridiem);
+  if (startHour === null || endHour === null) return null;
+
+  const now = getServerNowDate();
+  const start = new Date(now);
+  const end = new Date(now);
+  start.setHours(startHour, Number(match[2]) || 0, 0, 0);
+  end.setHours(endHour, Number(match[5]) || 0, 0, 0);
+  if (end.getTime() <= start.getTime()) end.setDate(end.getDate() + 1);
+
+  return {
+    startAtMs: start.getTime(),
+    endAtMs: end.getTime(),
+    label: `${formatRoutineHour(startHour)}–${formatRoutineHour(endHour)}`
+  };
+}
+
+function formatTaskClock(timestampMs) {
+  const date = new Date(Number(timestampMs) || 0);
+  if (!Number.isFinite(date.getTime())) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function getNextTaskSchedule() {
+  const scheduledEnds = taskEntries
+    .map((entry) => Number(entry?.scheduledEndAtMs) || 0)
+    .filter((timestamp) => timestamp > 0);
+  if (!scheduledEnds.length) return null;
+
+  const startAtMs = Math.max(...scheduledEnds);
+  const endAtMs = startAtMs + (60 * 60 * 1000);
+  return {
+    startAtMs,
+    endAtMs,
+    label: `${formatTaskClock(startAtMs)}–${formatTaskClock(endAtMs)}`
+  };
+}
+
+function removeTaskTimingText(inputText) {
+  const source = String(inputText || "").trim();
+  return source
+    .replace(/\s+(?:and\s+)?(?:make|set)\s+(?:it|the\s+task)?\s+(?:at|for|time|timing|timings)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s+(?:and|to|-|until)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/i, "")
+    .replace(/\s+(?:from|between)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s+(?:to|and|-|until)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/i, "")
+    .replace(/\s+(?:at|time|timing|timings)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s+(?:and|to|-|until)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/i, "")
+    .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function findTaskForAi(query) {
+  const rawQuery = stripWrappingQuotes(String(query || "").trim());
+  if (!rawQuery) return null;
+  if (/^\d+$/.test(rawQuery)) return taskEntries[Number(rawQuery) - 1] || null;
+  const lowered = rawQuery.toLowerCase();
+  return taskEntries.find((entry) => String(entry.text || "").toLowerCase().includes(lowered)) || null;
+}
+
+async function rescheduleTaskFromAi(user, query, schedule) {
+  if (!user?.uid) return { ok: false, message: "Please sign in first." };
+  if (!schedule) return { ok: false, message: "Tell me the start and end time, like 4 PM to 5 PM." };
+  const target = findTaskForAi(query);
+  if (!target || !target.id) return { ok: false, message: "No matching task found." };
+
+  try {
+    await fsUpdateDoc(doc(db, "users", user.uid, "tasks", target.id), {
+      scheduledStartAtMs: schedule.startAtMs,
+      scheduledEndAtMs: schedule.endAtMs,
+      scheduleLabel: schedule.label
+    }, 'tasks');
+    await loadTasks(user.uid);
+    return { ok: true, message: `✅ Scheduled “${target.text || "Task"}” for ${schedule.label}.` };
+  } catch (err) {
+    notifyFirestoreError(err);
+    return { ok: false, message: "Could not update that task's timing right now." };
+  }
 }
 
 function mapMoodFromInput(text) {
@@ -16774,17 +18107,7 @@ async function tryAiAction(input, user, options = {}) {
         || document.querySelector(".wellness-music-card");
 
       if (musicCard) {
-        scrollCardToViewportCenterReliably(musicCard, { repeats: 6, delayMs: 120 });
-        if (musicCard.classList) {
-          musicCard.classList.remove("shortcut-focus");
-          void musicCard.offsetWidth;
-          musicCard.classList.add("shortcut-focus");
-          setTimeout(() => {
-            try {
-              musicCard.classList.remove("shortcut-focus");
-            } catch (_) {}
-          }, 1250);
-        }
+        scrollToCardWithShortcutAnimation(musicCard, { repeats: 6, delayMs: 120 });
       }
 
     } catch (_) {
@@ -16794,17 +18117,39 @@ async function tryAiAction(input, user, options = {}) {
     return withGreeting("🎵 Opened Wellness Music. Tap play on the music player.");
   }
 
+  if (/\b(?:generate|create|make|build)\b[\s\S]{0,32}\b(?:daily\s+)?routine\b/i.test(commandMsg)
+    && !/\b(?:don't|do not|never|stop)\b/i.test(commandMsg)) {
+    const routineCard = document.querySelector(".daily-routine-card");
+    if (routineCard) scrollToCardWithShortcutAnimation(routineCard);
+    const generated = await generateDailyRoutine();
+    return withGreeting(generated
+      ? "Your routine is ready in the Daily Routine card."
+      : "I opened the Daily Routine card, but couldn’t generate the routine just now.");
+  }
+
   if (/^(?:run|start|do|begin|trigger)\s+(?:the\s+)?(?:mood\s+)?(?:crash\s+)?rescue$/i.test(commandMsg) && !isReminderIntent) {
     const rescueResult = await runCrashRescueFlow({ showAlert: false });
     if (!rescueResult?.ok) {
       return withGreeting(`ℹ️ ${rescueResult?.message || "Could not start rescue right now."}`);
     }
-    return withGreeting(`🛟 ${escapeHtml(rescueResult.title || "Mood crash rescue")} started (${rescueResult.level}). A 20-minute recovery reminder is now set. Focus now: ${escapeHtml(rescueResult.focus || rescueResult.reason)}.`);
+    return withGreeting(`${escapeHtml(rescueResult.title || "Quick reset")} is ready. Pick any step that feels manageable and take it from there.`);
+  }
+
+  const timingChangeMatch = commandMsg.match(/^(?:change|update)\s+(?:the\s+)?(?:timing|timings|time|schedule)\s+of\s+(?:my\s+)?(?:task|todo)\s*#?\s*(.+?)\s+(?:to|from)\s+(.+)$/i)
+    || commandMsg.match(/^(?:shift|move|reschedule)\s+(?:(?:the\s+)?(?:timing|timings|time|schedule)\s+of\s+)?(?:my\s+)?(?:task|todo)\s*#?\s*(.+?)\s+(?:to|from)\s+(.+)$/i);
+  if (timingChangeMatch?.[1] && timingChangeMatch?.[2]) {
+    const schedule = parseTaskTiming(timingChangeMatch[2]);
+    const result = await rescheduleTaskFromAi(user, timingChangeMatch[1], schedule);
+    return result.message;
   }
 
   let taskText = "";
-  const taskMatch = commandMsg.match(/^(?:add|create|new|log)\s+(?:a\s+)?(?:(?:productivity|work|study)\s+)?(?:task|todo)\s*[:\-]?\s*(.+)$/i);
-  if (taskMatch?.[1]) taskText = taskMatch[1].trim();
+  const taskMatch = commandMsg.match(/^(?:add|create|new|log)\s+(?:a\s+)?(?:(?:productivity|work|study)\s+)?(?:task|todo)\s*[:\-]?\s*(.+)$/i)
+    || commandMsg.match(/^(?:add|create|new)\s+(.+?)\s+(?:task|todo)\b(?:\s+and\s+(?:make|set)\s+it\s+(.+))?$/i);
+  if (taskMatch?.[1]) {
+    taskText = taskMatch[1].trim();
+    if (taskMatch[2]) taskText = `${taskText} timing ${taskMatch[2].trim()}`;
+  }
   if (!taskText && /^(?:add|create|new|log)\s+(?:a\s+)?(?:(?:productivity|work|study)\s+)?(?:task|todo)\s*[:\-]?\s*$/i.test(commandMsg)) {
     return withGreeting("ℹ️ Tell me the task text too, like: add task finish assignment.");
   }
@@ -16817,21 +18162,28 @@ async function tryAiAction(input, user, options = {}) {
     if (naturalTaskMatch?.[1]) taskText = naturalTaskMatch[1].trim();
   }
   if (taskText) {
-    const taskItems = splitAiTaskItems(stripWrappingQuotes(taskText));
+    const schedule = parseTaskTiming(taskText);
+    const cleanTaskText = removeTaskTimingText(stripWrappingQuotes(taskText));
+    const taskItems = splitAiTaskItems(cleanTaskText);
     const addedTasks = [];
+    const appliedSchedules = [];
     for (let index = 0; index < taskItems.length; index += 1) {
       const item = taskItems[index];
       const beforeCount = taskEntries.length;
+      const itemSchedule = schedule || getNextTaskSchedule();
       task.value = item;
-      await addTask();
-      if (taskEntries.length > beforeCount) addedTasks.push(item);
+      await addTask({ schedule: itemSchedule });
+      if (taskEntries.length > beforeCount) {
+        addedTasks.push(item);
+        if (itemSchedule) appliedSchedules.push(itemSchedule.label);
+      }
     }
     if (!addedTasks.length) {
       return withGreeting("ℹ️ Could not add tasks right now. Please try again.");
     }
     if (addedTasks.length === 1) {
       const msg = pickNonRepeatingVariant(AI_TASK_ADDED_POOL, 'task_added').replaceAll('{task}', addedTasks[0]);
-      return withGreeting(msg);
+      return withGreeting(appliedSchedules[0] ? `${msg} Scheduled for ${appliedSchedules[0]}.` : msg);
     }
     const multiTemplate = pickNonRepeatingVariant(AI_TASK_ADDED_POOL, 'task_added_multi') || `✅ Added {count} tasks: {list}`;
     const multiMsg = multiTemplate.replaceAll('{count}', String(addedTasks.length)).replaceAll('{list}', addedTasks.join(' | '));
@@ -16909,6 +18261,7 @@ async function tryAiAction(input, user, options = {}) {
   const waterAmountPattern = "(\\d+(?:\\.\\d+)?|a|an|one|two|three|four|five|six|seven|eight|nine|ten|couple|half)";
   const waterLogMatch = lower.match(new RegExp(`(?:log|add|track|drink|drank|had|have\\s+had)\\s+${waterAmountPattern}\\s*(?:glass|glasses|cup|cups)?\\s*(?:of\\s+)?(?:water)?(?:\\s+just\\s+now|\\s+rn|\\s+right\\s+now)?`, "i"))
     || lower.match(new RegExp(`\\bi\\s+(?:just\\s+)?(?:drank|drink|had)\\s+${waterAmountPattern}\\s*(?:glass|glasses|cup|cups)(?:\\s+of\\s+water)?(?:\\s+just\\s+now|\\s+rn|\\s+right\\s+now)?`, "i"))
+    || lower.match(new RegExp(`\\bmy\\s+(?:water|hydration)\\s+(?:was|is|totaled)\\s+${waterAmountPattern}\\s*(?:glass|glasses|cup|cups)\\b`, "i"))
     || lower.match(new RegExp(`\\b${waterAmountPattern}\\s*(?:glass|glasses|cup|cups)\\s*(?:of\\s+water)?(?:\\s+just\\s+now|\\s+rn|\\s+right\\s+now)?\\b`, "i"));
   const waterSignal = /\b(water|hydrate|hydration|glass|glasses|cup|cups|drink|drank)\b/.test(lower);
   if (waterLogMatch && waterSignal && !isReminderIntent) {
@@ -16946,6 +18299,8 @@ async function tryAiAction(input, user, options = {}) {
   const sleepMatch = lower.match(/(?:log|save|track|set)\s+(?:my\s+)?sleep\s*(?:to\s+|for\s+)?(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)?(?:\s+of\s+sleep)?(?:\s+right\s+now)?/i)
     || lower.match(/(?:log|save|track|set)\s+(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)\s*(?:of\s+)?sleep(?:\s+right\s+now)?/i)
     || lower.match(/(?:slept|sleep)\s*(?:for\s+)?(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)\b/i)
+    || lower.match(/\bmy\s+sleep\s+(?:was|is|totaled)\s+(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)?\b/i)
+    || lower.match(/\bi\s+slept\s+(?:for\s+)?(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)?\b/i)
     || lower.match(/(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)\s*(?:sleep|slept)\b/i);
   if (sleepMatch?.[1] && !isReminderIntent) {
     sleepInput.value = sleepMatch[1];
@@ -17094,6 +18449,19 @@ async function buildSmartAiResponse(input, user) {
   const normalizedInput = shouldSkipAiTypoNormalizationForPlannerInput(rawInput)
     ? rawInput
     : normalizeTyposForAi(rawInput).trim();
+  const checkInAnswer = normalizeLocalIntentText(normalizedInput);
+  const isBriefCheckInAnswer = /^(?:(?:i am|im|i m)\s+)?(?:(?:doing|feeling)\s+)?(?:nice|good|great|fine|okay|ok|alright|not bad|pretty good|very good|well)(?:\s+thanks?)?$/.test(checkInAnswer);
+  if (aiSessionState.awaitingCheckIn) {
+    aiSessionState.awaitingCheckIn = false;
+    if (isBriefCheckInAnswer) {
+      aiSessionState.lastIntent = "smalltalk-health";
+      aiSessionState.lastAdvice = [];
+      return {
+        response: "Nice, glad to hear it! What can I help with today?",
+        isHtml: false
+      };
+    }
+  }
   let actionResult = null;
   try {
     actionResult = await tryAiAction(normalizedInput, user);
@@ -17154,6 +18522,18 @@ async function buildSmartAiResponse(input, user) {
   const sleepMoodInsight = buildSleepMoodPatternInsight(30);
   const behaviorPatterns = getBehaviorPatternMemory(35);
 
+  if (intent.key === "greeting") {
+    const greetingTemplate = pickNonRepeatingVariant(AI_GREETING_FULL_POOL, "greeting_full")
+      || "Hey {name}! How are you doing? 😊";
+    aiSessionState.lastIntent = "greeting";
+    aiSessionState.lastAdvice = [];
+    aiSessionState.awaitingCheckIn = true;
+    return {
+      response: greetingTemplate.replaceAll("{name}", name),
+      isHtml: false
+    };
+  }
+
   if (/\b(?:thanks+|thank\s+you|thx|ty|tysm|appreciate(?:\s+it|\s+you)?)\b/i.test(msg)) {
     const thanksReply = pickNonRepeatingVariant(AI_SHORT_THANKS_REPLIES, "thanks_short") || "Anytime.";
     aiSessionState.lastIntent = "thanks";
@@ -17164,11 +18544,20 @@ async function buildSmartAiResponse(input, user) {
     };
   }
 
+  if (isDirectAiCriticism(msg)) {
+    aiSessionState.lastIntent = "bug-report";
+    aiSessionState.lastAdvice = [];
+    return {
+      response: `I’m sorry I wasn’t helpful. If something isn’t working as it should, you can report a bug by emailing <a href="mailto:support.lumevine@gmail.com">support.lumevine@gmail.com</a>.`,
+      isHtml: true
+    };
+  }
+
   if (isAppComplaintMessage(msg)) {
     aiSessionState.lastIntent = "bug-report";
     aiSessionState.lastAdvice = [];
     return {
-      response: `You can report a bug at <span class="support-email-highlight">support.novafix@gmail.com</span> and we’ll check it quickly.`,
+      response: `You can report a bug at <span class="support-email-highlight">support.lumevine@gmail.com</span> and we’ll check it quickly.`,
       isHtml: true
     };
   }
@@ -17176,7 +18565,7 @@ async function buildSmartAiResponse(input, user) {
   if (/\b(?:report|found|have|there(?:'s|\s+is)|noticed|seeing|raise)\b[\s\S]{0,28}\b(?:bug|issue|problem|glitch|error)\b|\b(?:bug|issue|problem|glitch|error)\b[\s\S]{0,20}\b(?:report|reported|reporting)\b/i.test(msg)) {
     aiSessionState.lastIntent = "bug-report";
     return {
-      response: `You can report a bug at <span class="support-email-highlight">support.novafix@gmail.com</span> and we’ll check it quickly.`,
+      response: `You can report a bug at <span class="support-email-highlight">support.lumevine@gmail.com</span> and we’ll check it quickly.`,
       isHtml: true
     };
   }
@@ -17199,6 +18588,28 @@ async function buildSmartAiResponse(input, user) {
 
   const coachingMoves = buildActionCoaching(snapshot);
   const deepPlan = buildDeepPlan(snapshot);
+
+  const confirmation = msg.match(/^(?:yes|yeah|yep|yup|sure|okay|ok|please do|do it|go ahead|no|nope|nah|not now)$/i);
+  if (confirmation && aiSessionState.lastAssistantQuestion) {
+    const answer = confirmation[0].toLowerCase();
+    const isYes = /^(?:yes|yeah|yep|yup|sure|okay|ok|please do|do it|go ahead)$/.test(answer);
+    const previousQuestion = aiSessionState.lastAssistantQuestion.toLowerCase();
+    aiSessionState.lastAssistantQuestion = "";
+    if (!isYes) {
+      aiSessionState.lastIntent = "confirmation-no";
+      return { response: "No problem. We can leave that for now.", isHtml: false };
+    }
+    if (/\b(?:plan|routine|schedule|game plan|next steps)\b/.test(previousQuestion)) {
+      aiSessionState.lastIntent = "plan";
+      aiSessionState.lastAdvice = deepPlan.slice(0, 4);
+      return {
+        response: `<b>Here’s a simple plan:</b><br>1) ${escapeHtml(deepPlan[0])}<br>2) ${escapeHtml(deepPlan[1])}<br>3) ${escapeHtml(deepPlan[2])}<br>4) ${escapeHtml(deepPlan[3])}`,
+        isHtml: true
+      };
+    }
+    aiSessionState.lastIntent = "confirmation-yes";
+    return { response: "Sure. What would you like me to do?", isHtml: false };
+  }
 
   const stylePrefix = buildModeAwarePrefix(tone);
 
@@ -17246,10 +18657,11 @@ async function buildSmartAiResponse(input, user) {
   }
 
   if (intent.key === "greeting") {
-    const pending = snapshot.pendingTasks;
     aiSessionState.lastIntent = "greeting";
+    aiSessionState.awaitingCheckIn = true;
     return {
-      response: `Hey ${name}! Quick check: you’re at ${snapshot.score}/100, ${pending} pending task${pending === 1 ? "" : "s"}, and ${getAiWaterStatusText(snapshot)}. Want me to line up a quick 3-step game plan?`,
+      response: (pickNonRepeatingVariant(AI_GREETING_FULL_POOL, "greeting_full") || "Hey {name}! How are you doing? 😊")
+        .replaceAll("{name}", name),
       isHtml: false
     };
   }
@@ -17306,9 +18718,14 @@ async function buildSmartAiResponse(input, user) {
   }
 
   if (intent.key === "emotional-personal") {
+    const moodFromMessage = mapMoodFromInput(msg);
+    if (moodFromMessage) {
+      mood.value = moodFromMessage;
+      await saveMood();
+    }
     aiSessionState.lastIntent = "emotional-personal";
     return {
-      response: `Thanks for sharing that, ${name}. You’re not weak — you’re overloaded. Let’s stabilize first:<br>1) 6 slow breaths (4-4-6 pattern).<br>2) Drink one glass of water.<br>3) Do one tiny win for 10 minutes: ${coachingMoves[0]}<br><br>If you want, say "guide me step by step" and I’ll stay with you through it.`,
+      response: `${moodFromMessage ? "I logged that as Low in your mood tracker. " : ""}Thanks for telling me, ${name}. It sounds like you’re having a low moment. I’m here with you. We can keep things gentle: take a slow breath, get some water, or talk through what’s weighing on you.`,
       isHtml: true
     };
   }
@@ -17337,7 +18754,7 @@ async function buildSmartAiResponse(input, user) {
   if (intent.key === "identity") {
     aiSessionState.lastIntent = "identity";
     return {
-      response: "I am NovaFix AI — your personal assistant. I use your live dashboard data, remember useful context, compare options, and execute supported actions directly.",
+      response: "I am Lumevine AI — your personal assistant. I use your live dashboard data, remember useful context, compare options, and execute supported actions directly.",
       isHtml: false
     };
   }
@@ -17353,8 +18770,9 @@ async function buildSmartAiResponse(input, user) {
 
   if (intent.key === "bye") {
     aiSessionState.lastIntent = "bye";
+    const farewell = pickNonRepeatingVariant(AI_BYE_POOL, "bye") || AI_BYE_BASE[0];
     return {
-      response: `See you soon, ${name} 👋 Before you go: ${coachingMoves[0]}`,
+      response: farewell.replaceAll("{name}", name),
       isHtml: false
     };
   }
@@ -17370,7 +18788,7 @@ async function buildSmartAiResponse(input, user) {
   if (mathResult) {
     aiSessionState.lastIntent = "math";
     return {
-      response: `🧠 ${mathResult.expression} = ${mathResult.result}`,
+      response: `${mathResult.expression} = ${mathResult.result}`,
       isHtml: false
     };
   }
@@ -17543,8 +18961,8 @@ async function buildSmartAiResponse(input, user) {
     aiSessionState.lastIntent = "knowledge";
     aiSessionState.lastAdvice = coachingMoves;
     return {
-      response: `${stylePrefix}${knowledgeAnswer}<br><br><b>Applied to you now</b>: ${coachingMoves[0]}`,
-      isHtml: true
+      response: `${stylePrefix}${knowledgeAnswer}`,
+      isHtml: false
     };
   }
 
@@ -17570,22 +18988,11 @@ async function buildSmartAiResponse(input, user) {
   }
 
   aiSessionState.lastIntent = "fallback";
-  aiSessionState.conversationSummary = `Last topic: ${intent.key}; mood: ${emotion}; score: ${snapshot.score}`;
-  const personalGoal = aiSessionState.userFacts.goal ? `<br>🎯 Your stated goal: <i>${escapeHtml(aiSessionState.userFacts.goal)}</i>` : "";
-
-  if (modePreset.style === "ultra") {
-    const unknownReply = pickNonRepeatingVariant(AI_FALLBACK_POOL, "fallback") || AI_FALLBACK_BASE[0];
-    return {
-      response: unknownReply,
-      isHtml: false
-    };
-  }
-
-  const riskDrivers = buildWhySummary(snapshot, trendSignals).slice(0, 3);
-
+  aiSessionState.conversationSummary = "Need clarification before choosing an action.";
+  const unknownReply = pickNonRepeatingVariant(AI_FALLBACK_POOL, "fallback") || AI_FALLBACK_BASE[0];
   return {
-    response: `🧠 <b>Here’s what I’m seeing</b><br><b>State</b>: score ${snapshot.score}/100, tasks ${snapshot.doneTasks}/${snapshot.totalTasks}, water ${snapshot.waterToday}/${snapshot.todayGoal}, sleep ${snapshot.sleepToday || 0}h.<br><b>Main constraints</b>: ${riskDrivers.join(" • ")}<br><b>Order to try</b>:<br>1) ${coachingMoves[0]}<br>2) ${coachingMoves[1]}<br>3) ${coachingMoves[2]}${personalGoal}<br><br>Ask for <i>deeper reasoning</i>, <i>A vs B</i>, or a <i>step-by-step plan</i>.`,
-    isHtml: true
+    response: unknownReply,
+    isHtml: false
   };
 }
 
@@ -18025,24 +19432,24 @@ async function editChatMessage(chatId, fieldName, textNode, role) {
     const dailyLimit = getCurrentAiDailyLimit();
     if (aiUsageCount >= dailyLimit) {
       updateAiLimitUI();
-      alert(buildDailyLimitCountdownMessage(`Daily AI limit reached (${dailyLimit}/${dailyLimit})`));
+      await appAlert(buildDailyLimitCountdownMessage(`Daily AI limit reached (${dailyLimit}/${dailyLimit})`), { title: "Daily AI limit reached" });
       return;
     }
   }
 
   const currentText = textNode.dataset.rawText || "";
-  const updatedText = prompt("Edit message", currentText);
+  const updatedText = await appPrompt("Edit message", currentText, { title: "Edit message" });
   if (updatedText === null) return;
 
   const nextText = updatedText.trim();
   if (!nextText) {
-    alert("Message cannot be empty.");
+    await appAlert("Message cannot be empty.");
     return;
   }
 
   const moderation = getAiAbuseModerationResult(nextText);
   if (moderation.blocked) {
-    alert(moderation.message);
+    await appAlert(moderation.message);
     return;
   }
 
@@ -18118,6 +19525,7 @@ async function editChatMessage(chatId, fieldName, textNode, role) {
 function renderChatPair(entry) {
   renderChatMessage("user", entry.userMessage || "", false, entry.id, "userMessage");
   renderChatMessage("ai", entry.aiResponse || "", !!entry.aiResponseIsHtml, entry.id, "aiResponse");
+  rememberAssistantQuestion(entry.aiResponse || "", !!entry.aiResponseIsHtml);
 
   aiSessionState.memoryPairs.push({
     user: String(entry.userMessage || ""),
@@ -18144,9 +19552,9 @@ function setTimeMirrorClearButtonState(hasContent) {
   if (timeMirrorCheckBtn) timeMirrorCheckBtn.style.display = canClear ? "none" : "inline-block";
 }
 
-function clearTimeMirror() {
+async function clearTimeMirror() {
   if (!timeMirror || timeMirrorClearBtn?.disabled) return;
-  const confirmed = confirm("Clear Time Traveller Mirror output?");
+  const confirmed = await appConfirm("Clear Time Traveller Mirror output?", { title: "Clear output", confirmText: "Clear" });
   if (!confirmed) return;
   timeMirror.innerHTML = "";
   setTimeMirrorClearButtonState(false);
@@ -18200,6 +19608,7 @@ function getAiAbuseModerationResult(inputText) {
   }
 
   aiAbuseCooldownUntilMs = now + AI_ABUSE_COOLDOWN_MS;
+  aiAbuseCooldownTemplate = "";
   return {
     blocked: true,
     message: buildAiAbuseCooldownMessage(AI_ABUSE_COOLDOWN_MS)
@@ -18249,12 +19658,15 @@ async function loadAiChats(userId) {
   aiSessionState.lastIntent = "";
   aiSessionState.lastAdvice = [];
   aiSessionState.lastUserMessage = "";
+  aiSessionState.lastAssistantQuestion = "";
+  aiSessionState.awaitingCheckIn = false;
   aiSessionState.conversationSummary = "";
   aiSessionState.topicHistory.length = 0;
   aiSessionState.memoryPairs.length = 0;
 
   try {
     const snapshot = await getDocs(collection(db, "users", userId, "aiChats"));
+    if (!isActiveDataLoadUser(userId)) return;
     const docs = snapshot.docs
       .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
       .sort((a, b) => {
@@ -18274,7 +19686,9 @@ async function loadAiChats(userId) {
     updateAiLimitUI();
     updateClearDataButtonState();
   } catch (err) {
+    if (!isActiveDataLoadUser(userId)) return;
     setAiClearButtonState(false);
+    setEmptyState(chat, getRandomEmptyMessage("chat", "No AI chats yet — ask one question to get started."));
     notifyFirestoreError(err);
   }
 }
@@ -18307,7 +19721,7 @@ async function clearAiChats(options = {}) {
     return false;
   }
 
-  if (!skipConfirm && !confirm("Clear all AI conversations?")) return false;
+  if (!skipConfirm && !await appConfirm("Clear all AI conversations?", { title: "Clear AI conversations", confirmText: "Clear" })) return false;
 
   try {
     const snapshot = await getDocs(collection(db, "users", user.uid, "aiChats"));
@@ -18333,6 +19747,8 @@ async function clearAiChats(options = {}) {
     aiSessionState.lastIntent = "";
     aiSessionState.lastAdvice = [];
     aiSessionState.lastUserMessage = "";
+    aiSessionState.lastAssistantQuestion = "";
+    aiSessionState.awaitingCheckIn = false;
     aiSessionState.conversationSummary = "";
     aiSessionState.topicHistory.length = 0;
     setAiClearButtonState(false);
@@ -18373,6 +19789,10 @@ async function clearAiChats(options = {}) {
 
 async function aiChat(){
   if (aiChatSubmitting) return;
+  if (aiInput.value.length > AI_MAX_MESSAGE_LENGTH) {
+    updateAiLimitUI();
+    return;
+  }
   const input = aiInput.value.trim();
   if(!input) return;
   const user = auth.currentUser;
@@ -18434,6 +19854,7 @@ async function aiChat(){
       const safeOutput = applyAiOutputSafetyFilter(response, responseIsHtml);
       response = safeOutput.text;
       responseIsHtml = safeOutput.isHtml;
+      rememberAssistantQuestion(response, responseIsHtml);
       rememberPrompt(input);
 
       const chatId = await storeAiChat(user.uid, input, response, responseIsHtml);
@@ -18588,7 +20009,7 @@ function renderReminder(entry, options = {}) {
   const editBtn = document.createElement("button");
   editBtn.textContent = "✏️";
   editBtn.onclick = async () => {
-    const nextText = prompt("Edit reminder", reminderTextValue);
+    const nextText = await appPrompt("Edit reminder", reminderTextValue, { title: "Edit reminder" });
     if (!nextText || !nextText.trim()) return;
 
     const user = auth.currentUser;
@@ -18614,7 +20035,7 @@ function renderReminder(entry, options = {}) {
   deleteBtn.className = "remove-entry-btn";
   deleteBtn.textContent = "🗑️";
   deleteBtn.onclick = async () => {
-    if (!confirm(`Delete reminder "${reminderTextValue}"?`)) return;
+    if (!await appConfirm(`Delete reminder "${reminderTextValue}"?`, { title: "Delete reminder", confirmText: "Delete" })) return;
     const user = auth.currentUser;
     clearReminderTimer(entry.id);
 
@@ -18675,6 +20096,7 @@ async function loadReminders(userId) {
 
   try {
     const snapshot = await getDocs(collection(db, "users", userId, "reminders"));
+    if (!isActiveDataLoadUser(userId)) return;
     const docs = snapshot.docs
       .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
       .sort((a, b) => getReminderSortMs(b) - getReminderSortMs(a));
@@ -18686,6 +20108,8 @@ async function loadReminders(userId) {
     await updateReminderLimitUI(userId);
     updateClearDataButtonState();
   } catch (err) {
+    if (!isActiveDataLoadUser(userId)) return;
+    setEmptyState(reminders, getRandomEmptyMessage("reminders", "No reminders set yet — add one small prompt for today."));
     notifyFirestoreError(err);
   }
 }
@@ -18784,9 +20208,13 @@ function sortTasksForDisplay(entries = []) {
 function renderTaskList() {
   if (!taskList) return;
   taskList.innerHTML = "";
-  const sortedTasks = sortTasksForDisplay(taskEntries);
+  const todayKey = getTodayKey();
+  const sortedTasks = sortTasksForDisplay(taskEntries.filter((entry) => {
+    const taskDateKey = dateToKey(entry?.time);
+    return taskDateKey === todayKey || !taskDateKey;
+  }));
   if (!sortedTasks.length) {
-    setEmptyState(taskList, getRandomEmptyMessage("tasks", "No tasks yet — add one quick win to begin."));
+    setEmptyState(taskList, "No tasks for today yet — add one quick win to begin.");
     return;
   }
   sortedTasks.forEach((entry) => renderTask(entry, { insertAtTop: false }));
@@ -18799,7 +20227,10 @@ function renderTask(entry, options = {}) {
   li.className = "item-row";
   const span = document.createElement("span");
   span.className = "item-text";
-  span.textContent = entry.text;
+  span.textContent = entry.scheduleLabel
+    ? `${entry.text} · ${entry.scheduleLabel}`
+    : entry.text;
+  if (entry.scheduleLabel) span.title = `Scheduled for ${entry.scheduleLabel}`;
   if (entry.completed) span.classList.add("task-done");
 
   const actions = document.createElement("div");
@@ -18844,7 +20275,7 @@ function renderTask(entry, options = {}) {
   const editBtn = document.createElement("button");
   editBtn.textContent = "✏️";
   editBtn.onclick = async () => {
-    const newText = prompt("Edit task", span.textContent);
+    const newText = await appPrompt("Edit task", entry.text, { title: "Edit task" });
     if (!newText || !newText.trim()) return;
     span.textContent = newText.trim();
 
@@ -18861,7 +20292,7 @@ function renderTask(entry, options = {}) {
   deleteBtn.classList.add("remove-entry-btn");
   deleteBtn.textContent = "🗑️";
   deleteBtn.onclick = async () => {
-    if (!confirm(`Delete task "${entry.text || "Task"}"?`)) return;
+    if (!await appConfirm(`Delete task "${entry.text || "Task"}"?`, { title: "Delete task", confirmText: "Delete" })) return;
     const user = auth.currentUser;
     if (!user || !entry.id) {
       const fallbackIndex = taskEntries.findIndex((taskItem) => taskItem.id === entry.id);
@@ -18903,6 +20334,7 @@ async function loadTasks(userId) {
   try {
     await loadWellnessTaskCompletionCache(userId);
     const snapshot = await getDocs(collection(db, "users", userId, "tasks"));
+    if (!isActiveDataLoadUser(userId)) return;
     const docs = snapshot.docs
       .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
       .sort((a, b) => {
@@ -18938,11 +20370,13 @@ async function loadTasks(userId) {
     updateTaskLimitUI();
     updateInsights();
   } catch (err) {
+    if (!isActiveDataLoadUser(userId)) return;
+    setEmptyState(taskList, getRandomEmptyMessage("tasks", "No tasks yet — add one quick win to begin."));
     notifyFirestoreError(err);
   }
 }
 
-async function addTask(){
+async function addTask(options = {}){
   if (taskSubmitting) return;
   const user = auth.currentUser;
   if (!user) {
@@ -18952,6 +20386,7 @@ async function addTask(){
 
   const t=task.value.trim();
   if(!t)return;
+  const schedule = options?.schedule || null;
 
   taskSubmitting = true;
   if (taskAddBtn) taskAddBtn.disabled = true;
@@ -18971,9 +20406,25 @@ async function addTask(){
         text: t,
         completed: false,
         completedAt: null,
-        time: serverTimestamp()
+        time: serverTimestamp(),
+        ...(schedule ? {
+          scheduledStartAtMs: schedule.startAtMs,
+          scheduledEndAtMs: schedule.endAtMs,
+          scheduleLabel: schedule.label
+        } : {})
       });
-      const newTask = { id: ref.id, text: t, completed: false, completedAt: null, time: getServerNowDate() };
+      const newTask = {
+        id: ref.id,
+        text: t,
+        completed: false,
+        completedAt: null,
+        time: getServerNowDate(),
+        ...(schedule ? {
+          scheduledStartAtMs: schedule.startAtMs,
+          scheduledEndAtMs: schedule.endAtMs,
+          scheduleLabel: schedule.label
+        } : {})
+      };
       taskEntries.push(newTask);
       renderTaskList();
       const taskMsg = pickNonRepeatingVariant(AI_TASK_ADDED_POOL, 'task_added').replaceAll('{task}', t);
@@ -19043,6 +20494,7 @@ async function loadMoods(userId) {
 
   try {
     const snapshot = await getDocs(collection(db, "users", userId, "moods"));
+    if (!isActiveDataLoadUser(userId)) return;
     const docs = snapshot.docs
       .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
       .sort((a, b) => {
@@ -19068,6 +20520,8 @@ async function loadMoods(userId) {
     updateMoodLimitUI();
     updateInsights();
   } catch (err) {
+    if (!isActiveDataLoadUser(userId)) return;
+    setEmptyState(moodLogs, getRandomEmptyMessage("mood", "No mood logs yet — one check-in is enough to start."));
     notifyFirestoreError(err);
   }
 }
@@ -19168,9 +20622,9 @@ async function setWaterGoal(){
   updateWaterProgress();
 
   if (waterGoal > 0) {
-    alert(`✅ Water goal set to ${waterGoal} glasses.`);
+    await appAlert(`Water goal set to ${waterGoal} glasses.`, { title: "Water goal updated" });
   } else {
-    alert("ℹ️ Water goal cleared.");
+    await appAlert("Water goal cleared.", { title: "Water goal updated" });
   }
   waterGoalInput.value = "";
 
@@ -19311,7 +20765,7 @@ async function saveWater() {
 
       const target = Number(waterGoal) || 0;
       if (target > 0 && previousTodayWater < target && v >= target) {
-        alert("🎉 Water goal complete!");
+        await appAlert("Water goal complete!", { title: "Nice work" });
       }
 
       waterInput.value = "";
@@ -19341,7 +20795,7 @@ async function clearWaterData() {
     return;
   }
 
-  const confirmed = confirm("Clear your current water intake and goal?");
+  const confirmed = await appConfirm("Clear your current water intake and goal?", { title: "Clear water data", confirmText: "Clear" });
   if (!confirmed) return;
 
   if (pendingWaterClearOperation?.timerId) {
@@ -19679,6 +21133,8 @@ async function loadBedtimeSettings(userId) {
     return;
   }
 
+  await ensureSleepDayCurrent(userId);
+
   try {
     const snap = await fsGetDoc(doc(db, "users", userId, "settings", "sleep"), 'sleep');
     if (!snap.exists) return;
@@ -19730,6 +21186,7 @@ async function setBedtimeReminder(timeOverride = "", meridiemOverride = "") {
       bedtimeEnabled: true,
       bedtimeTime: parsed.formattedTime,
       bedtimeMeridiem: "",
+      lastResetDateKey: getTodayKey(),
       updatedAt: serverTimestamp(),
       updatedAtMs: Date.now()
     }, 'sleep', { merge: true });
@@ -19746,7 +21203,7 @@ async function setBedtimeReminder(timeOverride = "", meridiemOverride = "") {
     scheduleBedtimeReminder();
     updateBedtimeSetButtonState();
 
-    alert(`✅ Bed time set for ${parsed.label}.`);
+    await appAlert(`Bed time set for ${parsed.label}.`, { title: "Bed time reminder set" });
     return { ok: true, label: parsed.label };
   } catch (err) {
     notifyFirestoreError(err);
@@ -19860,7 +21317,7 @@ async function clearSleepData() {
     return;
   }
 
-  const shouldClear = confirm("Clear all sleep logs and reset your bed time reminder?");
+  const shouldClear = await appConfirm("Clear all sleep logs and reset your bed time reminder?", { title: "Clear sleep data", confirmText: "Clear" });
   if (!shouldClear) return;
 
   // Reset local UI/state first so fields clear even if network cleanup fails.
@@ -19899,7 +21356,7 @@ async function clearBedtimeData() {
     return;
   }
 
-  const shouldClear = confirm("Clear your bed time reminder?");
+  const shouldClear = await appConfirm("Clear your bed time reminder?", { title: "Clear bed time reminder", confirmText: "Clear" });
   if (!shouldClear) return;
 
   bedtimeSettings = { timeText: "", enabled: false };
@@ -20555,107 +22012,107 @@ const quotes=[
   "Knowing is not enough; we must apply. Willing is not enough; we must do. - Johann Wolfgang von Goethe",
   "Fortune favors the bold. - Virgil",
   "Do one thing every day that scares you. - Eleanor Roosevelt",
-  "One clear action beats ten perfect plans. - NovaFix",
-  "Small steps count when they actually happen. - NovaFix",
-  "Start before confidence arrives; confidence follows evidence. - NovaFix",
-  "The next ten minutes can change the tone of the day. - NovaFix",
-  "Momentum is built by returning, not by never slipping. - NovaFix",
-  "A tiny win today is still a vote for your future self. - NovaFix",
-  "Make the task smaller until starting feels obvious. - NovaFix",
-  "Discipline gets easier when the first step is kind. - NovaFix",
-  "Do the smallest useful version, then build from there. - NovaFix",
-  "Progress likes simple instructions. - NovaFix",
-  "You do not need a perfect day to protect the streak. - NovaFix",
-  "Energy rises when action becomes clear. - NovaFix",
-  "The best reset is one honest next step. - NovaFix",
-  "Consistency is quiet, but it changes everything. - NovaFix",
-  "Win the minute in front of you. - NovaFix",
-  "You can restart without explaining the pause. - NovaFix",
-  "Clarity grows after you begin. - NovaFix",
-  "Less pressure, more motion. - NovaFix",
-  "A focused sprint can rescue a scattered day. - NovaFix",
-  "Your future self only needs proof that you showed up. - NovaFix",
-  "Drink water, take a breath, do one thing. - NovaFix",
-  "When the day feels heavy, lower the bar and keep moving. - NovaFix",
-  "Do not wait for a mood; build a rhythm. - NovaFix",
-  "The first checkbox is the hardest; make it easy. - NovaFix",
-  "You are one small finish away from better momentum. - NovaFix",
-  "Start messy, finish cleaner. - NovaFix",
-  "A calm pace still reaches the finish line. - NovaFix",
-  "Turn worry into one controllable action. - NovaFix",
-  "Short effort repeated often becomes identity. - NovaFix",
-  "The comeback starts with the next log. - NovaFix",
-  "Give your attention one job at a time. - NovaFix",
-  "A five-minute start is stronger than a perfect delay. - NovaFix",
-  "Protect the basics and the bigger goals get lighter. - NovaFix",
-  "You can be tired and still take one gentle step. - NovaFix",
-  "Keep promises small enough to keep. - NovaFix",
-  "The day is not lost while one action remains possible. - NovaFix",
-  "Focus is a door; open it with one task. - NovaFix",
-  "Build evidence, not excuses. - NovaFix",
-  "If it matters, give it a small beginning. - NovaFix",
-  "Your pace is allowed to be realistic. - NovaFix",
-  "Finish one thing before judging the whole day. - NovaFix",
-  "You get stronger every time you return to the plan. - NovaFix",
-  "Make the healthy choice visible and the hard choice harder. - NovaFix",
-  "A low-energy day still accepts low-friction progress. - NovaFix",
-  "The fastest way out of stuck is specific action. - NovaFix",
-  "Let today be simple and real. - NovaFix",
-  "You do not need intensity; you need repeatability. - NovaFix",
-  "Breathe first, then execute. - NovaFix",
-  "The next good choice is enough to begin again. - NovaFix",
-  "Small wins stack faster than self-criticism. - NovaFix",
-  "Your routine is a safety rail, not a cage. - NovaFix",
-  "Motivation fades; systems catch you. - NovaFix",
-  "Start with the version you can actually do. - NovaFix",
-  "A clean desk is optional; a clear next step is powerful. - NovaFix",
-  "Do the action that removes tomorrow's stress. - NovaFix",
-  "If you cannot do a lot, do something honest. - NovaFix",
-  "Your streak is built by ordinary days. - NovaFix",
-  "One glass, one breath, one task. - NovaFix",
-  "The best plan is the one you touch today. - NovaFix",
-  "A tiny finish is better than another almost. - NovaFix",
-  "Choose the action that makes the next action easier. - NovaFix",
-  "You are allowed to go slowly without stopping. - NovaFix",
-  "Reset your body, then reset the task. - NovaFix",
-  "Make progress so small it has no excuse. - NovaFix",
-  "Your attention is valuable; spend it on the next move. - NovaFix",
-  "Begin where the resistance is lowest. - NovaFix",
-  "The work gets lighter after the first honest minute. - NovaFix",
-  "Keep the streak human, not heroic. - NovaFix",
-  "A planned pause beats an accidental spiral. - NovaFix",
-  "The task does not need drama; it needs a start. - NovaFix",
-  "Today's small discipline becomes tomorrow's freedom. - NovaFix",
-  "Do the boring useful thing and let it compound. - NovaFix",
-  "You can change direction with one deliberate choice. - NovaFix",
-  "Progress is not loud; it is logged. - NovaFix",
-  "Make the next step visible, then take it. - NovaFix",
-  "The goal gets closer every time you reduce friction. - NovaFix",
-  "Confidence is built in completed minutes. - NovaFix",
-  "A good day can start in the middle. - NovaFix",
-  "Do not negotiate with the whole mountain; take one step. - NovaFix",
-  "Your best effort today may look small, and still count. - NovaFix",
-  "Steady beats dramatic when you need something to last. - NovaFix",
-  "One useful choice can interrupt a rough pattern. - NovaFix",
-  "Keep the promise tiny, then keep it. - NovaFix",
-  "The first move is allowed to be imperfect. - NovaFix",
-  "Action turns pressure into information. - NovaFix",
-  "When motivation is low, make the path shorter. - NovaFix",
-  "A ten-minute sprint can reopen the day. - NovaFix",
-  "Your habits are built in the moments nobody sees. - NovaFix",
-  "Better is built one repeatable action at a time. - NovaFix",
-  "If you slipped, make the next choice clean. - NovaFix",
-  "You are not behind when you are moving again. - NovaFix",
-  "Do one thing that makes bedtime easier. - NovaFix",
-  "Choose a small win and protect it. - NovaFix",
-  "The next log is a fresh signal. - NovaFix",
-  "Stable basics create room for bold goals. - NovaFix",
-  "Keep showing up until showing up feels normal. - NovaFix",
-  "Small control now prevents bigger stress later. - NovaFix",
-  "The simplest next action is usually the strongest. - NovaFix",
-  "Your future needs consistency more than perfection. - NovaFix"
+  "One clear action beats ten perfect plans. - Lumevine",
+  "Small steps count when they actually happen. - Lumevine",
+  "Start before confidence arrives; confidence follows evidence. - Lumevine",
+  "The next ten minutes can change the tone of the day. - Lumevine",
+  "Momentum is built by returning, not by never slipping. - Lumevine",
+  "A tiny win today is still a vote for your future self. - Lumevine",
+  "Make the task smaller until starting feels obvious. - Lumevine",
+  "Discipline gets easier when the first step is kind. - Lumevine",
+  "Do the smallest useful version, then build from there. - Lumevine",
+  "Progress likes simple instructions. - Lumevine",
+  "You do not need a perfect day to protect the streak. - Lumevine",
+  "Energy rises when action becomes clear. - Lumevine",
+  "The best reset is one honest next step. - Lumevine",
+  "Consistency is quiet, but it changes everything. - Lumevine",
+  "Win the minute in front of you. - Lumevine",
+  "You can restart without explaining the pause. - Lumevine",
+  "Clarity grows after you begin. - Lumevine",
+  "Less pressure, more motion. - Lumevine",
+  "A focused sprint can rescue a scattered day. - Lumevine",
+  "Your future self only needs proof that you showed up. - Lumevine",
+  "Drink water, take a breath, do one thing. - Lumevine",
+  "When the day feels heavy, lower the bar and keep moving. - Lumevine",
+  "Do not wait for a mood; build a rhythm. - Lumevine",
+  "The first checkbox is the hardest; make it easy. - Lumevine",
+  "You are one small finish away from better momentum. - Lumevine",
+  "Start messy, finish cleaner. - Lumevine",
+  "A calm pace still reaches the finish line. - Lumevine",
+  "Turn worry into one controllable action. - Lumevine",
+  "Short effort repeated often becomes identity. - Lumevine",
+  "The comeback starts with the next log. - Lumevine",
+  "Give your attention one job at a time. - Lumevine",
+  "A five-minute start is stronger than a perfect delay. - Lumevine",
+  "Protect the basics and the bigger goals get lighter. - Lumevine",
+  "You can be tired and still take one gentle step. - Lumevine",
+  "Keep promises small enough to keep. - Lumevine",
+  "The day is not lost while one action remains possible. - Lumevine",
+  "Focus is a door; open it with one task. - Lumevine",
+  "Build evidence, not excuses. - Lumevine",
+  "If it matters, give it a small beginning. - Lumevine",
+  "Your pace is allowed to be realistic. - Lumevine",
+  "Finish one thing before judging the whole day. - Lumevine",
+  "You get stronger every time you return to the plan. - Lumevine",
+  "Make the healthy choice visible and the hard choice harder. - Lumevine",
+  "A low-energy day still accepts low-friction progress. - Lumevine",
+  "The fastest way out of stuck is specific action. - Lumevine",
+  "Let today be simple and real. - Lumevine",
+  "You do not need intensity; you need repeatability. - Lumevine",
+  "Breathe first, then execute. - Lumevine",
+  "The next good choice is enough to begin again. - Lumevine",
+  "Small wins stack faster than self-criticism. - Lumevine",
+  "Your routine is a safety rail, not a cage. - Lumevine",
+  "Motivation fades; systems catch you. - Lumevine",
+  "Start with the version you can actually do. - Lumevine",
+  "A clean desk is optional; a clear next step is powerful. - Lumevine",
+  "Do the action that removes tomorrow's stress. - Lumevine",
+  "If you cannot do a lot, do something honest. - Lumevine",
+  "Your streak is built by ordinary days. - Lumevine",
+  "One glass, one breath, one task. - Lumevine",
+  "The best plan is the one you touch today. - Lumevine",
+  "A tiny finish is better than another almost. - Lumevine",
+  "Choose the action that makes the next action easier. - Lumevine",
+  "You are allowed to go slowly without stopping. - Lumevine",
+  "Reset your body, then reset the task. - Lumevine",
+  "Make progress so small it has no excuse. - Lumevine",
+  "Your attention is valuable; spend it on the next move. - Lumevine",
+  "Begin where the resistance is lowest. - Lumevine",
+  "The work gets lighter after the first honest minute. - Lumevine",
+  "Keep the streak human, not heroic. - Lumevine",
+  "A planned pause beats an accidental spiral. - Lumevine",
+  "The task does not need drama; it needs a start. - Lumevine",
+  "Today's small discipline becomes tomorrow's freedom. - Lumevine",
+  "Do the boring useful thing and let it compound. - Lumevine",
+  "You can change direction with one deliberate choice. - Lumevine",
+  "Progress is not loud; it is logged. - Lumevine",
+  "Make the next step visible, then take it. - Lumevine",
+  "The goal gets closer every time you reduce friction. - Lumevine",
+  "Confidence is built in completed minutes. - Lumevine",
+  "A good day can start in the middle. - Lumevine",
+  "Do not negotiate with the whole mountain; take one step. - Lumevine",
+  "Your best effort today may look small, and still count. - Lumevine",
+  "Steady beats dramatic when you need something to last. - Lumevine",
+  "One useful choice can interrupt a rough pattern. - Lumevine",
+  "Keep the promise tiny, then keep it. - Lumevine",
+  "The first move is allowed to be imperfect. - Lumevine",
+  "Action turns pressure into information. - Lumevine",
+  "When motivation is low, make the path shorter. - Lumevine",
+  "A ten-minute sprint can reopen the day. - Lumevine",
+  "Your habits are built in the moments nobody sees. - Lumevine",
+  "Better is built one repeatable action at a time. - Lumevine",
+  "If you slipped, make the next choice clean. - Lumevine",
+  "You are not behind when you are moving again. - Lumevine",
+  "Do one thing that makes bedtime easier. - Lumevine",
+  "Choose a small win and protect it. - Lumevine",
+  "The next log is a fresh signal. - Lumevine",
+  "Stable basics create room for bold goals. - Lumevine",
+  "Keep showing up until showing up feels normal. - Lumevine",
+  "Small control now prevents bigger stress later. - Lumevine",
+  "The simplest next action is usually the strongest. - Lumevine",
+  "Your future needs consistency more than perfection. - Lumevine"
 ];
-const QUOTE_HISTORY_STORAGE_KEY = "novafixRecentQuoteHistoryV1";
+const QUOTE_HISTORY_STORAGE_KEY = "lumevineRecentQuoteHistoryV1";
 const QUOTE_REPEAT_HISTORY_LIMIT = 150;
 let recentQuoteIndexes = [];
 
@@ -20726,7 +22183,7 @@ function renderGratitude(entry) {
   const editBtn = document.createElement("button");
   editBtn.textContent = "✏️";
   editBtn.onclick = async () => {
-    const nextText = prompt("Edit gratitude", entry.text || "");
+    const nextText = await appPrompt("Edit gratitude", entry.text || "", { title: "Edit gratitude" });
     if (!nextText || !nextText.trim()) return;
 
     const user = auth.currentUser;
@@ -20784,6 +22241,7 @@ async function loadGratitude(userId) {
 
   try {
     const snapshot = await getDocs(collection(db, "users", userId, "gratitudeLogs"));
+    if (!isActiveDataLoadUser(userId)) return;
     const docs = snapshot.docs
       .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
       .sort((a, b) => {
@@ -20808,6 +22266,8 @@ async function loadGratitude(userId) {
     updateGratitudeLimitUI();
     updateInsights();
   } catch (err) {
+    if (!isActiveDataLoadUser(userId)) return;
+    setEmptyState(gratitudeLogs, getRandomEmptyMessage("gratitude", "No gratitude notes yet — add one small win from today."));
     notifyFirestoreError(err);
   }
 }
@@ -21152,6 +22612,7 @@ function splitSnapshotChunks(serialized) {
 async function buildExportPayloadForUser(userId, userMeta = {}, dbInstance = db) {
   const waterSettingsSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "water"), 'water');
   const sleepSettingsSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "sleep"), 'sleep');
+  const dailyRoutineSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "dailyRoutine"), 'dailyRoutine');
   const dailyChallengeSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "dailyChallenge"), 'dailyChallenge');
   const weeklyTargetsSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "weeklyTargets"), 'weeklyTargets');
   const habitQuestSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "habitQuest"), 'habitQuest');
@@ -21191,6 +22652,7 @@ async function buildExportPayloadForUser(userId, userMeta = {}, dbInstance = db)
     },
     waterSettings: waterSettingsSnap.exists ? waterSettingsSnap.data : null,
     sleepSettings: sleepSettingsSnap.exists ? sleepSettingsSnap.data : null,
+    dailyRoutine: dailyRoutineSnap.exists ? dailyRoutineSnap.data : null,
     dailyChallengeSettings: dailyChallengeSnap.exists ? dailyChallengeSnap.data : null,
     weeklyTargets: weeklyTargetsSnap.exists ? weeklyTargetsSnap.data : null,
     habitQuest: habitQuestSnap.exists ? habitQuestSnap.data : null,
@@ -21440,7 +22902,7 @@ async function submitImportTransfer() {
     return;
   }
 
-  const confirmed = confirm(`Warning: current data will be replaced with the backup from ${sourceEmail}. Continue?`);
+  const confirmed = await appConfirm(`Warning: current data will be replaced with the backup from ${sourceEmail}. Continue?`, { title: "Replace current data", confirmText: "Replace data" });
   if (!confirmed) return;
 
   setImportTransferBusy(true);
@@ -21529,6 +22991,7 @@ async function applyImportPayloadToCurrentUser(user, payload) {
   await deleteDoc(doc(db, "users", user.uid, "settings", "dailyChallenge")).catch((err) => structuredLog('warn', 'import.delete.challenge', err?.message || String(err)));
   await deleteDoc(doc(db, "users", user.uid, "settings", "weeklyTargets")).catch((err) => structuredLog('warn', 'import.delete.weekly', err?.message || String(err)));
   await deleteDoc(doc(db, "users", user.uid, "settings", "habitQuest")).catch((err) => structuredLog('warn', 'import.delete.quest', err?.message || String(err)));
+  await deleteDoc(doc(db, "users", user.uid, "settings", "dailyRoutine")).catch((err) => structuredLog('warn', 'import.delete.routine', err?.message || String(err)));
   await deleteDoc(doc(db, "users", user.uid, "insights", "current")).catch((err) => structuredLog('warn', 'import.delete.current', err?.message || String(err)));
   await deleteDoc(doc(db, "users", user.uid, "insights", "barGraphs")).catch((err) => structuredLog('warn', 'import.delete.graphs', err?.message || String(err)));
   persistedBarGraphs = null;
@@ -21690,6 +23153,7 @@ async function applyImportPayloadToCurrentUser(user, payload) {
     loadWeeklyTargets(user.uid),
     loadRescueEvents(user.uid),
     loadHabitQuest(user.uid),
+    loadDailyRoutine(user.uid),
     loadWaterData(user.uid),
     loadSleepData(user.uid),
     loadMusicSessions(user.uid),
@@ -21981,8 +23445,15 @@ Object.assign(window, {
   sendResetPasswordEmail,
   sendAccountResetPasswordEmail,
   editAccountDisplayName,
-  refreshStartupPlan,
-  applyStartupPlanAsTasks,
+  generateDailyRoutine,
+  handleDailyRoutineStartTimeChange,
+  saveDailyRoutineStartTime,
+  openDailyRoutineEditor,
+  closeDailyRoutineEditor,
+  advanceDailyRoutineEditor,
+  closeDailyRoutineCustomActivity,
+  confirmDailyRoutineCustomActivity,
+  clearDailyRoutine,
   generateStartupWeeklyReport,
   copyStartupWeeklyReport
 });
@@ -21990,7 +23461,7 @@ Object.assign(window, {
 
 
 })().catch((err) => {
-  console.error("NovaFix failed to start:", err);
+  console.error("Lumevine failed to start:", err);
   const splash = document.getElementById("splash");
   if (splash) {
     splash.classList.add("hide");

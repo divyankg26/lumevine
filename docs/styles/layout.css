@@ -69,6 +69,45 @@
   color:#fff;
 }
 
+.tos-privacy-link{
+  margin:0;
+  color:#fff;
+  font-size:12px;
+  line-height:1.4;
+}
+
+.tos-privacy-link a,
+.account-tab-panel a{
+  color:#bfe7ff;
+  font-weight:700;
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+
+.legal-terms-content{
+  max-height:360px;
+  overflow:auto;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:10px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:12px;
+  line-height:1.45;
+  white-space:pre-wrap;
+  scrollbar-width:thin;
+  scrollbar-color:var(--primary) transparent;
+}
+
+.legal-terms-content::-webkit-scrollbar{
+  width:6px;
+}
+
+.legal-terms-content::-webkit-scrollbar-thumb{
+  background:var(--primary);
+  border-radius:999px;
+}
+
 .tos-actions{
   display:flex;
   justify-content:flex-end;
@@ -205,6 +244,49 @@
 }
 
 .account-tab-btn[data-account-tab="customisation"]{font-size:12px}
+
+.legal-disclosure{
+  padding:0;
+  overflow:hidden;
+}
+
+.legal-disclosure > summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:42px;
+  padding:10px 12px;
+  color:#fff;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  list-style:none;
+}
+
+.legal-disclosure > summary::-webkit-details-marker{
+  display:none;
+}
+
+.legal-disclosure > summary::after{
+  content:"+";
+  color:#d9e5ff;
+  font-size:20px;
+  line-height:1;
+}
+
+.legal-disclosure[open] > summary::after{
+  content:"−";
+}
+
+.legal-disclosure-content{
+  padding:0 12px 12px;
+}
+
+.legal-privacy-section{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.16);
+}
 
 .account-tab-btn.active{
   color:#fff;

@@ -3,9 +3,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="google-site-verification" content="eiPMx18oRPLkuG-TcWlEYEEeHfn2kJfIws1SABShHo8" />
-
-<title id="appPageTitle">NovaFix - Sign In</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<title id="appPageTitle">Lumevine - Sign In</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
@@ -18,7 +17,7 @@
 <script>
   (function () {
     try {
-      var theme = localStorage.getItem("novafix_theme_last");
+      var theme = localStorage.getItem("lumevine_theme_last");
       if (theme === "glacier" || theme === "nature" || theme === "burgundy") {
         document.documentElement.dataset.theme = theme;
       }
@@ -37,13 +36,13 @@
 
 <!-- SPLASH -->
 <div id="splash">
-  <img src="https://i.postimg.cc/mkS9cfP8/A06BAE0D-1F13-4DFD-8206-956AB07B379C.png">
+  <img src="https://i.postimg.cc/rshBdq4K/8BA18AD3-7C1D-4555-9FCA-70654B4ACB85.png">
 </div>
 
 <!-- SIGN-IN / SIGN-UP MODAL -->
 <div id="signInModal">
   <div class="modal-content">
-    <h2 id="modalTitle">Welcome to NovaFix 🌟</h2>
+    <h2 id="modalTitle">Welcome to Lumevine 🌟</h2>
     <input id="usernameInput" type="text" placeholder="Enter username" style="display:none;">
     <input id="displayNameInput" type="text" placeholder="Enter display name" style="display:none;">
     <input id="emailInput" type="email" placeholder="Enter email">
@@ -63,7 +62,7 @@
     <div class="friends-list-box">
       <div class="friend-row wellness-info-row">
         <strong id="wellnessInfoCategory">Not Yet Calculated</strong>
-        <small id="wellnessInfoScore">Score: waiting for today’s first log</small>
+        <small id="wellnessInfoScore">Score: Waiting for today’s first log</small>
         <small id="wellnessInfoStatus">Status: Log one item to calculate today’s score.</small>
       </div>
     </div>
@@ -94,7 +93,7 @@
     <div class="theme-bubble theme-bubble-two"></div>
     <div class="theme-bubble theme-bubble-three"></div>
     <div class="theme-setup-content">
-      <p class="theme-setup-eyebrow">Make NovaFix yours</p>
+      <p class="theme-setup-eyebrow">Make Lumevine yours</p>
       <h2 id="themeSetupTitle">Choose your theme</h2>
       <p class="theme-setup-subtitle">Pick a color mood for your dashboard. You can change it any time.</p>
       <div id="themeSetupOptions" class="theme-choice-grid"></div>
@@ -105,7 +104,7 @@
 <div id="welcomeGuideModal">
   <div class="welcome-guide-card">
     <div class="welcome-guide-top">
-      <h2 class="welcome-guide-title">Welcome to NovaFix ✨</h2>
+      <h2 class="welcome-guide-title">Welcome to Lumevine ✨</h2>
       <p id="guideStepCounter" class="welcome-guide-step">Step 1/5</p>
     </div>
     <div class="welcome-guide-body">
@@ -125,7 +124,7 @@
 <div id="tosModal">
   <div class="tos-card" role="dialog" aria-modal="true" aria-labelledby="tosTitle">
     <h3 id="tosTitle">Terms of Service</h3>
-    <div class="tos-scroll">TERMS OF SERVICE
+    <div id="tosScrollContent" class="tos-scroll">TERMS OF SERVICE
 
   Last Updated: May 14, 2026
 
@@ -172,6 +171,7 @@
   This tracking is limited to product operation, reliability, and account security.
 
   All rights reserved. Unauthorized copying, distribution, or commercial use is strictly prohibited.</div>
+    <p class="tos-privacy-link">You can view our Privacy Policy <a href="https://divyankg26.github.io/privacypolicy" target="_blank" rel="noopener noreferrer">here</a>.</p>
     <p id="tosError"></p>
     <div class="tos-actions">
       <button id="tosAgreeBtn" type="button" onclick="acceptTosAgreement()">Agree</button>
@@ -180,7 +180,7 @@
 </div>
 
 <header>
-  <h1>NovaFix</h1>
+  <h1>Lumevine</h1>
   <p>Mind • Body • Money • Music • Productivity</p>
 </header>
 
@@ -193,7 +193,7 @@
     <button type="button" class="account-tab-btn active" data-account-tab="general">General</button>
     <button type="button" class="account-tab-btn" data-account-tab="friends">Friends</button>
     <button type="button" class="account-tab-btn" data-account-tab="shortcuts">Shortcuts</button>
-    <button type="button" class="account-tab-btn" data-account-tab="customisation">Customisation</button>
+    <button type="button" class="account-tab-btn" data-account-tab="customisation">Personalization</button>
     <button type="button" class="account-tab-btn" data-account-tab="help">Help</button>
   </div>
 
@@ -249,7 +249,7 @@
   <div class="account-tab-panel" data-account-panel="customisation">
     <div class="account-transfer-box">
       <h4 style="margin:0 0 8px;font-size:15px;color:#fff;">Theme</h4>
-      <p class="export-note" style="margin-top:0;text-align:left;">Choose the color mood for your NovaFix dashboard.</p>
+      <p class="export-note" style="margin-top:0;text-align:left;">Choose the color mood for your Lumevine dashboard.</p>
       <div id="accountThemeOptions" class="theme-choice-grid theme-choice-grid-account"></div>
     </div>
   </div>
@@ -268,8 +268,20 @@
       <div class="export-actions" style="margin-bottom:8px;">
         <button id="helpReportNowBtn" type="button" onclick="openReportRedirectConfirm()">Report Now</button>
       </div>
-      <p class="export-note" style="margin-top:0;text-align:left;">Found a bug or issue? Report it at <span class="support-email-highlight">support.novafix@gmail.com</span> with a short description, what you expected, and what actually happened.</p>
+      <p class="export-note" style="margin-top:0;text-align:left;">Found a bug or issue? Report it at <span class="support-email-highlight">support.lumevine@gmail.com</span> with a short description, what you expected, and what actually happened.</p>
     </div>
+
+    <details class="account-transfer-box legal-disclosure">
+      <summary>Legal</summary>
+      <div class="legal-disclosure-content">
+        <h4 style="margin:0 0 8px;font-size:15px;color:#fff;">Terms of Service</h4>
+        <div id="accountTermsContent" class="legal-terms-content"></div>
+        <div class="legal-privacy-section">
+        <h4 style="margin:0 0 8px;font-size:15px;color:#fff;">Privacy Policy</h4>
+        <p class="export-note" style="margin-top:0;text-align:left;">Learn how Lumevine handles your information in our <a href="https://divyankg26.github.io/privacypolicy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
+        </div>
+      </div>
+    </details>
   </div>
 
 </div>
@@ -333,6 +345,63 @@
   </div>
 </div>
 
+<div id="appDialogModal" class="app-dialog-modal" aria-hidden="true">
+  <div class="import-transfer-card app-dialog-card" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle" aria-describedby="appDialogMessage">
+    <h3 id="appDialogTitle">Notice</h3>
+    <p id="appDialogMessage" class="import-transfer-note"></p>
+    <input id="appDialogInput" type="text" autocomplete="off" hidden>
+    <div class="import-transfer-actions">
+      <button id="appDialogCancelBtn" type="button" class="import-transfer-cancel">Cancel</button>
+      <button id="appDialogConfirmBtn" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="dailyRoutineEditorModal" onclick="closeDailyRoutineEditor(event)">
+  <div class="welcome-guide-card routine-editor-card" role="dialog" aria-modal="true" aria-labelledby="dailyRoutineEditorTitle" onclick="event.stopPropagation()">
+    <div class="welcome-guide-top">
+      <h2 id="dailyRoutineEditorTitle" class="welcome-guide-title">Update routine</h2>
+      <p id="dailyRoutineStepCounter" class="welcome-guide-step">Step 1/2</p>
+    </div>
+    <div class="welcome-guide-body">
+      <div id="dailyRoutineActivityStep">
+        <h3>Choose an activity</h3>
+        <p id="dailyRoutineActivityHint">Select an activity to add to your routine.</p>
+        <select id="dailyRoutineActivitySelect" aria-label="Routine activity">
+          <option value="">Choose an activity</option>
+        </select>
+      </div>
+      <div id="dailyRoutineTimeStep" hidden>
+        <h3>Choose a start time</h3>
+        <p id="dailyRoutineTimeHint">Choose an hourly start time, or select Custom time and enter it in 24-hour format (HH:MM).</p>
+        <select id="dailyRoutineTimeSelect" aria-label="Routine start time">
+          <option value="">Choose a start time</option>
+        </select>
+        <input id="dailyRoutineTimeInput" type="text" inputmode="numeric" autocomplete="off" placeholder="HH:MM (e.g. 09:30)" aria-label="Custom activity start time" hidden>
+      </div>
+      <p id="dailyRoutineEditorError" class="import-transfer-error" role="alert"></p>
+    </div>
+    <div id="dailyRoutineEditorDots" class="welcome-guide-dots" aria-hidden="true"></div>
+    <div class="routine-editor-actions">
+      <button type="button" class="routine-editor-cancel" onclick="closeDailyRoutineEditor()">Cancel</button>
+      <button id="dailyRoutineEditorNextBtn" type="button" onclick="advanceDailyRoutineEditor()">Next</button>
+    </div>
+  </div>
+</div>
+
+<div id="dailyRoutineCustomActivityModal" onclick="closeDailyRoutineCustomActivity(event)">
+  <div class="import-transfer-card routine-custom-card" role="dialog" aria-modal="true" aria-labelledby="dailyRoutineCustomTitle" onclick="event.stopPropagation()">
+    <h3 id="dailyRoutineCustomTitle">Custom activity</h3>
+    <p class="import-transfer-note">Name the activity you want to add to your routine.</p>
+    <input id="dailyRoutineCustomInput" type="text" maxlength="64" autocomplete="off" placeholder="e.g. Practice piano">
+    <p id="dailyRoutineCustomError" class="import-transfer-error" role="alert"></p>
+    <div class="import-transfer-actions">
+      <button type="button" class="import-transfer-cancel" onclick="closeDailyRoutineCustomActivity()">Cancel</button>
+      <button type="button" onclick="confirmDailyRoutineCustomActivity()">OK</button>
+    </div>
+  </div>
+</div>
+
 <div id="crashAlertBanner" class="crash-banner">
 <div class="crash-banner-row">
   <div>
@@ -340,7 +409,7 @@
       <p id="crashBannerText" class="crash-risk-sub">Your dip risk is elevated right now.</p>
   </div>
   <div class="crash-banner-actions">
-    <button onclick="runCrashRescueFlow()">Run 2-Min Rescue</button>
+    <button onclick="runCrashRescueFlow()">Start a quick reset</button>
     <button id="crashAlertDismissBtn" class="crash-dismiss-btn" type="button" onclick="dismissCrashAlertBanner()">Dismiss</button>
   </div>
 </div>
@@ -362,7 +431,7 @@
 <p class="micro-tip">Tip: Ask short, clear prompts for better advice.</p>
 <div class="chat" id="chat"></div>
 <div class="input-group">
-<textarea id="aiInput" rows="2" placeholder="Talk to AI"></textarea>
+<textarea id="aiInput" rows="2" placeholder="Ask Anything"></textarea>
 <button id="aiTalkBtn" onclick="aiChat()">Talk</button>
 </div>
 <p id="aiLimitError" class="limit-note"></p>
@@ -404,24 +473,22 @@
 <ul id="taskList"></ul>
 </div>
 
-<!-- Grocery Finance -->
-<div class="card">
-<h2>🧾 Grocery Financing</h2>
-<input id="gCost" placeholder="Monthly amount">
-<select id="gCurrency" aria-label="Currency">
-  <option value="usd">USD ($)</option>
-  <option value="eur">EUR (€)</option>
-  <option value="inr">INR (₹)</option>
-  <option value="gbp">GBP (£)</option>
-  <option value="jpy">JPY (¥)</option>
-  <option value="cad">CAD ($)</option>
-  <option value="aud">AUD ($)</option>
-  <option value="cny">CNY (¥)</option>
-</select>
-<input id="gMonths" placeholder="Months">
-<input id="buffer" placeholder="Buffer %">
-<button onclick="calculateFinance()">Plan</button>
-<p id="financeResult"></p>
+<!-- Sleep -->
+<div class="card sleep-card">
+<h2>💤 Sleep</h2>
+<p class="micro-tip">Tip: Log sleep after waking for a consistent trend.</p>
+<input type="number" id="sleepInput" placeholder="Hours" min="0.1" step="0.1">
+<button id="sleepSaveBtn" onclick="saveSleep()">Save</button>
+<div class="input-group bedtime-input-group">
+  <input id="bedtimeTimeInput" placeholder="Bed Time (in 24 hour format).">
+  <button id="bedtimeSetBtn" onclick="setBedtimeReminder()">Set Bed Time</button>
+</div>
+<p id="bedtimeInputError" class="limit-note"></p>
+<p id="sleepResetCountdown" class="reset-hint reset-countdown-alert"></p>
+<p id="sleepLimitError" class="limit-note"></p>
+<button id="sleepClearBtn" class="water-clear-btn" onclick="clearBedtimeData()">Clear Bed Time</button>
+<p id="sleepFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare sleep consistency.</p>
+<p id="sleepResult"></p>
 </div>
 
 <!-- Mood Tracker -->
@@ -458,22 +525,24 @@
 <p id="waterProgress"></p>
 </div>
 
-<!-- Sleep -->
-<div class="card sleep-card">
-<h2>💤 Sleep</h2>
-<p class="micro-tip">Tip: Log sleep after waking for a consistent trend.</p>
-<input type="number" id="sleepInput" placeholder="Hours" min="0.1" step="0.1">
-<button id="sleepSaveBtn" onclick="saveSleep()">Save</button>
-<div class="input-group bedtime-input-group">
-  <input id="bedtimeTimeInput" placeholder="Bed Time (in 24 hour format).">
-  <button id="bedtimeSetBtn" onclick="setBedtimeReminder()">Set Bed Time</button>
-</div>
-<p id="bedtimeInputError" class="limit-note"></p>
-<p id="sleepResetCountdown" class="reset-hint reset-countdown-alert"></p>
-<p id="sleepLimitError" class="limit-note"></p>
-<button id="sleepClearBtn" class="water-clear-btn" onclick="clearBedtimeData()">Clear Bed Time</button>
-<p id="sleepFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare sleep consistency.</p>
-<p id="sleepResult"></p>
+<!-- Grocery Finance -->
+<div class="card">
+<h2>🧾 Grocery Financing</h2>
+<input id="gCost" placeholder="Monthly amount">
+<select id="gCurrency" aria-label="Currency">
+  <option value="usd">USD ($)</option>
+  <option value="eur">EUR (€)</option>
+  <option value="inr">INR (₹)</option>
+  <option value="gbp">GBP (£)</option>
+  <option value="jpy">JPY (¥)</option>
+  <option value="cad">CAD ($)</option>
+  <option value="aud">AUD ($)</option>
+  <option value="cny">CNY (¥)</option>
+</select>
+<input id="gMonths" placeholder="Months">
+<input id="buffer" placeholder="Buffer %">
+<button onclick="calculateFinance()">Plan</button>
+<p id="financeResult"></p>
 </div>
 
 <!-- Wellness Music -->
@@ -553,12 +622,12 @@
 </div>
 <div class="crash-meter"><div id="crashRiskFill" class="crash-meter-fill"></div></div>
 <p id="crashRiskReason" class="crash-risk-sub">Log your first entries to generate risk analysis.</p>
-<button class="crash-rescue-btn" onclick="runCrashRescueFlow()">Run 2-Min Rescue</button>
+<button class="crash-rescue-btn" onclick="runCrashRescueFlow()">Start a quick reset</button>
 <ul id="crashRescuePlan" class="crash-plan"></ul>
 </div>
 
 <!-- Weekly Review + AI Coach -->
-<div class="card scroll-card">
+<div class="card scroll-card inner-scroll-card">
 <h2>🧠 Weekly Review + AI Coach</h2>
 <div class="card-scroll-body weekly-scroll-body">
 <p id="weeklyRange" class="weekly-range">Last 7 days review</p>
@@ -589,7 +658,7 @@
 </div>
 
 <!-- Adaptive Habit Quest -->
-<div class="card quest-card scroll-card" id="questCard">
+<div class="card quest-card scroll-card inner-scroll-card" id="questCard">
 <h2>🎮 Adaptive Habit Quest</h2>
 <div class="card-scroll-body quest-scroll-body">
 <p class="micro-tip">Tip: Finish all 4 quests before today’s reset countdown ends to lock streak progress.</p>
@@ -609,7 +678,7 @@
 </div>
 
 <!-- Predictive Burnout Radar -->
-<div class="card">
+<div class="card burnout-scroll-card">
 <h2>📡 Predictive Burnout Radar</h2>
 <div id="burnoutRisk" class="burnout-risk">0/100</div>
 <p id="burnoutWindow" class="wellness-status">Low Risk • Stable window</p>
@@ -652,17 +721,24 @@
 </div>
 </div>
 
-<!-- Personalized Daily Plan -->
-<div class="card startup-scroll-card">
-<h2>🗂️ Personalized Daily Plan</h2>
-<p class="micro-tip">Top 3 priorities generated from your mood, sleep, hydration, and task trends.</p>
-<ul id="startupDailyPlanList" class="startup-list"></ul>
-<div class="input-group startup-actions-two">
-  <button id="startupRefreshPlanBtn" onclick="refreshStartupPlan()">Generate Plan</button>
-  <button id="startupApplyPlanBtn" onclick="applyStartupPlanAsTasks()" disabled>Apply as Tasks</button>
+<!-- Daily Routine -->
+<div class="card startup-scroll-card daily-routine-card">
+<div class="daily-routine-header">
+  <h2>🗓️ Daily Routine</h2>
+  <label class="daily-routine-start-time" for="dailyRoutineStartTimeSelect">
+    <span>Start</span>
+    <select id="dailyRoutineStartTimeSelect" aria-label="Routine start time"></select>
+  </label>
 </div>
-<p id="startupPlanResetCountdown" class="insight-reset-note"></p>
-<p id="startupPlanMeta" class="startup-mini">Plan refreshes daily or when you regenerate it.</p>
+<p class="micro-tip">Generate a routine from your wellness trends, or shape it with your own activities.</p>
+<ul id="dailyRoutineList" class="startup-list"><li>Generate a routine to see your schedule.</li></ul>
+<div class="daily-routine-actions">
+  <button id="dailyRoutineGenerateBtn" type="button" onclick="generateDailyRoutine()">Generate Routine</button>
+  <button id="dailyRoutineAddBtn" type="button" onclick="openDailyRoutineEditor('add')">Add Activity</button>
+  <button id="dailyRoutineReplaceBtn" type="button" onclick="openDailyRoutineEditor('replace')">Replace Activity</button>
+  <button id="dailyRoutineClearBtn" type="button" class="routine-clear-btn" onclick="clearDailyRoutine()" disabled>Clear Routine</button>
+</div>
+<p id="dailyRoutineMeta" class="startup-mini">Your routine is saved to your account and stays here after refresh.</p>
 </div>
 
 <!-- Weekly Startup Report -->
@@ -684,6 +760,13 @@
 <ul id="startupBehaviorMemory" class="startup-list"></ul>
 </div>
 
+<script>
+  (() => {
+    const terms = document.getElementById("tosScrollContent");
+    const legalTerms = document.getElementById("accountTermsContent");
+    if (terms && legalTerms) legalTerms.textContent = terms.textContent || "";
+  })();
+</script>
 <script src="scripts/app.js"></script>
 </body>
 </html>

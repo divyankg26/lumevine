@@ -303,6 +303,30 @@ body.splash-active .crash-banner{
   padding:16px;
 }
 
+.app-dialog-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.78);
+  justify-content:center;
+  align-items:center;
+  z-index:10060;
+  padding:16px;
+}
+
+.app-dialog-card{
+  animation:modalIn var(--motion-medium) var(--ease-gentle);
+}
+
+.app-dialog-card .import-transfer-note{
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.app-dialog-card input[hidden]{
+  display:none;
+}
+
 #wellnessScoreInfoModal{
   display:none;
   position:fixed;
@@ -634,6 +658,194 @@ body.splash-active .crash-banner{
 #guideNextBtn{
   background:linear-gradient(135deg,var(--primary),var(--accent));
   color:#fff;
+}
+
+.daily-routine-card .daily-routine-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+
+.daily-routine-card .daily-routine-header{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:10px;
+}
+
+.daily-routine-card .daily-routine-header h2{
+  min-width:0;
+  margin:0;
+  white-space:nowrap;
+}
+
+.daily-routine-card .daily-routine-start-time{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:0 0 auto;
+  align-self:flex-start;
+  margin:0;
+  font-size:12px;
+  font-weight:600;
+  opacity:.95;
+}
+
+.daily-routine-card .daily-routine-header + .micro-tip{
+  margin-top:0;
+}
+
+.daily-routine-card #dailyRoutineStartTimeSelect{
+  width:auto;
+  min-width:112px;
+  min-height:34px;
+  padding:6px 28px 6px 9px;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:9px;
+  background-color:rgba(7,16,30,.35);
+  color:inherit;
+  font-size:12px;
+}
+
+@media (max-width:420px){
+  .daily-routine-card .daily-routine-start-time{
+    flex-direction:row;
+    align-items:center;
+    gap:6px;
+  }
+}
+
+.daily-routine-card .daily-routine-actions button{
+  width:100%;
+  min-width:0;
+  margin:0;
+}
+
+.daily-routine-card .daily-routine-item{
+  margin:9px 0;
+  line-height:1.4;
+}
+
+.daily-routine-card #dailyRoutineList{
+  max-height:280px;
+  overflow-y:auto;
+  padding:10px 12px 10px 30px;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(7,16,30,.38), rgba(7,16,30,.28));
+  scrollbar-width:thin;
+  scrollbar-color:var(--primary) transparent;
+}
+
+.daily-routine-card #dailyRoutineList::-webkit-scrollbar{
+  width:6px;
+}
+
+.daily-routine-card #dailyRoutineList::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+}
+
+.daily-routine-card #dailyRoutineList::-webkit-scrollbar-thumb{
+  background:var(--primary);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+}
+
+.daily-routine-card .daily-routine-item strong,
+.daily-routine-card .daily-routine-item span{
+  display:block;
+}
+
+.daily-routine-card .daily-routine-item span{
+  margin-top:3px;
+  font-size:12px;
+  opacity:.9;
+}
+
+.daily-routine-card .routine-clear-btn{
+  background:rgba(255,255,255,.2);
+}
+
+.daily-routine-card .routine-clear-btn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+#dailyRoutineEditorModal,
+#dailyRoutineCustomActivityModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  justify-content:center;
+  align-items:center;
+  padding:16px;
+  background:rgba(0,0,0,.76);
+}
+
+#dailyRoutineEditorModal{
+  z-index:10041;
+}
+
+#dailyRoutineCustomActivityModal{
+  z-index:10042;
+}
+
+.routine-editor-card{
+  width:min(560px, calc(100vw - 24px));
+}
+
+.routine-editor-card .welcome-guide-body select,
+.routine-editor-card .welcome-guide-body input{
+  display:block;
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  margin-top:12px;
+  padding:11px 12px;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:10px;
+  background:rgba(255,255,255,.18);
+  color:#fff;
+  font:inherit;
+}
+
+.routine-editor-card .welcome-guide-body select option{
+  color:#111;
+}
+
+.routine-editor-card .welcome-guide-body [hidden]{
+  display:none;
+}
+
+.routine-editor-actions{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:14px;
+}
+
+.routine-editor-actions button{
+  min-width:104px;
+  border:0;
+  border-radius:10px;
+  padding:10px 14px;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.routine-editor-actions button:last-child{
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+}
+
+.routine-editor-cancel{
+  background:rgba(255,255,255,.2);
+}
+
+.routine-custom-card{
+  width:min(420px, calc(100vw - 24px));
 }
 
 /* HEADER */
