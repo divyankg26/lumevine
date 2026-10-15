@@ -1,49 +1,62 @@
-# STRICT PROPRIETARY SOFTWARE LICENSE AGREEMENT
+# TERMS OF SERVICE
 
-**Copyright (c) 2026 Divyank Goyal. All Rights Reserved.**
+Last Updated: October 15, 2026
 
-This Software, including all source code, object code, documentation, design elements, algorithms, structure, and associated materials (collectively, the "Software"), is protected by copyright laws and international intellectual property treaties.
+These Terms of Service (“Terms”) govern access to and use of the software, source code, documentation, design elements, algorithms, structure, and any associated materials (collectively, the “Software”) provided by Divyank Goyal (“Licensor,” “we,” “us,” or “our”).
 
-By accessing, using, copying, or interacting with the Software in any way, you agree to be bound by this Agreement. If you do not agree, you must not use the Software.
+By accessing, using, copying, or interacting with the Software in any way, you agree to be bound by these Terms. If you do not agree, you must not use the Software.
 
-#1. Ownership
-The Software is and shall remain the exclusive intellectual property of the Copyright Holder. No ownership rights, title, or interest in the Software are transferred under this Agreement.
+## 1. Ownership
 
-#2. Grant of License
-You are granted a limited, non-exclusive, non-transferable, and revocable license to use the Software strictly for personal, non-commercial purposes.
-All rights not expressly granted herein are reserved by the Copyright Holder.
+The Software is and shall remain the exclusive intellectual property of the Licensor. No ownership rights, title, or interest in the Software are transferred to you under these Terms.
 
-#3. Prohibited Uses
-* Without prior written authorization from the Copyright Holder, you may NOT:
-* Copy, reproduce, or distribute the Software in whole or in part.
-* Modify, adapt, translate, reverse engineer, decompile, or disassemble the Software.
-* Create derivative works based on the Software.
-* Use the Software for any commercial purpose.
-* Sell, sublicense, lease, rent, publish, or otherwise transfer the Software.
-* The utilization of older versions of this software.
-* Remove, alter, or obscure any copyright notices or proprietary markings.
-* Use the Software in any product, system, or service that competes with the Copyright Holder.
+## 2. License to Use
 
-#4. Enforcement
-Any unauthorized use constitutes a violation of this Agreement and may result in enforcement actions, including suspension or termination of access.
-The Copyright Holder reserves the right to pursue all available remedies under applicable law, including but not limited to injunctive relief, damages, and recovery of legal fees.
+You are granted a limited, non-exclusive, non-transferable, and revocable license to use the Software for personal, non-commercial purposes.
 
-#5. Termination
-Access to the Software may be suspended or terminated at any time if you violate this Agreement.
-Upon termination, all rights granted to you under this Agreement immediately cease, and you must discontinue all use of the Software.
+## 3. Restrictions on Use
 
-#6. No Warranty
-The Software is provided strictly "AS IS" and "AS AVAILABLE," without warranties of any kind, whether express or implied, including but not limited to merchantability, fitness for a particular purpose, or non-infringement.
+Without prior written permission from the Licensor, you are prohibited from:
 
-#7. Governing Law
-This Agreement shall be governed by and interpreted in accordance with the laws applicable in the jurisdiction of the Copyright Holder, without regard to conflict of law principles.
+- Copying, reproducing, or distributing the Software in whole or in part.
+- Modifying, adapting, translating, reverse engineering, decompiling, or disassembling the Software.
+- Creating derivative works based on the Software.
+- Using the Software for commercial purposes.
+- Selling, sublicensing, leasing, renting, publishing, or transferring the Software.
+- Using older versions of the Software.
+- Removing, altering, or obscuring proprietary notices or markings.
+- Using the Software in any product, system, or service that competes with the Licensor.
 
-#8. Entire Agreement
-This Agreement constitutes the entire agreement regarding the Software and supersedes any prior or contemporaneous understandings, unless replaced by a separate written agreement signed by the Copyright Holder.
+## 4. Enforcement and Remedies
 
-#9. Basic Activity Tracking
-To operate core account features, the app stores basic account activity metadata such as your account creation date and last login date.
-This tracking is limited to product operation, reliability, and account security.
+Violations of these Terms may result in actions including suspension of access or legal remedies where appropriate. The Licensor reserves the right to pursue all available remedies under applicable law, including injunctive relief, damages, and recovery of legal fees.
 
---
+## 5. Termination
+
+We may suspend or terminate your access to the Software if you violate these Terms. Upon termination, your right to use the Software ends immediately.
+
+## 6. Disclaimer of Warranty
+
+The Software is provided “AS IS” and “AS AVAILABLE,” without warranties of any kind, whether express or implied, including warranties of merchantability, fitness for a particular purpose, or non-infringement.
+
+## 7. Governing Law
+
+These Terms are governed by and interpreted in accordance with the laws applicable in the jurisdiction of the Licensor, without regard to conflict-of-law principles.
+
+## 8. Entire Agreement
+
+These Terms represent the entire agreement regarding the Software unless superseded by a separate written agreement signed by the Licensor.
+
+## 9. Basic Activity Tracking
+
+To operate core account features, the app stores basic account activity metadata, such as your account creation date and last login date. This tracking is limited to product operation, reliability, and account security.
+
+## 10. Wellness Estimates
+
+Wellness scores, mood-risk estimates, burnout forecasts, trends, and suggested recovery actions are provided for general informational and self-reflection purposes only. They are estimates generated from information available in the app, including user-entered mood, sleep, hydration, productivity, gratitude, challenge, and recovery activity data.
+
+These estimates may be incomplete, inaccurate, or out of date. They are not medical assessments, diagnoses, or treatment recommendations, and are not a substitute for advice from a qualified healthcare professional. Do not use them to make medical decisions. If you have health concerns, seek advice from a qualified professional.
+
 All rights reserved. Unauthorized copying, distribution, or commercial use is strictly prohibited.
+
+You can view the Privacy Policy at https://divyankg26.github.io/privacypolicy.
