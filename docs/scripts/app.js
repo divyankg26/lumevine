@@ -11151,6 +11151,10 @@ const QUEST_LIBRARY = [
   { id: "sleep85_2", text: "Stretch sleep to 8.5 hours today.", type: "recovery", requirement: { kind: "sleep", min: 8.5 } },
   { id: "sleep90_1", text: "Log at least 9 hours of sleep today.", type: "recovery", requirement: { kind: "sleep", min: 9 } },
   { id: "sleep90_2", text: "Reach 9 sleep hours today.", type: "recovery", requirement: { kind: "sleep", min: 9 } },
+  { id: "sleep60_3", text: "Record six hours of sleep or more today.", type: "recovery", requirement: { kind: "sleep", min: 6 } },
+  { id: "sleep70_3", text: "Log seven hours of rest for recovery.", type: "recovery", requirement: { kind: "sleep", min: 7 } },
+  { id: "sleep80_3", text: "Track eight hours of sleep today.", type: "recovery", requirement: { kind: "sleep", min: 8 } },
+  { id: "sleep85_3", text: "Give yourself at least 8.5 hours of rest.", type: "recovery", requirement: { kind: "sleep", min: 8.5 } },
 
   { id: "water5_1", text: "Log at least 5 glasses of water today.", type: "hydration", requirement: { kind: "water", min: 5 } },
   { id: "water5_2", text: "Drink and log 5 glasses today.", type: "hydration", requirement: { kind: "water", min: 5 } },
@@ -11164,11 +11168,18 @@ const QUEST_LIBRARY = [
   { id: "water9_2", text: "Push hydration to 9 glasses today.", type: "hydration", requirement: { kind: "water", min: 9 } },
   { id: "water10_1", text: "Log at least 10 glasses of water today.", type: "hydration", requirement: { kind: "water", min: 10 } },
   { id: "water10_2", text: "Complete a 10-glass hydration day.", type: "hydration", requirement: { kind: "water", min: 10 } },
+  { id: "water4_1", text: "Log four glasses of water today.", type: "hydration", requirement: { kind: "water", min: 4 } },
+  { id: "water7_3", text: "Track seven glasses of water before day-end.", type: "hydration", requirement: { kind: "water", min: 7 } },
+  { id: "water8_3", text: "Reach eight logged glasses of water today.", type: "hydration", requirement: { kind: "water", min: 8 } },
+  { id: "water10_3", text: "Log ten glasses to meet today's hydration quest.", type: "hydration", requirement: { kind: "water", min: 10 } },
 
   { id: "mood_1", text: "Log your mood at least once today.", type: "mind", requirement: { kind: "mood" } },
   { id: "mood_2", text: "Check in with your mood today.", type: "mind", requirement: { kind: "mood" } },
   { id: "mood_3", text: "Record one mood entry for today.", type: "mind", requirement: { kind: "mood" } },
   { id: "mood_4", text: "Track your emotional state once today.", type: "mind", requirement: { kind: "mood" } },
+  { id: "mood_5", text: "Pause for a mood check-in and log it.", type: "mind", requirement: { kind: "mood" } },
+  { id: "mood_6", text: "Add one mood entry to today's log.", type: "mind", requirement: { kind: "mood" } },
+  { id: "mood_7", text: "Notice how you feel and record it today.", type: "mind", requirement: { kind: "mood" } },
 
   { id: "grat1_1", text: "Write one gratitude note today.", type: "mind", requirement: { kind: "gratitude", min: 1 } },
   { id: "grat1_2", text: "Capture 1 gratitude win today.", type: "mind", requirement: { kind: "gratitude", min: 1 } },
@@ -11182,6 +11193,11 @@ const QUEST_LIBRARY = [
   { id: "grat5_2", text: "Log 5 gratitude points today.", type: "mind", requirement: { kind: "gratitude", min: 5 } },
   { id: "grat6_1", text: "Write six gratitude notes today.", type: "mind", requirement: { kind: "gratitude", min: 6 } },
   { id: "grat6_2", text: "Hit 6 gratitude entries today.", type: "mind", requirement: { kind: "gratitude", min: 6 } },
+  { id: "grat1_3", text: "Log one thing you appreciate today.", type: "mind", requirement: { kind: "gratitude", min: 1 } },
+  { id: "grat2_3", text: "Write down two gratitude notes today.", type: "mind", requirement: { kind: "gratitude", min: 2 } },
+  { id: "grat3_3", text: "Record three things you are grateful for.", type: "mind", requirement: { kind: "gratitude", min: 3 } },
+  { id: "grat4_3", text: "Add four gratitude moments to your journal.", type: "mind", requirement: { kind: "gratitude", min: 4 } },
+  { id: "grat5_3", text: "Write five gratitude notes in today's log.", type: "mind", requirement: { kind: "gratitude", min: 5 } },
 
   { id: "task1_1", text: "Complete all your tasks today.", type: "focus", requirement: { kind: "tasksAll" } },
   { id: "task1_2", text: "Finish all your tasks today.", type: "focus", requirement: { kind: "tasksAll" } },
@@ -11203,11 +11219,12 @@ const QUEST_LIBRARY = [
   { id: "task9_2", text: "End the day with all tasks completed.", type: "focus", requirement: { kind: "tasksAll" } },
   { id: "task10_1", text: "Complete all your tasks today.", type: "focus", requirement: { kind: "tasksAll" } },
   { id: "task10_2", text: "Finish all tasks on your plate today.", type: "focus", requirement: { kind: "tasksAll" } },
-
-  { id: "challenge_1", text: "Complete today’s daily challenge.", type: "consistency", requirement: { kind: "challenge" } },
-  { id: "challenge_2", text: "Finish the daily challenge today.", type: "consistency", requirement: { kind: "challenge" } },
-  { id: "challenge_3", text: "Secure your day by completing today’s challenge.", type: "consistency", requirement: { kind: "challenge" } },
-  { id: "challenge_4", text: "Check off the daily challenge before day-end.", type: "consistency", requirement: { kind: "challenge" } },
+  { id: "task11_1", text: "Finish every open task on your list.", type: "focus", requirement: { kind: "tasksAll" } },
+  { id: "task11_2", text: "Complete your remaining tasks and log the progress.", type: "focus", requirement: { kind: "tasksAll" } },
+  { id: "task12_1", text: "Clear all pending tasks from your list today.", type: "focus", requirement: { kind: "tasksAll" } },
+  { id: "task12_2", text: "Close out every task you have today.", type: "focus", requirement: { kind: "tasksAll" } },
+  { id: "task13_1", text: "Finish today's task list, one item at a time.", type: "focus", requirement: { kind: "tasksAll" } },
+  { id: "task13_2", text: "Complete every task still open today.", type: "focus", requirement: { kind: "tasksAll" } },
 
 ];
 
@@ -11258,10 +11275,8 @@ function getHabitQuestSemanticKey(quest = {}) {
   }
 
   kind = kind.replace(/\s+/g, "");
-  if (["water", "sleep", "gratitude", "rescue", "taskscompleted"].includes(kind)) {
-    const minimum = Number(requirement.min);
-    return `${kind}:${Number.isFinite(minimum) ? minimum : 1}`;
-  }
+  if (kind === "taskscompleted" || kind === "tasksall") return "tasks";
+  if (["water", "sleep", "gratitude", "rescue", "mood", "challenge"].includes(kind)) return kind;
   return kind || "general";
 }
 
@@ -11533,7 +11548,7 @@ async function loadHabitQuest(userId) {
             completed: !!quest.completed
           };
           const key = getHabitQuestSemanticKey(normalizedQuest);
-          if (key.startsWith("rescue:")) return;
+          if (key.startsWith("rescue:") || key === "challenge") return;
           if (seenKeys.has(key) || loadedQuests.length >= 4) return;
           seenKeys.add(key);
           loadedQuests.push(normalizedQuest);
@@ -11591,12 +11606,18 @@ async function loadHabitQuest(userId) {
 
 function getTodayCompletedTaskCount() {
   const todayKey = getTodayKey();
-  return taskEntries.filter((entry) => !!entry.completed && dateToKey(entry.time) === todayKey).length;
+  const completedActiveTasks = taskEntries.filter((entry) => (
+    !!entry.completed && dateToKey(entry.completedAt || entry.time) === todayKey
+  )).length;
+  const deletedCompletedTasks = wellnessTaskCompletionCache.dateKey === todayKey
+    ? getWellnessTaskCacheGhostIds().length
+    : 0;
+  return completedActiveTasks + deletedCompletedTasks;
 }
 
 function getTodayRescueCount() {
   const todayKey = getTodayKey();
-  return rescueEvents.filter((entry) => dateToKey(entry.time) === todayKey).length;
+  return rescueEvents.filter((entry) => !!entry.completed && dateToKey(entry.time) === todayKey).length;
 }
 
 function getTodayGratitudeCount() {
@@ -11605,7 +11626,11 @@ function getTodayGratitudeCount() {
 }
 
 function validateHabitQuestCompletion(quest) {
-  const requirement = quest?.requirement || null;
+  const questId = String(quest?.id || "").split("-")[0];
+  const baseId = String(quest?.baseId || "");
+  const canonicalQuest = QUEST_LIBRARY.find((entry) => entry.id === questId)
+    || QUEST_LIBRARY.find((entry) => entry.id === baseId);
+  const requirement = canonicalQuest?.requirement || quest?.requirement || null;
   const snapshot = getWellnessSnapshot();
 
   if (!requirement?.kind) {
@@ -11635,7 +11660,9 @@ function validateHabitQuestCompletion(quest) {
       return { valid: true };
     }
     if (baseId === "challenge") {
-      if (!dailyChallengeCompleted) return { valid: false, message: "Complete today’s daily challenge first." };
+      if (!dailyChallengeCompleted || currentChallengeDateKey !== getTodayKey()) {
+        return { valid: false, message: "Complete today’s daily challenge first." };
+      }
       return { valid: true };
     }
     if (baseId === "rescue") {
@@ -11674,13 +11701,19 @@ function validateHabitQuestCompletion(quest) {
   }
   if (requirement.kind === "tasksAll") {
     const pending = Math.max(0, Number(snapshot.pendingTasks) || 0);
+    const completedToday = getTodayCompletedTaskCount();
+    if (completedToday < 1) {
+      return { valid: false, message: "Complete at least one task today before finishing this quest." };
+    }
     if (pending > 0) {
       return { valid: false, message: `Complete all your tasks first (${pending} still pending).` };
     }
     return { valid: true };
   }
   if (requirement.kind === "challenge") {
-    if (!dailyChallengeCompleted) return { valid: false, message: "Complete today’s daily challenge first." };
+    if (!dailyChallengeCompleted || currentChallengeDateKey !== getTodayKey()) {
+      return { valid: false, message: "Complete today’s daily challenge first." };
+    }
     return { valid: true };
   }
   if (requirement.kind === "rescue") {
@@ -22490,105 +22523,130 @@ const quotes=[
   "Knowing is not enough; we must apply. Willing is not enough; we must do. - Johann Wolfgang von Goethe",
   "Fortune favors the bold. - Virgil",
   "Do one thing every day that scares you. - Eleanor Roosevelt",
-  "One clear action beats ten perfect plans. - Lumevine",
-  "Small steps count when they actually happen. - Lumevine",
-  "Start before confidence arrives; confidence follows evidence. - Lumevine",
-  "The next ten minutes can change the tone of the day. - Lumevine",
-  "Momentum is built by returning, not by never slipping. - Lumevine",
-  "A tiny win today is still a vote for your future self. - Lumevine",
-  "Make the task smaller until starting feels obvious. - Lumevine",
-  "Discipline gets easier when the first step is kind. - Lumevine",
-  "Do the smallest useful version, then build from there. - Lumevine",
-  "Progress likes simple instructions. - Lumevine",
-  "You do not need a perfect day to protect the streak. - Lumevine",
-  "Energy rises when action becomes clear. - Lumevine",
-  "The best reset is one honest next step. - Lumevine",
-  "Consistency is quiet, but it changes everything. - Lumevine",
-  "Win the minute in front of you. - Lumevine",
-  "You can restart without explaining the pause. - Lumevine",
-  "Clarity grows after you begin. - Lumevine",
-  "Less pressure, more motion. - Lumevine",
-  "A focused sprint can rescue a scattered day. - Lumevine",
-  "Your future self only needs proof that you showed up. - Lumevine",
-  "Drink water, take a breath, do one thing. - Lumevine",
-  "When the day feels heavy, lower the bar and keep moving. - Lumevine",
-  "Do not wait for a mood; build a rhythm. - Lumevine",
-  "The first checkbox is the hardest; make it easy. - Lumevine",
-  "You are one small finish away from better momentum. - Lumevine",
-  "Start messy, finish cleaner. - Lumevine",
-  "A calm pace still reaches the finish line. - Lumevine",
-  "Turn worry into one controllable action. - Lumevine",
-  "Short effort repeated often becomes identity. - Lumevine",
-  "The comeback starts with the next log. - Lumevine",
-  "Give your attention one job at a time. - Lumevine",
-  "A five-minute start is stronger than a perfect delay. - Lumevine",
-  "Protect the basics and the bigger goals get lighter. - Lumevine",
-  "You can be tired and still take one gentle step. - Lumevine",
-  "Keep promises small enough to keep. - Lumevine",
-  "The day is not lost while one action remains possible. - Lumevine",
-  "Focus is a door; open it with one task. - Lumevine",
-  "Build evidence, not excuses. - Lumevine",
-  "If it matters, give it a small beginning. - Lumevine",
-  "Your pace is allowed to be realistic. - Lumevine",
-  "Finish one thing before judging the whole day. - Lumevine",
-  "You get stronger every time you return to the plan. - Lumevine",
-  "Make the healthy choice visible and the hard choice harder. - Lumevine",
-  "A low-energy day still accepts low-friction progress. - Lumevine",
-  "The fastest way out of stuck is specific action. - Lumevine",
-  "Let today be simple and real. - Lumevine",
-  "You do not need intensity; you need repeatability. - Lumevine",
-  "Breathe first, then execute. - Lumevine",
-  "The next good choice is enough to begin again. - Lumevine",
-  "Small wins stack faster than self-criticism. - Lumevine",
-  "Your routine is a safety rail, not a cage. - Lumevine",
-  "Motivation fades; systems catch you. - Lumevine",
-  "Start with the version you can actually do. - Lumevine",
-  "A clean desk is optional; a clear next step is powerful. - Lumevine",
-  "Do the action that removes tomorrow's stress. - Lumevine",
-  "If you cannot do a lot, do something honest. - Lumevine",
-  "Your streak is built by ordinary days. - Lumevine",
-  "One glass, one breath, one task. - Lumevine",
-  "The best plan is the one you touch today. - Lumevine",
-  "A tiny finish is better than another almost. - Lumevine",
-  "Choose the action that makes the next action easier. - Lumevine",
-  "You are allowed to go slowly without stopping. - Lumevine",
-  "Reset your body, then reset the task. - Lumevine",
-  "Make progress so small it has no excuse. - Lumevine",
-  "Your attention is valuable; spend it on the next move. - Lumevine",
-  "Begin where the resistance is lowest. - Lumevine",
-  "The work gets lighter after the first honest minute. - Lumevine",
-  "Keep the streak human, not heroic. - Lumevine",
-  "A planned pause beats an accidental spiral. - Lumevine",
-  "The task does not need drama; it needs a start. - Lumevine",
-  "Today's small discipline becomes tomorrow's freedom. - Lumevine",
-  "Do the boring useful thing and let it compound. - Lumevine",
-  "You can change direction with one deliberate choice. - Lumevine",
-  "Progress is not loud; it is logged. - Lumevine",
-  "Make the next step visible, then take it. - Lumevine",
-  "The goal gets closer every time you reduce friction. - Lumevine",
-  "Confidence is built in completed minutes. - Lumevine",
-  "A good day can start in the middle. - Lumevine",
-  "Do not negotiate with the whole mountain; take one step. - Lumevine",
-  "Your best effort today may look small, and still count. - Lumevine",
-  "Steady beats dramatic when you need something to last. - Lumevine",
-  "One useful choice can interrupt a rough pattern. - Lumevine",
-  "Keep the promise tiny, then keep it. - Lumevine",
-  "The first move is allowed to be imperfect. - Lumevine",
-  "Action turns pressure into information. - Lumevine",
-  "When motivation is low, make the path shorter. - Lumevine",
-  "A ten-minute sprint can reopen the day. - Lumevine",
-  "Your habits are built in the moments nobody sees. - Lumevine",
-  "Better is built one repeatable action at a time. - Lumevine",
-  "If you slipped, make the next choice clean. - Lumevine",
-  "You are not behind when you are moving again. - Lumevine",
-  "Do one thing that makes bedtime easier. - Lumevine",
-  "Choose a small win and protect it. - Lumevine",
-  "The next log is a fresh signal. - Lumevine",
-  "Stable basics create room for bold goals. - Lumevine",
-  "Keep showing up until showing up feels normal. - Lumevine",
-  "Small control now prevents bigger stress later. - Lumevine",
-  "The simplest next action is usually the strongest. - Lumevine",
-  "Your future needs consistency more than perfection. - Lumevine"
+  "Good name in man and woman, dear my lord, is the immediate jewel of their souls. - William Shakespeare, Othello",
+  "Our doubts are traitors, and make us lose the good we oft might win, by fearing to attempt. - William Shakespeare, Measure for Measure",
+  "Wisely and slow; they stumble that run fast. - William Shakespeare, Romeo and Juliet",
+  "We know what we are, but know not what we may be. - William Shakespeare, Hamlet",
+  "Sweet are the uses of adversity. - William Shakespeare, As You Like It",
+  "No legacy is so rich as honesty. - William Shakespeare, All's Well That Ends Well",
+  "Nothing will come of nothing. - William Shakespeare, King Lear",
+  "Our remedies oft in ourselves do lie. - William Shakespeare, All's Well That Ends Well",
+  "The fault, dear Brutus, is not in our stars, but in ourselves. - William Shakespeare, Julius Caesar",
+  "Things won are done; joy's soul lies in the doing. - William Shakespeare, Troilus and Cressida",
+  "Strong reasons make strong actions. - William Shakespeare, King John",
+  "Better three hours too soon than a minute too late. - William Shakespeare, The Merry Wives of Windsor",
+  "How far that little candle throws his beams! So shines a good deed in a naughty world. - William Shakespeare, The Merchant of Venice",
+  "Love all, trust a few, do wrong to none. - William Shakespeare, All's Well That Ends Well",
+  "Be not afraid of greatness. - William Shakespeare, Twelfth Night",
+  "Give every man thy ear, but few thy voice. - William Shakespeare, Hamlet",
+  "The better part of valor is discretion. - William Shakespeare, Henry IV, Part 1",
+  "The web of our life is of a mingled yarn, good and ill together. - William Shakespeare, All's Well That Ends Well",
+  "There is nothing either good or bad, but thinking makes it so. - William Shakespeare, Hamlet",
+  "What is past is prologue. - William Shakespeare, The Tempest",
+  "The readiness is all. - William Shakespeare, Hamlet",
+  "All things are ready, if our mind be so. - William Shakespeare, Henry V",
+  "No profit grows where is no pleasure ta'en. - William Shakespeare, The Taming of the Shrew",
+  "How poor are they that have not patience! - William Shakespeare, Othello",
+  "The robbed that smiles steals something from the thief. - William Shakespeare, Othello",
+  "If music be the food of love, play on. - William Shakespeare, Twelfth Night",
+  "Action is eloquence. - William Shakespeare, Coriolanus",
+  "Brevity is the soul of wit. - William Shakespeare, Hamlet",
+  "We burn daylight. - William Shakespeare, Romeo and Juliet",
+  "The quality of mercy is not strained. - William Shakespeare, The Merchant of Venice",
+  "Lost time is never found again. - Benjamin Franklin",
+  "Diligence is the mother of good luck. - Benjamin Franklin",
+  "An investment in knowledge pays the best interest. - Benjamin Franklin",
+  "There are no gains without pains. - Benjamin Franklin",
+  "Little strokes fell great oaks. - Benjamin Franklin",
+  "He that can have patience can have what he will. - Benjamin Franklin",
+  "He that is good for making excuses is seldom good for anything else. - Benjamin Franklin",
+  "Never leave that till tomorrow which you can do today. - Benjamin Franklin",
+  "Early to bed and early to rise makes a man healthy, wealthy, and wise. - Benjamin Franklin",
+  "The doors of wisdom are never shut. - Benjamin Franklin",
+  "If you would be loved, love and be lovable. - Benjamin Franklin",
+  "When the well is dry, we know the worth of water. - Benjamin Franklin",
+  "An ounce of prevention is worth a pound of cure. - Benjamin Franklin",
+  "Employ thy time well, if thou meanest to gain leisure. - Benjamin Franklin",
+  "The eye of the master will do more work than both his hands. - Benjamin Franklin",
+  "Beware of little expenses; a small leak will sink a great ship. - Benjamin Franklin",
+  "The cat in gloves catches no mice. - Benjamin Franklin",
+  "God helps them that help themselves. - Benjamin Franklin",
+  "A penny saved is a penny earned. - Benjamin Franklin",
+  "He that rises late must trot all day. - Benjamin Franklin",
+  "A life of leisure and a life of laziness are two things. - Benjamin Franklin",
+  "Go confidently in the direction of your dreams; live the life you have imagined. - Henry David Thoreau",
+  "Things do not change; we change. - Henry David Thoreau",
+  "Simplify, simplify. - Henry David Thoreau",
+  "Our life is frittered away by detail. Simplify, simplify. - Henry David Thoreau",
+  "The price of anything is the amount of life you exchange for it. - Henry David Thoreau",
+  "If you have built castles in the air, your work need not be lost; now put foundations under them. - Henry David Thoreau",
+  "The mass of men lead lives of quiet desperation. - Henry David Thoreau",
+  "Rather than love, than money, than fame, give me truth. - Henry David Thoreau",
+  "What old people say you cannot do, you try and find you can. - Henry David Thoreau",
+  "I know of no more encouraging fact than the unquestionable ability of man to elevate his life by conscious endeavor. - Henry David Thoreau",
+  "As if you could kill time without injuring eternity. - Henry David Thoreau",
+  "I wanted to live deep and suck out all the marrow of life. - Henry David Thoreau",
+  "You must live in the present, launch yourself on every wave, find your eternity in each moment. - Henry David Thoreau",
+  "The only obligation which I have a right to assume is to do at any time what I think right. - Henry David Thoreau",
+  "A foolish consistency is the hobgoblin of little minds. - Ralph Waldo Emerson",
+  "To be great is to be misunderstood. - Ralph Waldo Emerson",
+  "Trust thyself: every heart vibrates to that iron string. - Ralph Waldo Emerson",
+  "Nothing can bring you peace but yourself. - Ralph Waldo Emerson",
+  "Nothing great was ever achieved without enthusiasm. - Ralph Waldo Emerson",
+  "The first wealth is health. - Ralph Waldo Emerson",
+  "The reward of a thing well done is to have done it. - Ralph Waldo Emerson",
+  "Write it on your heart that every day is the best day in the year. - Ralph Waldo Emerson",
+  "Every artist was first an amateur. - Ralph Waldo Emerson",
+  "The years teach much which the days never know. - Ralph Waldo Emerson",
+  "The only way to have a friend is to be one. - Ralph Waldo Emerson",
+  "Adopt the pace of nature: her secret is patience. - Ralph Waldo Emerson",
+  "A house divided against itself cannot stand. - Abraham Lincoln",
+  "Those who deny freedom to others deserve it not for themselves. - Abraham Lincoln",
+  "The dogmas of the quiet past are inadequate to the stormy present. - Abraham Lincoln",
+  "With malice toward none; with charity for all. - Abraham Lincoln",
+  "I do the very best I know how—the very best I can; and I mean to keep on doing so until the end. - Abraham Lincoln",
+  "Let us have faith that right makes might, and in that faith, let us, to the end, dare to do our duty as we understand it. - Abraham Lincoln",
+  "If there is no struggle, there is no progress. - Frederick Douglass",
+  "Power concedes nothing without a demand. It never did and it never will. - Frederick Douglass",
+  "I would unite with anybody to do right and with nobody to do wrong. - Frederick Douglass",
+  "Knowledge makes a man unfit to be a slave. - Frederick Douglass",
+  "The limits of tyrants are prescribed by the endurance of those whom they oppress. - Frederick Douglass",
+  "I exist as I am, that is enough. - Walt Whitman",
+  "Resist much, obey little. - Walt Whitman",
+  "Do I contradict myself? Very well then I contradict myself; I am large, I contain multitudes. - Walt Whitman",
+  "To me, every hour of the light and dark is a miracle. - Walt Whitman",
+  "Nothing is ever really lost, or can be lost. - Walt Whitman",
+  "The powerful play goes on, and you may contribute a verse. - Walt Whitman",
+  "I sound my barbaric yawp over the roofs of the world. - Walt Whitman",
+  "If I can stop one heart from breaking, I shall not live in vain. - Emily Dickinson",
+  "Hope is the thing with feathers that perches in the soul. - Emily Dickinson",
+  "Forever is composed of nows. - Emily Dickinson",
+  "I dwell in Possibility. - Emily Dickinson",
+  "Not knowing when the dawn will come, I open every door. - Emily Dickinson",
+  "Success is counted sweetest by those who ne'er succeed. - Emily Dickinson",
+  "Tell all the truth but tell it slant. - Emily Dickinson",
+  "A word is dead when it is said, some say; I say it just begins to live that day. - Emily Dickinson",
+  "The miserable have no other medicine but only hope. - William Shakespeare, Measure for Measure",
+  "A fool thinks himself to be wise, but a wise man knows himself to be a fool. - William Shakespeare, As You Like It",
+  "There is no darkness but ignorance. - William Shakespeare, Twelfth Night",
+  "Some are born great, some achieve greatness, and some have greatness thrust upon them. - William Shakespeare, Twelfth Night",
+  "We are such stuff as dreams are made on. - William Shakespeare, The Tempest",
+  "Love looks not with the eyes, but with the mind. - William Shakespeare, A Midsummer Night's Dream",
+  "The course of true love never did run smooth. - William Shakespeare, A Midsummer Night's Dream",
+  "Things base and vile, holding no quantity, love can transpose to form and dignity. - William Shakespeare, A Midsummer Night's Dream",
+  "One today is worth two tomorrows. - Benjamin Franklin",
+  "The sleeping fox catches no poultry. - Benjamin Franklin",
+  "He that waits upon fortune is never sure of a dinner. - Benjamin Franklin",
+  "Experience keeps a dear school, but fools will learn in no other. - Benjamin Franklin",
+  "Nothing is at last sacred but the integrity of your own mind. - Ralph Waldo Emerson",
+  "Insist on yourself; never imitate. - Ralph Waldo Emerson",
+  "The creation of a thousand forests is in one acorn. - Ralph Waldo Emerson",
+  "The universe is wider than our views of it. - Henry David Thoreau",
+  "I went to the woods because I wished to live deliberately. - Henry David Thoreau",
+  "We never know how high we are till we are called to rise. - Emily Dickinson",
+  "Afoot and light-hearted I take to the open road. - Walt Whitman",
+  "I celebrate myself, and sing myself. - Walt Whitman",
+  "All truths wait in all things. - Walt Whitman"
 ];
 const QUOTE_HISTORY_STORAGE_KEY = "lumevineRecentQuoteHistoryV1";
 const QUOTE_REPEAT_HISTORY_LIMIT = 150;

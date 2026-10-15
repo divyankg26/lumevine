@@ -43,6 +43,10 @@ textarea:focus-visible{
   color:#8bd5ff;
 }
 
+:root[data-theme="burgundy"] .reset-countdown-alert{
+  color:#8bd5ff;
+}
+
 .soft-note{
   margin:8px 0 0;
   font-size:12px;
