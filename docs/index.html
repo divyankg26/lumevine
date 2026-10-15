@@ -406,6 +406,32 @@
   </div>
 </div>
 
+<div id="dailyRoutineStartTimeModal" class="app-dialog-modal" aria-hidden="true">
+  <div class="import-transfer-card app-dialog-card" role="dialog" aria-modal="true" aria-labelledby="dailyRoutineStartTimeTitle">
+    <h3 id="dailyRoutineStartTimeTitle">Routine Start Time</h3>
+    <p class="import-transfer-note">Choose when your routine day begins. This shifts scheduled activities together.</p>
+    <select id="dailyRoutineStartTimeSelect" aria-label="Routine start time"></select>
+    <div class="import-transfer-actions">
+      <button type="button" class="import-transfer-cancel" onclick="closeDailyRoutineStartTimeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="dailyRoutineDeleteModal" class="app-dialog-modal" aria-hidden="true">
+  <div class="import-transfer-card app-dialog-card" role="dialog" aria-modal="true" aria-labelledby="dailyRoutineDeleteTitle">
+    <h3 id="dailyRoutineDeleteTitle">Delete Activity</h3>
+    <p class="import-transfer-note">Choose an activity to remove. Its time will remain unallocated.</p>
+    <select id="dailyRoutineDeleteSelect" aria-label="Choose routine activity to delete">
+      <option value="">Choose an activity</option>
+    </select>
+    <p id="dailyRoutineDeleteError" class="import-transfer-error" role="alert"></p>
+    <div class="import-transfer-actions">
+      <button type="button" class="import-transfer-cancel" onclick="closeDailyRoutineDeleteModal()">Cancel</button>
+      <button id="dailyRoutineDeleteConfirmBtn" type="button" onclick="deleteDailyRoutineActivity()">Delete Activity</button>
+    </div>
+  </div>
+</div>
+
 <div id="crashAlertBanner" class="crash-banner">
 <div class="crash-banner-row">
   <div>
@@ -741,10 +767,6 @@
 <div class="card startup-scroll-card daily-routine-card">
 <div class="daily-routine-header">
   <h2>🗓️ Daily Routine</h2>
-  <label class="daily-routine-start-time" for="dailyRoutineStartTimeSelect">
-    <span>Start</span>
-    <select id="dailyRoutineStartTimeSelect" aria-label="Routine start time"></select>
-  </label>
 </div>
 <p class="micro-tip">Generate a routine from your wellness trends, or shape it with your own activities.</p>
 <ul id="dailyRoutineList" class="startup-list"><li>Generate a routine to see your schedule.</li></ul>
@@ -752,6 +774,8 @@
   <button id="dailyRoutineGenerateBtn" type="button" onclick="generateDailyRoutine()">Generate Routine</button>
   <button id="dailyRoutineAddBtn" type="button" onclick="openDailyRoutineEditor('add')">Add Activity</button>
   <button id="dailyRoutineReplaceBtn" type="button" onclick="openDailyRoutineEditor('replace')">Replace Activity</button>
+  <button id="dailyRoutineStartTimeBtn" type="button" onclick="openDailyRoutineStartTimeModal()">Start Time</button>
+  <button id="dailyRoutineDeleteBtn" type="button" onclick="openDailyRoutineDeleteModal()" disabled>Delete Activity</button>
   <button id="dailyRoutineClearBtn" type="button" class="routine-clear-btn" onclick="clearDailyRoutine()" disabled>Clear Routine</button>
 </div>
 <p id="dailyRoutineMeta" class="startup-mini">Your routine is saved to your account and stays here after refresh.</p>

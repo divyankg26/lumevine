@@ -1383,7 +1383,13 @@ const dailyRoutineGenerateBtn = document.getElementById("dailyRoutineGenerateBtn
 const dailyRoutineAddBtn = document.getElementById("dailyRoutineAddBtn");
 const dailyRoutineReplaceBtn = document.getElementById("dailyRoutineReplaceBtn");
 const dailyRoutineClearBtn = document.getElementById("dailyRoutineClearBtn");
+const dailyRoutineStartTimeBtn = document.getElementById("dailyRoutineStartTimeBtn");
 const dailyRoutineStartTimeSelect = document.getElementById("dailyRoutineStartTimeSelect");
+const dailyRoutineStartTimeModal = document.getElementById("dailyRoutineStartTimeModal");
+const dailyRoutineDeleteBtn = document.getElementById("dailyRoutineDeleteBtn");
+const dailyRoutineDeleteModal = document.getElementById("dailyRoutineDeleteModal");
+const dailyRoutineDeleteSelect = document.getElementById("dailyRoutineDeleteSelect");
+const dailyRoutineDeleteError = document.getElementById("dailyRoutineDeleteError");
 const startupWeeklyReportText = document.getElementById("startupWeeklyReportText");
 const startupGenerateReportBtn = document.getElementById("startupGenerateReportBtn");
 const startupBehaviorMemory = document.getElementById("startupBehaviorMemory");
@@ -1517,6 +1523,12 @@ dailyRoutineStartTimeSelect?.addEventListener("change", () => {
     renderDailyRoutine();
     showToast("Could not update the routine start time. Please try again.");
   });
+});
+dailyRoutineStartTimeModal?.addEventListener("click", (event) => {
+  if (event.target === dailyRoutineStartTimeModal) closeDailyRoutineStartTimeModal();
+});
+dailyRoutineDeleteModal?.addEventListener("click", (event) => {
+  if (event.target === dailyRoutineDeleteModal) closeDailyRoutineDeleteModal();
 });
 
 // ---------- SPLASH + AUTH CHECK ----------
@@ -14201,8 +14213,16 @@ function renderDailyRoutine() {
       dailyRoutineMeta.innerText = "Your routine is saved to your account and stays here after refresh.";
     }
   }
+  const configuredStart = Number(dailyRoutineState.preferences?.startHour);
+  const routineStart = Number.isFinite(configuredStart) && configuredStart >= 0 && configuredStart < 24
+    ? configuredStart
+    : entries[0]?.startHour ?? 7;
+  if (dailyRoutineStartTimeBtn) {
+    dailyRoutineStartTimeBtn.innerText = `Start Time · ${formatRoutineTimeValue(routineStart)}`;
+  }
   if (dailyRoutineReplaceBtn) dailyRoutineReplaceBtn.disabled = !entries.length;
   if (dailyRoutineClearBtn) dailyRoutineClearBtn.disabled = !entries.length;
+  if (dailyRoutineDeleteBtn) dailyRoutineDeleteBtn.disabled = !entries.length;
 }
 
 function syncDailyRoutineStartTimeControls() {
@@ -14229,6 +14249,7 @@ function syncDailyRoutineStartTimeControls() {
 async function handleDailyRoutineStartTimeChange() {
   if (!dailyRoutineStartTimeSelect) return;
   if (dailyRoutineStartTimeSelect.value === "__custom__") {
+    closeDailyRoutineStartTimeModal();
     const customTime = await appPrompt(
       "Enter the routine start time in 24-hour HH:MM format.",
       "",
@@ -14241,7 +14262,73 @@ async function handleDailyRoutineStartTimeChange() {
     await saveDailyRoutineStartTime(customTime);
     return;
   }
-  await saveDailyRoutineStartTime(dailyRoutineStartTimeSelect.value);
+  if (await saveDailyRoutineStartTime(dailyRoutineStartTimeSelect.value)) closeDailyRoutineStartTimeModal();
+}
+
+function openDailyRoutineStartTimeModal() {
+  if (!dailyRoutineStartTimeModal) return;
+  syncDailyRoutineStartTimeControls();
+  dailyRoutineStartTimeModal.style.display = "flex";
+  dailyRoutineStartTimeModal.setAttribute("aria-hidden", "false");
+  dailyRoutineStartTimeSelect?.focus();
+}
+
+function closeDailyRoutineStartTimeModal() {
+  if (!dailyRoutineStartTimeModal) return;
+  dailyRoutineStartTimeModal.style.display = "none";
+  dailyRoutineStartTimeModal.setAttribute("aria-hidden", "true");
+  renderDailyRoutine();
+}
+
+function openDailyRoutineDeleteModal() {
+  if (!dailyRoutineDeleteModal || !dailyRoutineDeleteSelect) return;
+  dailyRoutineDeleteSelect.replaceChildren(new Option("Choose an activity", ""));
+  dailyRoutineState.entries.forEach((entry) => {
+    const duration = `${formatRoutineHour(entry.startHour, "24")}–${formatRoutineHour(entry.endHour, "24")}`;
+    dailyRoutineDeleteSelect.add(new Option(`${duration} · ${entry.label}`, entry.id));
+  });
+  if (dailyRoutineDeleteError) dailyRoutineDeleteError.innerText = "";
+  dailyRoutineDeleteModal.style.display = "flex";
+  dailyRoutineDeleteModal.setAttribute("aria-hidden", "false");
+  dailyRoutineDeleteSelect.focus();
+}
+
+function closeDailyRoutineDeleteModal() {
+  if (!dailyRoutineDeleteModal) return;
+  dailyRoutineDeleteModal.style.display = "none";
+  dailyRoutineDeleteModal.setAttribute("aria-hidden", "true");
+  if (dailyRoutineDeleteError) dailyRoutineDeleteError.innerText = "";
+  if (dailyRoutineDeleteSelect) dailyRoutineDeleteSelect.value = "";
+}
+
+async function deleteDailyRoutineActivity() {
+  const user = auth.currentUser;
+  const entryId = String(dailyRoutineDeleteSelect?.value || "");
+  if (!user) {
+    showToast("Please sign in first.");
+    return;
+  }
+  if (!entryId) {
+    if (dailyRoutineDeleteError) dailyRoutineDeleteError.innerText = "Choose an activity to delete.";
+    return;
+  }
+  const nextEntries = dailyRoutineState.entries.filter((entry) => entry.id !== entryId);
+  if (nextEntries.length === dailyRoutineState.entries.length) {
+    if (dailyRoutineDeleteError) dailyRoutineDeleteError.innerText = "That activity is no longer in your routine. Reopen this menu and choose another.";
+    return;
+  }
+  try {
+    await saveDailyRoutine(user.uid, {
+      ...dailyRoutineState,
+      entries: nextEntries,
+      source: "custom"
+    });
+    closeDailyRoutineDeleteModal();
+    showToast("Activity deleted. Its time is now unallocated.");
+  } catch (err) {
+    structuredLog("error", "dailyRoutine.deleteActivity", err?.message || String(err), { userId: user.uid });
+    if (dailyRoutineDeleteError) dailyRoutineDeleteError.innerText = "The activity could not be deleted. Please try again.";
+  }
 }
 
 async function saveDailyRoutineStartTime(timeText) {
@@ -14252,20 +14339,20 @@ async function saveDailyRoutineStartTime(timeText) {
       { title: "Invalid start time" }
     );
     renderDailyRoutine();
-    return;
+    return false;
   }
   const parsed = parseBedtimeInput(strictTimeText);
   if (!parsed.ok) {
     await appAlert(parsed.message, { title: "Invalid start time" });
     renderDailyRoutine();
-    return;
+    return false;
   }
   const startHour = parsed.hour + parsed.minute / 60;
   const user = auth.currentUser;
   if (!user) {
     renderDailyRoutine();
     showToast("Please sign in first.");
-    return;
+    return false;
   }
   try {
     const entries = dailyRoutineState.entries;
@@ -14293,10 +14380,12 @@ async function saveDailyRoutineStartTime(timeText) {
       }
     });
     showToast("Routine start time saved.");
+    return true;
   } catch (err) {
     notifyFirestoreError(err);
     renderDailyRoutine();
     showToast("Could not save the routine start time. Please try again.");
+    return false;
   }
 }
 
@@ -23835,8 +23924,13 @@ Object.assign(window, {
   sendAccountResetPasswordEmail,
   editAccountDisplayName,
   generateDailyRoutine,
+  openDailyRoutineStartTimeModal,
+  closeDailyRoutineStartTimeModal,
   handleDailyRoutineStartTimeChange,
   saveDailyRoutineStartTime,
+  openDailyRoutineDeleteModal,
+  closeDailyRoutineDeleteModal,
+  deleteDailyRoutineActivity,
   openDailyRoutineEditor,
   closeDailyRoutineEditor,
   advanceDailyRoutineEditor,

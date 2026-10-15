@@ -680,40 +680,8 @@ body.splash-active .crash-banner{
   white-space:nowrap;
 }
 
-.daily-routine-card .daily-routine-start-time{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  flex:0 0 auto;
-  align-self:flex-start;
-  margin:0;
-  font-size:12px;
-  font-weight:600;
-  opacity:.95;
-}
-
 .daily-routine-card .daily-routine-header + .micro-tip{
-  margin-top:0;
-}
-
-.daily-routine-card #dailyRoutineStartTimeSelect{
-  width:auto;
-  min-width:112px;
-  min-height:34px;
-  padding:6px 28px 6px 9px;
-  border:1px solid rgba(255,255,255,.24);
-  border-radius:9px;
-  background-color:rgba(7,16,30,.35);
-  color:inherit;
-  font-size:12px;
-}
-
-@media (max-width:420px){
-  .daily-routine-card .daily-routine-start-time{
-    flex-direction:row;
-    align-items:center;
-    gap:6px;
-  }
+  margin-top:8px;
 }
 
 .daily-routine-card .daily-routine-actions button{
@@ -846,6 +814,12 @@ body.splash-active .crash-banner{
 
 .routine-custom-card{
   width:min(420px, calc(100vw - 24px));
+}
+
+.app-dialog-card #dailyRoutineStartTimeSelect,
+.app-dialog-card #dailyRoutineDeleteSelect{
+  width:100%;
+  margin-top:10px;
 }
 
 /* HEADER */
