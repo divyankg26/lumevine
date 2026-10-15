@@ -1315,6 +1315,7 @@ const dailyRoutineStepCounter = document.getElementById("dailyRoutineStepCounter
 const dailyRoutineActivityStep = document.getElementById("dailyRoutineActivityStep");
 const dailyRoutineTimeStep = document.getElementById("dailyRoutineTimeStep");
 const dailyRoutineActivityHint = document.getElementById("dailyRoutineActivityHint");
+const dailyRoutineTimeHint = document.getElementById("dailyRoutineTimeHint");
 const dailyRoutineActivitySelect = document.getElementById("dailyRoutineActivitySelect");
 const dailyRoutineTimeSelect = document.getElementById("dailyRoutineTimeSelect");
 const dailyRoutineTimeInput = document.getElementById("dailyRoutineTimeInput");
@@ -9457,6 +9458,7 @@ let dailyRoutineState = getDefaultDailyRoutineState();
 let routineEditorMode = "add";
 let routineEditorStep = 0;
 let routinePendingActivity = null;
+let routinePendingExistingActivity = null;
 
 const DAILY_ROUTINE_ACTIVITIES = [
   "Workout", "Walking", "Stretching", "Yoga", "Meditation", "Reading",
@@ -14009,7 +14011,7 @@ function syncDailyRoutineStartTimeControls() {
     ? configuredStart
     : entries[0]?.startHour ?? 7;
   const selectedTime = formatRoutineTimeValue(currentStart);
-  populateDailyRoutineTimeOptions("", dailyRoutineStartTimeSelect, false);
+  populateDailyRoutineTimeOptions("", dailyRoutineStartTimeSelect, false, () => false, "Custom time…");
   if (!dailyRoutineStartTimeSelect.querySelector(`option[value="${selectedTime}"]`)) {
     dailyRoutineStartTimeSelect.insertBefore(
       new Option(selectedTime, selectedTime),
@@ -14298,15 +14300,29 @@ function setRoutineCustomError(message = "") {
 }
 
 function renderRoutineEditorStep() {
-  const isActivityStep = routineEditorStep === 0;
+  const isActivityStep = routineEditorMode === "add"
+    ? routineEditorStep === 0
+    : routineEditorStep < 2;
+  const stepCount = routineEditorMode === "replace" ? 3 : 2;
+  const activityHeading = dailyRoutineActivityStep?.querySelector("h3");
+  if (activityHeading) {
+    activityHeading.innerText = routineEditorMode === "add"
+      ? "Choose an activity"
+      : routineEditorStep === 0 ? "Choose an activity to replace" : "Choose a replacement activity";
+  }
   if (dailyRoutineActivityStep) dailyRoutineActivityStep.hidden = !isActivityStep;
   if (dailyRoutineTimeStep) dailyRoutineTimeStep.hidden = isActivityStep;
-  if (dailyRoutineStepCounter) dailyRoutineStepCounter.innerText = `Step ${routineEditorStep + 1}/2`;
+  if (dailyRoutineTimeHint) {
+    dailyRoutineTimeHint.innerText = "Choose an available one-hour slot or enter a custom range like 13:00-14:00. Occupied times are unavailable.";
+  }
+  if (dailyRoutineStepCounter) dailyRoutineStepCounter.innerText = `Step ${routineEditorStep + 1}/${stepCount}`;
   if (dailyRoutineEditorNextBtn) {
-    dailyRoutineEditorNextBtn.innerText = isActivityStep ? "Next" : "Finish";
+    dailyRoutineEditorNextBtn.innerText = routineEditorMode === "replace" && routineEditorStep === 1
+      ? "Next"
+      : routineEditorStep === stepCount - 1 ? "Finish" : "Next";
   }
   if (dailyRoutineEditorDots) {
-    dailyRoutineEditorDots.innerHTML = [0, 1].map((step) =>
+    dailyRoutineEditorDots.innerHTML = Array.from({ length: stepCount }, (_, step) =>
       `<span class="welcome-guide-dot${step === routineEditorStep ? " active" : ""}"></span>`
     ).join("");
   }
@@ -14321,13 +14337,14 @@ function openDailyRoutineEditor(mode = "add") {
   }
   routineEditorStep = 0;
   routinePendingActivity = null;
+  routinePendingExistingActivity = null;
   setRoutineEditorError("");
   if (dailyRoutineEditorTitle) {
-    dailyRoutineEditorTitle.innerText = routineEditorMode === "replace" ? "Reschedule routine activity" : "Add to your routine";
+    dailyRoutineEditorTitle.innerText = routineEditorMode === "replace" ? "Replace routine activity" : "Add to your routine";
   }
   if (dailyRoutineActivityHint) {
     dailyRoutineActivityHint.innerText = routineEditorMode === "replace"
-      ? "Choose an activity from your current routine to move to a new time."
+      ? "Choose the activity in your current routine that you want to replace."
       : "Choose a basic activity, or create a custom one.";
   }
 
@@ -14337,7 +14354,8 @@ function openDailyRoutineEditor(mode = "add") {
       const time = `${formatRoutineHour(entry.startHour, "24")}–${formatRoutineHour(entry.endHour, "24")}`;
       dailyRoutineActivitySelect.add(new Option(`${time} · ${entry.label}`, entry.id));
     });
-  } else {
+  }
+  if (routineEditorMode === "add") {
     DAILY_ROUTINE_ACTIVITIES.forEach((activity) => dailyRoutineActivitySelect.add(new Option(activity, activity)));
     dailyRoutineActivitySelect.add(new Option("Custom activity…", "__custom__"));
   }
@@ -14358,7 +14376,45 @@ function formatRoutineTimeValue(hourValue) {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-function populateDailyRoutineTimeOptions(selectedTime = "", selectElement = dailyRoutineTimeSelect, showTimeRange = true) {
+function normalizeRoutineTimeRangeText(value) {
+  const raw = String(value || "").replace(/[^\d:-]/g, "").slice(0, 11);
+  if (!raw.includes("-")) return normalizeBedtimeTimeText(raw);
+  const [startText, endText, ...extra] = raw.split("-");
+  if (extra.length) return raw;
+  return `${normalizeBedtimeTimeText(startText)}-${normalizeBedtimeTimeText(endText)}`;
+}
+
+function parseRoutineTimeRange(value) {
+  const range = String(value || "").trim();
+  const match = range.match(/^(\d{2}:\d{2})-(\d{2}:\d{2})$/);
+  if (!match) {
+    return { ok: false, message: "Enter a time range using HH:MM-HH:MM, for example 13:00-14:00." };
+  }
+  const start = parseBedtimeInput(match[1]);
+  const end = parseBedtimeInput(match[2]);
+  if (!start.ok) return start;
+  if (!end.ok) return end;
+  const startMinutes = start.hour * 60 + start.minute;
+  let endMinutes = end.hour * 60 + end.minute;
+  if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+  const durationMinutes = endMinutes - startMinutes;
+  if (durationMinutes <= 0 || durationMinutes >= 24 * 60) {
+    return { ok: false, message: "The end time must be later than the start time and within 24 hours." };
+  }
+  return {
+    ok: true,
+    startHour: startMinutes / 60,
+    duration: durationMinutes / 60
+  };
+}
+
+function populateDailyRoutineTimeOptions(
+  selectedTime = "",
+  selectElement = dailyRoutineTimeSelect,
+  showTimeRange = true,
+  isTimeDisabled = () => false,
+  customOptionLabel = "Custom duration…"
+) {
   if (!selectElement) return;
   selectElement.replaceChildren();
   for (let hour = 0; hour < 24; hour += 1) {
@@ -14366,9 +14422,12 @@ function populateDailyRoutineTimeOptions(selectedTime = "", selectElement = dail
     const startLabel = `${String(hour).padStart(2, "0")}:00`;
     const endLabel = `${String(nextHour).padStart(2, "0")}:00`;
     const time = `${String(hour).padStart(2, "0")}:00`;
-    selectElement.add(new Option(showTimeRange ? `${startLabel}–${endLabel}` : startLabel, time));
+    const option = new Option(showTimeRange ? `${startLabel}–${endLabel}` : startLabel, time);
+    option.disabled = isTimeDisabled(hour);
+    if (option.disabled) option.textContent += " · In use";
+    selectElement.add(option);
   }
-  selectElement.add(new Option("Custom time…", "__custom__"));
+  selectElement.add(new Option(customOptionLabel, "__custom__"));
   selectElement.value = selectedTime || "09:00";
 }
 
@@ -14402,9 +14461,9 @@ function confirmDailyRoutineCustomActivity() {
 function getDailyRoutineActivityFromSelection() {
   const selectedValue = String(dailyRoutineActivitySelect?.value || "");
   if (!selectedValue) return null;
-  if (routineEditorMode === "replace") {
+  if (routineEditorMode === "replace" && routineEditorStep === 0) {
     const existing = dailyRoutineState.entries.find((entry) => entry.id === selectedValue);
-    return existing ? { ...existing, existingId: existing.id } : null;
+    return existing ? { ...existing } : null;
   }
   const label = dailyRoutineActivitySelect?.selectedOptions?.[0]?.textContent?.trim() || "";
   if (!label || selectedValue === "__custom__") return null;
@@ -14417,21 +14476,118 @@ function getDailyRoutineActivityFromSelection() {
   };
 }
 
+function dailyRoutineTimeConflicts(startHour, duration, excludedEntryId = "") {
+  const start = startHour * 60;
+  const end = start + duration * 60;
+  return dailyRoutineState.entries.some((entry) => {
+    if (excludedEntryId && entry.id === excludedEntryId) return false;
+    const entryStart = entry.startHour * 60;
+    const entryEnd = entry.endHour * 60;
+    return [-1440, 0, 1440].some((offset) => (
+      start < entryEnd + offset && entryStart + offset < end
+    ));
+  });
+}
+
+function populateRoutineActivityTimeOptions(startHour, duration, excludedEntryId = "") {
+  const selectedTime = formatRoutineTimeValue(startHour);
+  const selectedHour = Number(selectedTime.slice(0, 2));
+  const selectedMinute = Number(selectedTime.slice(3, 5));
+  const selectedValue = selectedMinute === 0 ? selectedTime : "__custom__";
+  populateDailyRoutineTimeOptions(
+    selectedValue,
+    dailyRoutineTimeSelect,
+    true,
+    (hour) => dailyRoutineTimeConflicts(hour, duration, excludedEntryId),
+    "Custom duration…"
+  );
+  if (selectedMinute !== 0 && dailyRoutineTimeInput) dailyRoutineTimeInput.value = "";
+  if (dailyRoutineTimeSelect?.value === selectedTime
+    && dailyRoutineTimeSelect.selectedOptions[0]?.disabled) {
+    const firstAvailable = Array.from(dailyRoutineTimeSelect.options)
+      .find((option) => !option.disabled && option.value !== "__custom__");
+    dailyRoutineTimeSelect.value = firstAvailable?.value || "__custom__";
+  }
+  return selectedHour;
+}
+
 async function advanceDailyRoutineEditor() {
-  if (routineEditorStep === 0) {
+  if (routineEditorMode === "replace" && routineEditorStep === 0) {
+    const selectedExisting = getDailyRoutineActivityFromSelection();
+    if (!selectedExisting) {
+      setRoutineEditorError("Choose an activity from your routine to replace.");
+      return;
+    }
+    routinePendingExistingActivity = selectedExisting;
+    dailyRoutineActivitySelect.replaceChildren(new Option("Choose a replacement activity", ""));
+    DAILY_ROUTINE_ACTIVITIES.forEach((activity) => dailyRoutineActivitySelect.add(new Option(activity, activity)));
+    dailyRoutineActivitySelect.add(new Option("Custom activity…", "__custom__"));
+    if (dailyRoutineActivityHint) {
+      dailyRoutineActivityHint.innerText = `Choose what to replace “${selectedExisting.label}” with, or add a custom activity.`;
+    }
+    routineEditorStep = 1;
+    setRoutineEditorError("");
+    renderRoutineEditorStep();
+    dailyRoutineActivitySelect.focus();
+    return;
+  }
+
+  if ((routineEditorMode === "add" && routineEditorStep === 0)
+    || (routineEditorMode === "replace" && routineEditorStep === 1)) {
     const selected = getDailyRoutineActivityFromSelection();
     if (!selected) {
       setRoutineEditorError("Choose an activity to continue.");
       return;
     }
+    if (routineEditorMode === "replace") {
+      if (!routinePendingExistingActivity) {
+        setRoutineEditorError("Choose the routine activity you want to replace first.");
+        return;
+      }
+      const shouldReschedule = await appConfirm(
+        `Would you like to choose a new duration for “${selected.label}”?`,
+        { title: "Change duration?", confirmText: "Choose a duration", cancelText: "Keep current duration" }
+      );
+      const replacement = {
+        ...selected,
+        id: routinePendingExistingActivity.id,
+        startHour: routinePendingExistingActivity.startHour,
+        endHour: routinePendingExistingActivity.endHour
+      };
+      if (!shouldReschedule) {
+        const nextEntries = dailyRoutineState.entries.map((entry) =>
+          entry.id === routinePendingExistingActivity.id ? replacement : entry
+        );
+        await saveDailyRoutineEditorEntries(nextEntries);
+        return;
+      }
+      routinePendingActivity = {
+        ...replacement,
+        existingId: routinePendingExistingActivity.id
+      };
+      if (dailyRoutineTimeInput) {
+        populateRoutineActivityTimeOptions(
+          routinePendingExistingActivity.startHour,
+          1,
+          routinePendingExistingActivity.id
+        );
+        dailyRoutineTimeInput.value = dailyRoutineTimeSelect?.value === "__custom__"
+          ? ""
+          : formatRoutineTimeValue(routinePendingExistingActivity.startHour);
+        dailyRoutineTimeInput.hidden = dailyRoutineTimeSelect?.value !== "__custom__";
+      }
+      routineEditorStep = 2;
+      setRoutineEditorError("");
+      renderRoutineEditorStep();
+      (dailyRoutineTimeInput?.hidden ? dailyRoutineTimeSelect : dailyRoutineTimeInput)?.focus();
+      return;
+    }
     routinePendingActivity = selected;
     if (dailyRoutineTimeInput) {
       const currentStart = selected.existingId ? selected.startHour : 9;
-      const currentTime = formatRoutineTimeValue(currentStart);
-      dailyRoutineTimeInput.value = currentTime;
-      populateDailyRoutineTimeOptions(
-        dailyRoutineTimeSelect?.querySelector(`option[value="${currentTime}"]`) ? currentTime : "__custom__"
-      );
+      populateRoutineActivityTimeOptions(currentStart, 1, selected.existingId || "");
+      if (dailyRoutineTimeSelect?.value === "__custom__") dailyRoutineTimeInput.value = "";
+      else dailyRoutineTimeInput.value = formatRoutineTimeValue(currentStart);
       dailyRoutineTimeInput.hidden = dailyRoutineTimeSelect?.value !== "__custom__";
     }
     setRoutineEditorError("");
@@ -14441,26 +14597,37 @@ async function advanceDailyRoutineEditor() {
     return;
   }
 
-  const selectedTime = String(dailyRoutineTimeSelect?.value || "");
-  const timeText = selectedTime && selectedTime !== "__custom__"
-    ? selectedTime
-    : (dailyRoutineTimeInput?.value || "");
-  const normalizedTime = normalizeBedtimeTimeText(timeText);
-  if (dailyRoutineTimeInput && selectedTime === "__custom__") dailyRoutineTimeInput.value = normalizedTime;
-  const parsed = parseBedtimeInput(normalizedTime);
-  if (!parsed.ok) {
-    setRoutineEditorError(parsed.message);
-    return;
-  }
   if (!routinePendingActivity) {
-    setRoutineEditorError("Choose an activity before setting its time.");
+    setRoutineEditorError("Choose an activity before setting its duration.");
     return;
   }
 
-  const startHour = parsed.hour + parsed.minute / 60;
-  const duration = routinePendingActivity.existingId
-    ? Math.max(0.25, routinePendingActivity.endHour - routinePendingActivity.startHour)
-    : 1;
+  const selectedTime = String(dailyRoutineTimeSelect?.value || "");
+  let startHour;
+  let duration;
+  if (selectedTime === "__custom__") {
+    const normalizedRange = normalizeRoutineTimeRangeText(dailyRoutineTimeInput?.value || "");
+    if (dailyRoutineTimeInput) dailyRoutineTimeInput.value = normalizedRange;
+    const parsedRange = parseRoutineTimeRange(normalizedRange);
+    if (!parsedRange.ok) {
+      setRoutineEditorError(parsedRange.message);
+      return;
+    }
+    startHour = parsedRange.startHour;
+    duration = parsedRange.duration;
+  } else {
+    const parsed = parseBedtimeInput(selectedTime);
+    if (!parsed.ok) {
+      setRoutineEditorError(parsed.message);
+      return;
+    }
+    startHour = parsed.hour + parsed.minute / 60;
+    duration = 1;
+  }
+  if (dailyRoutineTimeConflicts(startHour, duration, routinePendingActivity.existingId || "")) {
+    setRoutineEditorError("That duration overlaps another activity in your routine. Choose a different duration.");
+    return;
+  }
   const updatedActivity = {
     id: routinePendingActivity.existingId || routinePendingActivity.id,
     label: routinePendingActivity.label,
@@ -14471,9 +14638,13 @@ async function advanceDailyRoutineEditor() {
   const nextEntries = routineEditorMode === "replace"
     ? dailyRoutineState.entries.map((entry) => entry.id === routinePendingActivity.existingId ? updatedActivity : entry)
     : [...dailyRoutineState.entries, updatedActivity];
+  await saveDailyRoutineEditorEntries(nextEntries);
+}
+
+async function saveDailyRoutineEditorEntries(entries) {
   const nextState = {
     ...dailyRoutineState,
-    entries: nextEntries.sort((left, right) => left.startHour - right.startHour),
+    entries: entries.sort((left, right) => left.startHour - right.startHour),
     source: "custom"
   };
   const user = auth.currentUser;
@@ -14484,7 +14655,9 @@ async function advanceDailyRoutineEditor() {
   try {
     await saveDailyRoutine(user.uid, nextState);
     closeDailyRoutineEditor();
-    showToast(routineEditorMode === "replace" ? "Routine activity rescheduled." : "Activity added to your routine.");
+    showToast(routineEditorMode === "replace"
+      ? "Routine activity replaced."
+      : "Activity added to your routine.");
   } catch (err) {
     setRoutineEditorError("Your routine could not be saved. Please try again.");
   }
@@ -14512,7 +14685,8 @@ async function clearDailyRoutine() {
 if (dailyRoutineActivitySelect) {
   dailyRoutineActivitySelect.addEventListener("change", () => {
     setRoutineEditorError("");
-    if (routineEditorMode === "add" && dailyRoutineActivitySelect.value === "__custom__") {
+    if ((routineEditorMode === "add" || routineEditorMode === "replace")
+      && dailyRoutineActivitySelect.value === "__custom__") {
       setRoutineCustomError("");
       if (dailyRoutineCustomInput) dailyRoutineCustomInput.value = "";
       if (dailyRoutineCustomActivityModal) dailyRoutineCustomActivityModal.style.display = "flex";
@@ -14523,8 +14697,13 @@ if (dailyRoutineActivitySelect) {
 
 if (dailyRoutineTimeInput) {
   dailyRoutineTimeInput.addEventListener("input", () => {
-    dailyRoutineTimeInput.value = normalizeBedtimeTimeText(dailyRoutineTimeInput.value);
+    dailyRoutineTimeInput.value = normalizeRoutineTimeRangeText(dailyRoutineTimeInput.value);
     setRoutineEditorError("");
+    const parsed = parseRoutineTimeRange(dailyRoutineTimeInput.value);
+    if (!parsed.ok || !routinePendingActivity) return;
+    if (dailyRoutineTimeConflicts(parsed.startHour, parsed.duration, routinePendingActivity.existingId || "")) {
+      setRoutineEditorError("That duration overlaps another activity in your routine. Choose a different duration.");
+    }
   });
   dailyRoutineTimeInput.addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;

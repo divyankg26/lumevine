@@ -372,12 +372,12 @@
         </select>
       </div>
       <div id="dailyRoutineTimeStep" hidden>
-        <h3>Choose a start time</h3>
-        <p id="dailyRoutineTimeHint">Choose an hourly start time, or select Custom time and enter it in 24-hour format (HH:MM).</p>
-        <select id="dailyRoutineTimeSelect" aria-label="Routine start time">
-          <option value="">Choose a start time</option>
+        <h3>Choose a duration</h3>
+        <p id="dailyRoutineTimeHint">Choose an available hourly duration or enter a custom 24-hour range like 13:00-14:00.</p>
+        <select id="dailyRoutineTimeSelect" aria-label="Activity duration">
+          <option value="">Choose a duration</option>
         </select>
-        <input id="dailyRoutineTimeInput" type="text" inputmode="numeric" autocomplete="off" placeholder="HH:MM (e.g. 09:30)" aria-label="Custom activity start time" hidden>
+        <input id="dailyRoutineTimeInput" type="text" inputmode="numeric" autocomplete="off" maxlength="11" placeholder="HH:MM-HH:MM (e.g. 13:00-14:00)" aria-label="Custom activity duration range" hidden>
       </div>
       <p id="dailyRoutineEditorError" class="import-transfer-error" role="alert"></p>
     </div>
