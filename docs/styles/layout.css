@@ -481,6 +481,21 @@
   display:none;
 }
 
+.dashboard-loading{
+  display:none;
+}
+
+.dashboard.preload-shell .dashboard-loading{
+  display:flex;
+  grid-column:1 / -1;
+  min-height:50vh;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+  font-size:16px;
+  font-weight:600;
+}
+
 .dashboard{
   perspective:1200px;
 }

@@ -1008,6 +1008,9 @@ const accountPanel = document.getElementById("accountPanel");
 const accountTabButtons = Array.from(document.querySelectorAll(".account-tab-btn"));
 const accountTabPanels = Array.from(document.querySelectorAll(".account-tab-panel"));
 const friendsTabBtn = accountTabButtons.find((buttonEl) => String(buttonEl?.dataset?.accountTab || "").trim().toLowerCase() === "friends") || null;
+const accountIdentityCache = new Map();
+const accountIdentitySyncInFlight = new Map();
+const ACCOUNT_USERNAME_CACHE_PREFIX = "lumevine_account_username:";
 const themeSetupModal = document.getElementById("themeSetupModal");
 const themeSetupOptions = document.getElementById("themeSetupOptions");
 const accountThemeOptions = document.getElementById("accountThemeOptions");
@@ -1122,7 +1125,6 @@ function showThemeToast(message) {
 function revealDashboardForSetupOverlay() {
   if (!dashboard) return;
   dashboard.style.display = "grid";
-  dashboard.classList.remove("preload-shell");
   setInitialLoadingStates();
   updateClearDataButtonState();
 }
@@ -1247,6 +1249,7 @@ const weeklyGoalScorecard = document.getElementById("weeklyGoalScorecard");
 const progressMilestones = document.getElementById("progressMilestones");
 const weeklyTargetsDisplay = document.getElementById("weeklyTargetsDisplay");
 const questXpEl = document.getElementById("questXp");
+const questRecoveryBonusEl = document.getElementById("questRecoveryBonus");
 const questStreakEl = document.getElementById("questStreak");
 const questWeekStreakLabels = document.getElementById("questWeekStreakLabels");
 const questWeekStreakCircles = document.getElementById("questWeekStreakCircles");
@@ -1713,6 +1716,29 @@ function setAccountDisplayNameError(message = "") {
   accountDisplayNameError.style.display = text ? "block" : "none";
 }
 
+function readCachedAccountUsername(userId) {
+  const safeUserId = String(userId || "").trim();
+  if (!safeUserId) return "";
+  try {
+    const cachedUsername = String(localStorage.getItem(`${ACCOUNT_USERNAME_CACHE_PREFIX}${safeUserId}`) || "").trim();
+    return validateSignupUsername(cachedUsername).ok ? cachedUsername : "";
+  } catch (err) {
+    structuredLog("warn", "profile.username.cache.read", err?.message || String(err), { userId: safeUserId });
+    return "";
+  }
+}
+
+function cacheAccountUsername(userId, username) {
+  const safeUserId = String(userId || "").trim();
+  const safeUsername = String(username || "").trim();
+  if (!safeUserId || !validateSignupUsername(safeUsername).ok) return;
+  try {
+    localStorage.setItem(`${ACCOUNT_USERNAME_CACHE_PREFIX}${safeUserId}`, safeUsername);
+  } catch (err) {
+    structuredLog("warn", "profile.username.cache.write", err?.message || String(err), { userId: safeUserId });
+  }
+}
+
 function updateAccountPanel(user) {
   if (!user) {
     if (accountName) accountName.innerText = "-";
@@ -1733,12 +1759,15 @@ function updateAccountPanel(user) {
     ? user.providerData.map((entry) => String(entry?.providerId || "").trim().toLowerCase())
     : [];
   const isGoogleAccount = providerIds.includes("google.com");
+  const uid = String(user.uid || "");
+  const cachedIdentity = accountIdentityCache.get(uid);
+  const storedUsername = readCachedAccountUsername(uid);
   const fallbackName = (isGoogleAccount
     ? (buildUsernameSeedFromDisplayName(user.displayName) || "user")
     : ((user.email || "").split("@")[0] || "User"));
   const rawDisplayName = String(user.displayName || "").trim();
   const rawDisplayValidation = validateSignupDisplayName(rawDisplayName);
-  if (accountName) accountName.innerText = fallbackName;
+  if (accountName) accountName.innerText = cachedIdentity?.username || storedUsername || fallbackName;
   if (accountDisplayName) accountDisplayName.innerText = normalizeDisplayNameValue(rawDisplayName) || fallbackName;
   if (accountEmail) accountEmail.innerText = user.email || "Not available";
   const isVerifiedForDisplay = !!user.emailVerified || isGoogleAccount;
@@ -1754,7 +1783,23 @@ function updateAccountPanel(user) {
   void syncAccountIdentityFromProfile(user);
 }
 
-async function syncAccountIdentityFromProfile(user) {
+function syncAccountIdentityFromProfile(user) {
+  const activeUid = String(user?.uid || "").trim();
+  if (!activeUid) return Promise.resolve();
+  if (accountIdentityCache.has(activeUid)) return Promise.resolve();
+  const existingSync = accountIdentitySyncInFlight.get(activeUid);
+  if (existingSync) return existingSync;
+
+  const syncPromise = loadAccountIdentityFromProfile(user).finally(() => {
+    if (accountIdentitySyncInFlight.get(activeUid) === syncPromise) {
+      accountIdentitySyncInFlight.delete(activeUid);
+    }
+  });
+  accountIdentitySyncInFlight.set(activeUid, syncPromise);
+  return syncPromise;
+}
+
+async function loadAccountIdentityFromProfile(user) {
   const activeUid = String(user?.uid || "").trim();
   if (!activeUid) return;
 
@@ -1765,13 +1810,14 @@ async function syncAccountIdentityFromProfile(user) {
   const isGoogleAccount = providerIds.includes("google.com");
   const emailLocalIdentity = getEmailLocalIdentity(safeEmail);
   const googleSeed = buildUsernameSeedFromDisplayName(user?.displayName) || "user";
+  const storedUsername = readCachedAccountUsername(activeUid);
+  let profileData = {};
   const normalizeResolvedUsername = (value) => {
     const normalized = normalizeUsernameForLookup(value);
     if (isGoogleAccount && emailLocalIdentity && normalized === emailLocalIdentity) return "";
     return normalized;
   };
-  let usernameValue = normalizeResolvedUsername(accountName?.innerText || "")
-    || (isGoogleAccount ? googleSeed : normalizeUsernameForLookup(emailLocal))
+  let usernameValue = (isGoogleAccount ? googleSeed : emailLocalIdentity)
     || "user";
   let displayNameValue = normalizeDisplayNameValue(user?.displayName) || usernameValue;
   let hasLegacyInvalidDisplayName = false;
@@ -1779,7 +1825,7 @@ async function syncAccountIdentityFromProfile(user) {
   try {
     const profileRes = await fsGetDoc(doc(db, "users", activeUid, "settings", "profile"), 'profile');
     if (profileRes.exists) {
-      const profileData = profileRes.data || {};
+      profileData = profileRes.data || {};
       const profileDisplayRaw = String(profileData.displayName || "").trim();
       if (profileDisplayRaw && !validateSignupDisplayName(profileDisplayRaw).ok) {
         hasLegacyInvalidDisplayName = true;
@@ -1791,26 +1837,86 @@ async function syncAccountIdentityFromProfile(user) {
         || usernameValue;
     }
 
-    // Canonical source of truth for username is usernameDirectory doc id.
+    // Prefer the profile value; directory query order is not stable when legacy duplicate claims exist.
     const usernameByUidSnap = await fsGetDocs(query(
       collection(db, "usernameDirectory"),
       where("uid", "==", activeUid)
     ));
-    const canonicalDoc = Array.isArray(usernameByUidSnap?.docs) ? usernameByUidSnap.docs.find((docSnap) => {
-      const candidate = normalizeResolvedUsername(docSnap?.id || "");
-      return !!candidate;
-    }) : null || (usernameByUidSnap?.docs && usernameByUidSnap.docs[0]);
-    const canonicalUsername = normalizeResolvedUsername(canonicalDoc?.id || "");
-    if (canonicalUsername) {
-      usernameValue = canonicalUsername;
+    const ownedUsernameDocs = [...(usernameByUidSnap?.docs || [])]
+      .sort((left, right) => String(left.id || "").localeCompare(String(right.id || "")));
+    const profileUsernameRaw = getCaseSensitiveUsernameInputValue(profileData.username || profileData.name || "");
+    const profileUsername = validateSignupUsername(profileUsernameRaw).ok
+      ? normalizeResolvedUsername(profileUsernameRaw)
+      : "";
+    const canonicalDoc = ownedUsernameDocs.find((docSnap) => {
+      return normalizeResolvedUsername(docSnap?.id || "") === profileUsername;
+    }) || ownedUsernameDocs.find((docSnap) => !!normalizeResolvedUsername(docSnap?.id || ""));
+    let canonicalUsername = profileUsername || normalizeResolvedUsername(canonicalDoc?.id || "");
+    const canonicalData = canonicalDoc?.data?.() || {};
+    let legacyIdentityData = {};
+    if (safeEmail) {
+      const legacyIdentitySnap = await fsGetDoc(doc(db, "userDirectory", safeEmail), 'userDirectory');
+      if (legacyIdentitySnap.exists) legacyIdentityData = legacyIdentitySnap.data || {};
     }
-  } catch (_) {
-    // Non-blocking: keep fallback values.
+    const canonicalWithoutSeparators = canonicalUsername.replace(/[-_]/g, "");
+    const recoverableUsername = [
+      storedUsername,
+      profileData.username,
+      profileData.name,
+      legacyIdentityData.username,
+      legacyIdentityData.name,
+      canonicalData.username,
+      canonicalData.name
+    ].map(getCaseSensitiveUsernameInputValue).find((candidate) => {
+      const normalized = normalizeResolvedUsername(candidate);
+      return /[-_]/.test(candidate)
+        && isValidUsernameKey(normalized)
+        && normalized.replace(/[-_]/g, "") === canonicalWithoutSeparators;
+    });
+
+    const profileUsernameIsClaimed = ownedUsernameDocs.some((docSnap) => {
+      return normalizeResolvedUsername(docSnap?.id || "") === profileUsername;
+    });
+    const usernameToRestore = recoverableUsername
+      || (profileUsername && /[-_]/.test(profileUsernameRaw) && !profileUsernameIsClaimed
+        ? profileUsernameRaw
+        : "");
+    const usernameToRestoreIsClaimed = ownedUsernameDocs.some((docSnap) => {
+      return normalizeResolvedUsername(docSnap?.id || "") === normalizeResolvedUsername(usernameToRestore);
+    });
+    if (usernameToRestore && (
+      usernameToRestore.toLowerCase() !== canonicalUsername
+      || !usernameToRestoreIsClaimed
+    )) {
+      try {
+        await claimUsernameDirectoryEntry(activeUid, usernameToRestore, safeEmail, displayNameValue);
+        canonicalUsername = normalizeResolvedUsername(usernameToRestore);
+        const repairedProfile = {
+          username: canonicalUsername,
+          name: canonicalUsername,
+          updatedAt: serverTimestamp()
+        };
+        await setDoc(doc(db, "users", activeUid, "settings", "profile"), repairedProfile, { merge: true });
+        if (safeEmail) {
+          await setDoc(doc(db, "userDirectory", safeEmail), repairedProfile, { merge: true });
+        }
+      } catch (err) {
+        structuredLog('warn', 'profile.username.recovery', err?.message || String(err), { userId: activeUid });
+      }
+    }
+
+    if (canonicalUsername) {
+      usernameValue = storedUsername || canonicalUsername;
+    }
+  } catch (err) {
+    structuredLog('warn', 'profile.identity.sync', err?.message || String(err), { userId: activeUid });
   }
 
   const stillActive = String(auth.currentUser?.uid || "").trim() === activeUid;
   if (!stillActive) return;
 
+  accountIdentityCache.set(activeUid, { username: usernameValue, displayName: displayNameValue });
+  cacheAccountUsername(activeUid, usernameValue);
   if (accountName) accountName.innerText = usernameValue;
   if (accountDisplayName) accountDisplayName.innerText = displayNameValue;
   if (hasLegacyInvalidDisplayName) {
@@ -2308,6 +2414,12 @@ async function clearAllAccountData() {
     currentChallengeDateKey = "";
     questDateKey = "";
     questXp = 0;
+    questRecoveryBonusDateKey = "";
+    questRecoveryBonusClaimed = false;
+    questRecoveryBonusAwardInFlight = false;
+    burnoutRadarWarningActive = false;
+    burnoutRadarDataReady = false;
+    burnoutRadarCalculatedDateKey = "";
     questShieldAvailable = false;
     waterGoal = 0;
 
@@ -2330,6 +2442,8 @@ async function clearAllAccountData() {
       loadDailyRoutine(user.uid)
     ]);
 
+    burnoutRadarDataReady = true;
+    updateBurnoutRadarUI();
     updateClearDataButtonState();
     updateCrashPreventionUI();
 
@@ -2485,6 +2599,12 @@ try {
         burnoutRecoveryPlan.length = 0;
         questDateKey = "";
         questXp = 0;
+        questRecoveryBonusDateKey = "";
+        questRecoveryBonusClaimed = false;
+        questRecoveryBonusAwardInFlight = false;
+        burnoutRadarWarningActive = false;
+        burnoutRadarDataReady = false;
+        burnoutRadarCalculatedDateKey = "";
         questShieldAvailable = false;
         questStreakCount = 0;
         questLastStreakDateKey = "";
@@ -2507,6 +2627,7 @@ try {
         if (weeklyGoalScorecard) weeklyGoalScorecard.innerHTML = "";
         if (progressMilestones) progressMilestones.innerHTML = "";
         if (questXpEl) questXpEl.innerText = "XP 0/100";
+        updateQuestRecoveryBonusUI();
         if (questStreakEl) questStreakEl.innerText = "Streak 0 🔥";
         if (questProgressFill) questProgressFill.style.width = "0%";
         if (questShieldEl) questShieldEl.innerText = "Streak shield: Inactive";
@@ -3221,6 +3342,10 @@ async function initializeAuthenticatedSession(user) {
   const sessionUserId = String(user?.uid || "").trim();
   if (!sessionUserId) return;
   lastAuthenticatedUserId = sessionUserId;
+  burnoutRadarDataReady = false;
+  burnoutRadarCalculatedDateKey = "";
+  burnoutRadarWarningActive = false;
+  updateBurnoutRadarUI();
   clearAuthProgressMessage();
 
   if (signInModal) signInModal.style.display = "none";
@@ -3245,7 +3370,6 @@ async function initializeAuthenticatedSession(user) {
   closeGoogleIdentitySetupModal();
   updateAccountPanel(user);
   signInModal.style.display = "none";
-  dashboard.classList.remove("preload-shell");
   setInitialLoadingStates();
   updateClearDataButtonState();
   // Record last sign-in timestamp on the existing writable `timeSync` settings doc.
@@ -3275,8 +3399,8 @@ async function initializeAuthenticatedSession(user) {
         clearDashboardCardLoadTimeout();
         return;
       }
-      forceDashboardCardLoad(sessionUserId);
       if (attempts >= maxAttempts) {
+        forceDashboardCardLoad(sessionUserId);
         clearDashboardCardLoadTimeout();
       }
     }, 1500);
@@ -3289,7 +3413,6 @@ async function initializeAuthenticatedSession(user) {
     return;
   }
 
-  dashboard.classList.remove("preload-shell");
   updateClearDataButtonState();
   const sessionPrepPromise = Promise.allSettled([
     migrateUserDocument(user.uid),
@@ -3305,25 +3428,34 @@ async function initializeAuthenticatedSession(user) {
     if (!activeUser?.uid || activeUser.uid !== user.uid) return;
     updateAccountPanel(activeUser);
   }).catch((err) => structuredLog('warn', 'session.prep', err?.message || String(err)));
-  const initialDataLoadPromises = [
+  const burnoutRadarDataLoadPromises = [
     loadDailyChallenge(user.uid),
-    loadDailyUsage(user.uid),
     loadMoods(user.uid),
+    loadTasks(user.uid),
+    loadRescueEvents(user.uid),
+    loadWaterData(user.uid),
+    loadSleepData(user.uid),
+    loadGratitude(user.uid)
+  ];
+  const initialDataLoadPromises = [
+    ...burnoutRadarDataLoadPromises,
+    loadDailyUsage(user.uid),
     loadAiUsage(user.uid),
     loadAiChats(user.uid),
-    loadTasks(user.uid),
     loadReminders(user.uid),
     loadWeeklyTargets(user.uid),
-    loadRescueEvents(user.uid),
     loadHabitQuest(user.uid),
     loadStartupUsageState(user.uid),
     loadDailyRoutine(user.uid),
-    loadWaterData(user.uid),
-    loadSleepData(user.uid),
     loadMusicSessions(user.uid),
-    loadBedtimeSettings(user.uid),
-    loadGratitude(user.uid)
+    loadBedtimeSettings(user.uid)
   ];
+  void Promise.allSettled(burnoutRadarDataLoadPromises).then((results) => {
+    const activeUser = auth.currentUser;
+    if (!activeUser?.uid || activeUser.uid !== user.uid) return;
+    burnoutRadarDataReady = results.every((result) => result.status === "fulfilled");
+    updateBurnoutRadarUI();
+  });
   const shouldShowPendingRequestLoginAlert = consumePendingRequestLoginAlertFlag();
   friendRequestLoginAlertShown = false;
   loadFriendRequests(user.uid, shouldShowPendingRequestLoginAlert);
@@ -3344,6 +3476,7 @@ async function initializeAuthenticatedSession(user) {
   void Promise.allSettled(initialDataLoadPromises).then(async () => {
     const activeUser = auth.currentUser;
     if (!activeUser?.uid || activeUser.uid !== user.uid) return;
+    dashboard.classList.remove("preload-shell");
     updateCrashPreventionUI();
     await forceSyncFriendProfileFromLocalSnapshot(activeUser);
     await loadFriendsInsights(activeUser.uid);
@@ -4803,7 +4936,7 @@ async function handleAuth() {
         updatedAt: new Date()
       }, 'profile', { merge: true });
       await upsertUserDirectoryProfile(userCredential.user, {
-        username,
+        username: usernameKey,
         displayName: signupDisplayName
       });
       const verifyResult = await sendVerificationEmailReliable(userCredential.user);
@@ -4984,12 +5117,11 @@ async function handleGoogleAuth() {
       hideAuthModalError();
       return;
     }
-    const currentOrigin = window.location.origin || "unknown-origin";
     const currentHost = window.location.hostname || "unknown-host";
     const isUnauthorizedDomain = (err?.code || "").includes("unauthorized-domain");
     error.style.display = "block";
     error.innerText = isUnauthorizedDomain
-      ? "Unauthorized domain. Current origin: " + currentOrigin + ". Add '" + currentHost + "' in Firebase Auth > Settings > Authorized domains, then hard refresh."
+      ? "This domain is not authorized for sign-in. Ask the app administrator to authorize '" + currentHost + "', then reload."
       : (err.message || "Google authentication failed.");
   } finally {
     clearAuthProgressMessage();
@@ -5581,6 +5713,7 @@ function normalizeUsernameForLookup(usernameValue) {
     .toLowerCase()
     .replace(/\s+/g, "")
     .replace(/\./g, "")
+    .replace(/[^a-z0-9_-]/g, "")
     .trim();
 }
 
@@ -7407,7 +7540,8 @@ async function upsertUserDirectoryProfile(user, options = {}) {
         collection(db, "usernameDirectory"),
         where("uid", "==", user.uid)
       ));
-      const firstMatch = (usernameByUidSnap?.docs || [])[0];
+      const firstMatch = [...(usernameByUidSnap?.docs || [])]
+        .sort((left, right) => String(left.id || "").localeCompare(String(right.id || "")))[0];
       if (firstMatch) {
         const usernameData = firstMatch.data() || {};
         existingUsernameFromDirectory = getNormalizedUsernameIdentity(usernameData.username || usernameData.name || firstMatch.id, safeEmail);
@@ -7486,10 +7620,6 @@ async function upsertUserDirectoryProfile(user, options = {}) {
       preferredUsername: safeUsername,
       allowSuffixFallback: (isGoogleAccount && !!googleNameSeed) || legacyDotMigration
     });
-
-    if (accountName && claimedUsername) {
-      accountName.innerText = claimedUsername;
-    }
 
     if (claimedUsername && claimedUsername !== safeUsername) {
       const mergedProfilePayload = {
@@ -9259,6 +9389,12 @@ let moodDailyResetTimeoutId = null;
 let insightMetricIndex = 0;
 let questDateKey = "";
 let questXp = 0;
+let questRecoveryBonusDateKey = "";
+let questRecoveryBonusClaimed = false;
+let questRecoveryBonusAwardInFlight = false;
+let burnoutRadarWarningActive = false;
+let burnoutRadarDataReady = false;
+let burnoutRadarCalculatedDateKey = "";
 let questShieldAvailable = false;
 let questStreakCount = 0;
 let questLastStreakDateKey = "";
@@ -11195,6 +11331,7 @@ function renderQuestWeekStreak(animatedDateKey = "") {
 
 function renderHabitQuestUI(animatedDateKey = "") {
   if (questXpEl) questXpEl.innerText = `XP ${questXp}/100`;
+  updateQuestRecoveryBonusUI();
   const allDoneToday = habitQuests.length > 0 && habitQuests.every((entry) => !!entry.completed);
   if (questStreakEl) questStreakEl.innerText = allDoneToday ? `Streak ${questStreakCount} 🔥` : "Complete all 4 quests to lock today’s streak";
   const progressPercent = allDoneToday ? 100 : Math.max(0, Math.min(100, questXp));
@@ -11233,6 +11370,26 @@ function renderHabitQuestUI(animatedDateKey = "") {
   });
 }
 
+function updateQuestRecoveryBonusUI() {
+  if (!questRecoveryBonusEl) return;
+  if (questRecoveryBonusClaimed && questRecoveryBonusDateKey === getTodayKey()) {
+    questRecoveryBonusEl.innerText = "Recovery bonus earned today: +10 XP.";
+    questRecoveryBonusEl.classList.add("is-earned");
+  } else if (burnoutRadarWarningActive) {
+    questRecoveryBonusEl.innerText = "Burnout warning active: log at least 1 glass of water or complete a task for today’s +10 bonus XP.";
+    questRecoveryBonusEl.classList.remove("is-earned");
+  } else {
+    questRecoveryBonusEl.innerText = "Earn +10 bonus XP once per day by logging a glass of water or completing a task while the Burnout Radar warning is active.";
+    questRecoveryBonusEl.classList.remove("is-earned");
+  }
+}
+
+function isBurnoutRecoveryBonusEligible() {
+  return burnoutRadarDataReady
+    && burnoutRadarWarningActive
+    && burnoutRadarCalculatedDateKey === getTodayKey();
+}
+
 async function saveHabitQuestState(userId) {
   if (!userId) return;
   try {
@@ -11240,6 +11397,8 @@ async function saveHabitQuestState(userId) {
       dateKey: questDateKey,
       weekStartKey: questWeekStartKey,
       xp: questXp,
+      recoveryBonusDateKey: questRecoveryBonusDateKey,
+      recoveryBonusClaimed: questRecoveryBonusClaimed,
       shield: questShieldAvailable,
       streakCount: questStreakCount,
       lastStreakDateKey: questLastStreakDateKey,
@@ -11250,6 +11409,25 @@ async function saveHabitQuestState(userId) {
     }, { merge: true });
   } catch (err) {
     notifyFirestoreError(err);
+  }
+}
+
+async function awardBurnoutRecoveryBonus(userId, warningWasActive) {
+  const todayKey = getTodayKey();
+  if (!userId || !warningWasActive || questRecoveryBonusAwardInFlight) return;
+  if (questRecoveryBonusClaimed && questRecoveryBonusDateKey === todayKey) return;
+
+  questRecoveryBonusAwardInFlight = true;
+  questRecoveryBonusDateKey = todayKey;
+  questRecoveryBonusClaimed = true;
+  questXp += 10;
+  while (questXp >= 100) questXp -= 100;
+  renderHabitQuestUI();
+  try {
+    await saveHabitQuestState(userId);
+    showToast("Recovery action complete: +10 bonus XP in Adaptive Habit Quest!");
+  } finally {
+    questRecoveryBonusAwardInFlight = false;
   }
 }
 
@@ -11310,6 +11488,8 @@ async function loadHabitQuest(userId) {
     if (snap.exists) {
       const data = snap.data;
       questXp = Number(data.xp) || 0;
+      questRecoveryBonusDateKey = String(data.recoveryBonusDateKey || "");
+      questRecoveryBonusClaimed = questRecoveryBonusDateKey === questDateKey && !!data.recoveryBonusClaimed;
       questShieldAvailable = !!data.shield;
       questStreakCount = Math.max(0, Number(data.streakCount) || 0);
       questLastStreakDateKey = String(data.lastStreakDateKey || "");
@@ -11363,18 +11543,24 @@ async function loadHabitQuest(userId) {
           }
         } else {
           questXp = 0;
+          questRecoveryBonusDateKey = "";
+          questRecoveryBonusClaimed = false;
           questShieldAvailable = false;
           generateAdaptiveQuests(questDateKey);
           await saveHabitQuestState(userId);
         }
       } else {
         questXp = 0;
+        questRecoveryBonusDateKey = "";
+        questRecoveryBonusClaimed = false;
         questShieldAvailable = false;
         generateAdaptiveQuests(questDateKey);
         await saveHabitQuestState(userId);
       }
     } else {
       questXp = 0;
+      questRecoveryBonusDateKey = "";
+      questRecoveryBonusClaimed = false;
       questShieldAvailable = false;
       questStreakCount = 0;
       questLastStreakDateKey = "";
@@ -11554,6 +11740,8 @@ function ensureHabitQuestCurrent() {
     questDateKey = todayKey;
     normalizeQuestStreakForToday(todayKey);
     questXp = 0;
+    questRecoveryBonusDateKey = "";
+    questRecoveryBonusClaimed = false;
     questShieldAvailable = false;
     generateAdaptiveQuests(todayKey);
     const user = auth.currentUser;
@@ -11650,6 +11838,17 @@ function renderBurnoutRecoveryPlan(options = {}) {
 }
 
 function updateBurnoutRadarUI() {
+  if (!burnoutRadarDataReady) {
+    burnoutRadarWarningActive = false;
+    burnoutRadarCalculatedDateKey = "";
+    updateQuestRecoveryBonusUI();
+    if (burnoutRiskEl) burnoutRiskEl.innerText = "Not yet calculated";
+    if (burnoutWindowEl) burnoutWindowEl.innerText = "Waiting for wellness data";
+    if (burnoutReasonEl) burnoutReasonEl.innerText = "The forecast will appear after your wellness data has loaded.";
+    if (burnoutScheduleEl) burnoutScheduleEl.innerHTML = "";
+    return;
+  }
+
   const crash = getCrashRiskSnapshot();
   const moodMeta = getMoodStateMeta(getTodayMood());
 
@@ -11672,6 +11871,9 @@ function updateBurnoutRadarUI() {
   forecast = Math.max(0, Math.min(100, forecast));
 
   const level = forecast >= 75 ? "High Risk" : forecast >= 50 ? "Moderate Risk" : "Low Risk";
+  burnoutRadarWarningActive = forecast >= 50;
+  burnoutRadarCalculatedDateKey = getTodayKey();
+  updateQuestRecoveryBonusUI();
   const poolKey = forecast >= 75 ? "high" : forecast >= 50 ? "moderate" : "low";
   const variant = pickBootStablePoolItem(
     BURNOUT_RADAR_PLAN_POOLS[poolKey],
@@ -14670,7 +14872,7 @@ async function clearDailyRoutine() {
     return;
   }
   if (!dailyRoutineState.entries.length) return;
-  if (!await appConfirm("Clear your routine from this device and your Firebase account?", { title: "Clear routine", confirmText: "Clear routine" })) return;
+  if (!await appConfirm("Clear your routine from all of your signed-in devices?", { title: "Clear routine", confirmText: "Clear routine" })) return;
 
   try {
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "dailyRoutine"));
@@ -20419,6 +20621,7 @@ function renderTask(entry, options = {}) {
   toggleBtn.textContent = entry.completed ? "✅" : "⬜";
   toggleBtn.title = "Toggle complete";
   toggleBtn.onclick = async () => {
+    const recoveryBonusEligible = !entry.completed && isBurnoutRecoveryBonusEligible();
     entry.completed = !entry.completed;
     entry.completedAt = entry.completed ? getServerNowDate() : null;
     span.classList.toggle("task-done", entry.completed);
@@ -20441,6 +20644,7 @@ function renderTask(entry, options = {}) {
       }, 'tasks');
       if (entry.completed) {
         await rememberCompletedTaskForWellness(user.uid, entry.id);
+        await awardBurnoutRecoveryBonus(user.uid, recoveryBonusEligible);
       } else {
         await forgetCompletedTaskForWellness(user.uid, entry.id);
       }
@@ -20907,6 +21111,7 @@ async function saveWater() {
     showToast(`You can log a maximum of ${WATER_MAX_GLASSES_PER_ENTRY} glasses at once.`);
     return;
   }
+  const recoveryBonusEligible = v >= 1 && isBurnoutRecoveryBonusEligible();
 
   waterSubmitting = true;
   if (waterTrackBtn) waterTrackBtn.disabled = true;
@@ -20933,12 +21138,14 @@ async function saveWater() {
     }
 
     waterHistory.push(v);
+    let waterLogSaved = false;
 
     try {
       await addDoc(collection(db, "users", user.uid, "waterIntake"), {
         glasses: v,
         time: serverTimestamp()
       });
+      waterLogSaved = true;
       waterDates.push(getServerNowDate());
       updateWaterProgress();
 
@@ -20960,6 +21167,9 @@ async function saveWater() {
       waterHistory.pop();
       await rollbackDailyQuota(user.uid, "waterCount");
       notifyFirestoreError(err);
+    }
+    if (waterLogSaved && v >= 1) {
+      await awardBurnoutRecoveryBonus(user.uid, recoveryBonusEligible);
     }
   } finally {
     waterSubmitting = false;
@@ -22934,7 +23144,7 @@ async function exportAllData() {
     }, db);
     await replaceUserSnapshotInFirebase(user.uid, payload, db);
     startExportCooldown(EXPORT_COOLDOWN_MS);
-    showToast("Export backup saved to Firebase. Previous backup replaced.");
+    showToast("Cloud backup saved. Your previous backup was replaced.");
   } catch (err) {
     notifyFirestoreError(err);
   }

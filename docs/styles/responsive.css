@@ -514,6 +514,21 @@
   opacity:.95;
 }
 
+.quest-recovery-bonus{
+  margin:8px 0;
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:10px;
+  background:rgba(255,255,255,.08);
+  font-size:12px;
+  line-height:1.4;
+}
+
+.quest-recovery-bonus.is-earned{
+  border-color:rgba(130,220,170,.45);
+  background:rgba(70,180,120,.14);
+}
+
 #questStreak{
   padding:6px 10px;
   border-radius:999px;

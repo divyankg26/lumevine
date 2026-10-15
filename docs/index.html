@@ -126,7 +126,7 @@
     <h3 id="tosTitle">Terms of Service</h3>
     <div id="tosScrollContent" class="tos-scroll">TERMS OF SERVICE
 
-  Last Updated: May 14, 2026
+  Last Updated: October 15, 2026
 
   This Terms of Service ("Terms") governs access to and use of the software, source code, documentation, design elements, algorithms, structure, and any associated materials (collectively, the "Software") provided by Divyank Goyal ("Licensor," "we," "us," or "our").
   By accessing, using, copying, or interacting with the Software in any way, you agree to be bound by these Terms. If you do not agree, you must not use the Software.
@@ -170,6 +170,9 @@
   To operate core account features, the app stores basic account activity metadata such as your account creation date and last login date.
   This tracking is limited to product operation, reliability, and account security.
 
+  10. Wellness Estimates
+  Wellness scores, mood-risk estimates, burnout forecasts, trends, and suggested recovery actions are provided for general informational and self-reflection purposes only. They are estimates generated from information available in the app, including user-entered mood, sleep, hydration, productivity, gratitude, challenge, and recovery activity data. They may be incomplete, inaccurate, or out of date, and are not medical assessments, diagnoses, treatment recommendations, or a substitute for advice from a qualified healthcare professional. Do not use them to make medical decisions. If you have health concerns, seek advice from a qualified professional.
+
   All rights reserved. Unauthorized copying, distribution, or commercial use is strictly prohibited.</div>
     <p class="tos-privacy-link">You can view our Privacy Policy <a href="https://divyankg26.github.io/privacypolicy" target="_blank" rel="noopener noreferrer">here</a>.</p>
     <p id="tosError"></p>
@@ -212,7 +215,7 @@
         <button id="exportDataBtn" onclick="exportAllData()">Export My Data</button>
         <button onclick="startImportData()">Import Data</button>
       </div>
-      <p class="export-note">Store one secure Firebase backup and import from another account via email + password.</p>
+      <p class="export-note">Store one secure cloud backup and import it from another account with that account’s email and password.</p>
     </div>
   </div>
 
@@ -279,6 +282,7 @@
         <div class="legal-privacy-section">
         <h4 style="margin:0 0 8px;font-size:15px;color:#fff;">Privacy Policy</h4>
         <p class="export-note" style="margin-top:0;text-align:left;">Learn how Lumevine handles your information in our <a href="https://divyankg26.github.io/privacypolicy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
+        <p class="export-note" style="margin-top:0;text-align:left;">Mood-risk and burnout estimates are calculated from the mood, sleep, hydration, productivity, gratitude, challenge, and recovery information available in your account. These estimates are for general wellness reflection, not medical assessments.</p>
         </div>
       </div>
     </details>
@@ -302,7 +306,7 @@
 <div id="importTransferModal" onclick="closeImportTransferModal(event)">
   <div class="import-transfer-card" onclick="event.stopPropagation()">
     <h3>Import From Another Account</h3>
-    <p class="import-transfer-note">Enter source account credentials. This will replace your current data with that account’s latest Firebase backup. The source account will see a security warning on next login.</p>
+    <p class="import-transfer-note">Enter source account credentials. This will replace your current data with that account’s latest cloud backup. The source account will see a security warning on next login.</p>
     <input id="importSourceEmail" type="email" placeholder="Source account email">
     <input id="importSourcePassword" type="password" placeholder="Source account password">
     <p id="importTransferError" class="import-transfer-error"></p>
@@ -421,6 +425,7 @@
 </div>
 
 <div class="dashboard">
+<div class="dashboard-loading" role="status" aria-live="polite">Loading...</div>
 
 <!-- AI Companion -->
 <div class="card scroll-card">
@@ -622,6 +627,11 @@
 </div>
 <div class="crash-meter"><div id="crashRiskFill" class="crash-meter-fill"></div></div>
 <p id="crashRiskReason" class="crash-risk-sub">Log your first entries to generate risk analysis.</p>
+<details class="risk-explanation">
+  <summary>How this estimate works</summary>
+  <p>This mood-risk estimate uses information logged in Lumevine, including your mood, sleep, hydration, pending tasks, gratitude and challenge check-ins, and wellness score. Completing recovery actions can also affect it.</p>
+  <p>It is a rough guide based only on available app data—not a medical assessment, diagnosis, or prediction of what will happen. Missing or outdated logs can make it less useful. It cannot replace professional care.</p>
+</details>
 <button class="crash-rescue-btn" onclick="runCrashRescueFlow()">Start a quick reset</button>
 <ul id="crashRescuePlan" class="crash-plan"></ul>
 </div>
@@ -665,6 +675,7 @@
 <div class="quest-top">
   <div id="questXp" class="quest-stat">XP 0/100</div>
 </div>
+<p id="questRecoveryBonus" class="soft-note quest-recovery-bonus" aria-live="polite">Earn +10 bonus XP once per day by logging a glass of water or completing a task while the Burnout Radar warning is active.</p>
 <div id="questStreak" class="quest-stat">Streak 0 🔥</div>
 <div id="questWeekStreak" class="challenge-streak">
   <div id="questWeekStreakLabels" class="challenge-streak-labels"></div>
@@ -683,6 +694,11 @@
 <div id="burnoutRisk" class="burnout-risk">0/100</div>
 <p id="burnoutWindow" class="wellness-status">Low Risk • Stable window</p>
 <p id="burnoutReason" class="burnout-sub">Forecast appears stable right now.</p>
+<details class="risk-explanation">
+  <summary>How this estimate works</summary>
+  <p>This burnout-risk estimate combines the mood-risk estimate with mood-related signals, recent recovery activity, and changes in logged sleep.</p>
+  <p>It is a heuristic based on the information available in your account, not a medical assessment, diagnosis, or certainty about future burnout. It may be inaccurate or incomplete and is not a substitute for professional care.</p>
+</details>
 <p id="burnoutDoNow" class="wellness-do-now burnout-do-now"><b>DO NOW:</b> Keep one simple recovery action visible.</p>
 <ul id="burnoutSchedule" class="burnout-list"></ul>
 <button class="burnout-btn" onclick="applyRecoverySchedule()">Start Simple Recovery Plan</button>
