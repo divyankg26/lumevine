@@ -10,10 +10,10 @@ Lumevine currently supports the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 13.6    | :white_check_mark: |
 | 13.5.1  | :white_check_mark: |
 | 13.5    | :white_check_mark: |
-| <13.5   | :warning:          |
-| < 13.0  | :x:                |
+| < 13.5  | :x:                |
 
 Lumevine supports the latest version with full updates. Older versions may receive limited security fixes or no support.
 
