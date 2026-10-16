@@ -58,12 +58,12 @@
 
 <div id="wellnessScoreInfoModal" onclick="closeWellnessScoreInfoModal(event)">
   <div class="import-transfer-card" role="dialog" aria-modal="true" aria-labelledby="wellnessInfoTitle" onclick="event.stopPropagation()">
-    <h3 id="wellnessInfoTitle">Wellness Score Details</h3>
+    <h3 id="wellnessInfoTitle">Wellness Reflection Details</h3>
     <div class="friends-list-box">
       <div class="friend-row wellness-info-row">
-        <strong id="wellnessInfoCategory">Not Yet Calculated</strong>
-        <small id="wellnessInfoScore">Score: Waiting for today’s first log</small>
-        <small id="wellnessInfoStatus">Status: Log one item to calculate today’s score.</small>
+        <strong id="wellnessInfoCategory">Not Yet Reflected</strong>
+        <small id="wellnessInfoScore">Score: Waiting for a check-in</small>
+        <small id="wellnessInfoStatus">Status: Your reflection will take shape after a check-in.</small>
       </div>
     </div>
     <div class="import-transfer-actions">
@@ -341,7 +341,7 @@
 <div id="bedtimeReminderModal" onclick="closeBedtimeReminderModal(event)">
   <div class="import-transfer-card" onclick="event.stopPropagation()">
     <h3>Bed Time Reminder</h3>
-    <p class="import-transfer-note">It's your scheduled bedtime. Start winding down now for better recovery.</p>
+    <p class="import-transfer-note">It is around your scheduled bedtime. If it feels right, take a moment to wind down.</p>
     <div id="bedtimeReminderPreview" class="friends-list-box"></div>
     <div class="import-transfer-actions">
       <button class="import-transfer-cancel" onclick="closeBedtimeReminderModal(null, true)">Dismiss</button>
@@ -446,10 +446,10 @@
 <h2>🤖 AI Companion</h2>
 <button id="aiClearBtn" class="ai-clear-btn" onclick="clearAiChats()">Clear</button>
 </div>
-<p class="micro-tip">Tip: Ask short, clear prompts for better advice.</p>
+<p class="micro-tip">Bring whatever is on your mind; a little context can help me support you.</p>
 <div class="chat" id="chat"></div>
 <div class="input-group">
-<textarea id="aiInput" rows="2" placeholder="Ask Anything"></textarea>
+<textarea id="aiInput" rows="2" placeholder="What would feel helpful to talk through?"></textarea>
 <button id="aiTalkBtn" onclick="aiChat()">Talk</button>
 </div>
 <p id="aiLimitError" class="limit-note"></p>
@@ -457,11 +457,11 @@
 
 <!-- Reminders -->
 <div class="card scroll-card">
-<h2>⏰ Reminders</h2>
-<p class="micro-tip">Tip: Keep reminders specific, like “Drink water now”.</p>
+<h2>⏰ Gentle Reminders</h2>
+<p class="micro-tip">Set a kind, specific reminder for something you would like to remember.</p>
 <div class="input-group">
-<input id="reminderText" placeholder="Reminder">
-<input type="number" id="reminderMinutes" placeholder="Time" min="1" step="1">
+<input id="reminderText" placeholder="A gentle reminder">
+<input type="number" id="reminderMinutes" placeholder="In how long?" min="1" step="1">
 <select id="reminderUnit" aria-label="Reminder time unit">
   <option value="second">Second(s)</option>
   <option value="minute" selected>Minute(s)</option>
@@ -472,47 +472,47 @@
 </select>
 <button id="reminderSetBtn" onclick="addReminder()">Set</button>
 </div>
-<p class="reset-hint">Daily limits show a live countdown when reached.</p>
+<p class="reset-hint">If a daily limit is reached, its reset time will appear here.</p>
 <p id="reminderLimitError" class="limit-note"></p>
 <ul id="reminders"></ul>
 </div>
 
 <!-- Tasks -->
 <div class="card scroll-card">
-<h2>📊 Productivity</h2>
-<p class="micro-tip">Tip: Add tiny tasks first to build momentum.</p>
+<h2>📊 Tasks &amp; Focus</h2>
+<p class="micro-tip">Choose one small next step; it is okay to keep your list short.</p>
 <div class="input-group">
-<input id="task" placeholder="Task">
-<button id="taskAddBtn" onclick="addTask()">Add</button>
+<input id="task" placeholder="A task to remember">
+<button id="taskAddBtn" onclick="addTask()">Add Task</button>
 </div>
 <p id="taskResetCountdown" class="reset-hint reset-countdown-alert"></p>
 <p id="taskLimitError" class="limit-note"></p>
-<p id="taskFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare productivity pace.</p>
+<p id="taskFriendInsight" class="friend-card-note">Optional shared task reflections can appear here if you choose to connect with a friend.</p>
 <ul id="taskList"></ul>
 </div>
 
 <!-- Sleep -->
 <div class="card sleep-card">
-<h2>💤 Sleep</h2>
-<p class="micro-tip">Tip: Log sleep after waking for a consistent trend.</p>
-<input type="number" id="sleepInput" placeholder="Hours" min="0.1" step="0.1">
-<button id="sleepSaveBtn" onclick="saveSleep()">Save</button>
+<h2>💤 Sleep &amp; Rest</h2>
+<p class="micro-tip">A sleep log is just a snapshot—there is no need to make it perfect.</p>
+<input type="number" id="sleepInput" placeholder="Hours slept" min="0.1" step="0.1">
+<button id="sleepSaveBtn" onclick="saveSleep()">Log Sleep</button>
 <div class="input-group bedtime-input-group">
-  <input id="bedtimeTimeInput" placeholder="Bed Time (in 24 hour format).">
-  <button id="bedtimeSetBtn" onclick="setBedtimeReminder()">Set Bed Time</button>
+  <input id="bedtimeTimeInput" placeholder="Bedtime (24-hour format)">
+  <button id="bedtimeSetBtn" onclick="setBedtimeReminder()">Set Reminder</button>
 </div>
 <p id="bedtimeInputError" class="limit-note"></p>
 <p id="sleepResetCountdown" class="reset-hint reset-countdown-alert"></p>
 <p id="sleepLimitError" class="limit-note"></p>
-<button id="sleepClearBtn" class="water-clear-btn" onclick="clearBedtimeData()">Clear Bed Time</button>
-<p id="sleepFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare sleep consistency.</p>
+<button id="sleepClearBtn" class="water-clear-btn" onclick="clearBedtimeData()">Clear Bedtime</button>
+<p id="sleepFriendInsight" class="friend-card-note">Optional shared sleep reflections can appear here if you choose to connect with a friend.</p>
 <p id="sleepResult"></p>
 </div>
 
 <!-- Mood Tracker -->
 <div class="card scroll-card">
-<h2>🧘 Mood Tracker</h2>
-<p class="micro-tip">Tip: A quick mood log now improves your crash-risk forecast.</p>
+<h2>🧘 Mood Check-in</h2>
+<p class="micro-tip">Take a moment to notice how you are feeling; every mood is welcome here.</p>
 <select id="mood">
 <option>😤 Angry</option>
 <option>😔 Low</option>
@@ -524,29 +524,30 @@
 <button id="moodSaveBtn" onclick="saveMood()">Save</button>
 <p id="moodLimitError" class="limit-note"></p>
 <p id="moodResetCountdown" class="reset-hint reset-countdown-alert"></p>
-<p id="moodFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare average mood of the day.</p>
+<p id="moodFriendInsight" class="friend-card-note">Optional shared mood reflections can appear here if you choose to connect with a friend.</p>
 <div id="moodLogs"></div>
 </div>
 
 <!-- Water -->
 <div class="card scroll-card">
-<h2>💧 Water Intake</h2>
-<p class="micro-tip">Tip: Set your daily goal once each morning.</p>
-<input id="waterGoalInput" placeholder="Daily goal">
-<button onclick="setWaterGoal()">Set Goal</button>
-<input type="number" id="waterInput" placeholder="Glasses" min="0.1" step="0.1">
-<button id="waterTrackBtn" onclick="saveWater()">Track</button>
+<h2>💧 Hydration</h2>
+<p class="micro-tip">Check in with what feels right for you; a small sip is a start.</p>
+<input id="waterGoalInput" placeholder="Daily water goal">
+<button onclick="setWaterGoal()">Update Goal</button>
+<input type="number" id="waterInput" placeholder="Glasses of water" min="0.1" step="0.1">
+<button id="waterTrackBtn" onclick="saveWater()">Log Water</button>
 <p id="waterGoalResetCountdown" class="reset-hint reset-countdown-alert"></p>
 <p id="waterLimitError" class="limit-note"></p>
-<button id="waterClearBtn" class="water-clear-btn" onclick="clearWaterData()">Clear Intake + Goal</button>
-<p id="waterFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare hydration consistency.</p>
+<button id="waterClearBtn" class="water-clear-btn" onclick="clearWaterData()">Clear Water Logs &amp; Goal</button>
+<p id="waterFriendInsight" class="friend-card-note">Optional shared hydration reflections can appear here if you choose to connect with a friend.</p>
 <p id="waterProgress"></p>
 </div>
 
 <!-- Grocery Finance -->
 <div class="card">
-<h2>🧾 Grocery Financing</h2>
-<input id="gCost" placeholder="Monthly amount">
+<h2>🧾 Grocery Planning</h2>
+<p class="micro-tip">Sketch out a monthly grocery plan that feels manageable for you.</p>
+<input id="gCost" placeholder="Monthly grocery amount">
 <select id="gCurrency" aria-label="Currency">
   <option value="usd">USD ($)</option>
   <option value="eur">EUR (€)</option>
@@ -557,15 +558,16 @@
   <option value="aud">AUD ($)</option>
   <option value="cny">CNY (¥)</option>
 </select>
-<input id="gMonths" placeholder="Months">
-<input id="buffer" placeholder="Buffer %">
-<button onclick="calculateFinance()">Plan</button>
+<input id="gMonths" placeholder="Number of months">
+<input id="buffer" placeholder="Flexible buffer %">
+<button onclick="calculateFinance()">View Plan</button>
 <p id="financeResult"></p>
 </div>
 
 <!-- Wellness Music -->
 <div class="card wellness-music-card">
-<h2>🎵 Wellness Music</h2>
+<h2>🎵 Music for a Moment</h2>
+<p class="micro-tip">Press play for a pause, a little focus, or simply a sound you enjoy.</p>
 <iframe id="wellnessMusicFrame" style="border-radius:14px" src="https://open.spotify.com/embed/playlist/7JKDTbcB00R2kwBpLRo72r" width="100%" height="190" allow="encrypted-media; autoplay" title="Wellness Music"></iframe>
 <script src="scripts/wellness-music.js"></script>
 </div>
@@ -573,62 +575,63 @@
 <!-- Time Traveller Mirror -->
 <div class="card scroll-card">
 <div class="ai-header-row">
-<h2>🪞 Time Traveller Mirror</h2>
+<h2>🪞 Future Self Reflection</h2>
 <button id="timeMirrorClearBtn" class="ai-clear-btn" onclick="clearTimeMirror()">Clear</button>
 </div>
-<input id="futureTask" placeholder="Enter goal">
-<button id="timeMirrorCheckBtn" onclick="timeTraveller()">Check</button>
+<p class="micro-tip">Imagine a future you would like to move toward, at your own pace.</p>
+<input id="futureTask" placeholder="Something you would like to work toward">
+<button id="timeMirrorCheckBtn" onclick="timeTraveller()">Reflect</button>
 <div id="timeMirror"></div>
 </div>
 
 <!-- Motivational Quotes -->
 <div class="card">
-<h2>💡 Motivational Quotes</h2>
+<h2>💡 Words to Carry With You</h2>
 <p id="quoteDisplay"></p>
-<button onclick="newQuote()">Inspire Me</button>
+<button onclick="newQuote()">Another Quote</button>
 </div>
 
 <!-- Gratitude Journal -->
 <div class="card scroll-card">
 <h2>🙏 Gratitude Journal</h2>
-<p class="micro-tip">Tip: 1 line is enough — consistency beats length.</p>
+<p class="micro-tip">A word or one line is plenty. There is no need to find perfect words.</p>
 <textarea id="gratitudeInput" rows="3"></textarea>
 <button id="gratitudeSaveBtn" onclick="saveGratitude()">Save</button>
 <p id="gratitudeResetCountdown" class="reset-hint reset-countdown-alert"></p>
 <p id="gratitudeLimitError" class="limit-note"></p>
 <div id="gratitudeLogs"></div>
-<p id="gratitudeFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare gratitude consistency.</p>
+<p id="gratitudeFriendInsight" class="friend-card-note">Optional shared gratitude reflections can appear here if you choose to connect with a friend.</p>
 </div>
 
 <!-- Daily Challenge -->
 <div class="card">
-<h2>🏆 Daily Challenge</h2>
-<p class="micro-tip">Tip: Completing this boosts your overall wellness score.</p>
+<h2>🏆 A Small Daily Invitation</h2>
+<p class="micro-tip">Treat this as an invitation, not an obligation. A smaller version counts too.</p>
 <p id="dailyChallenge"></p>
-<button id="challengeCompleteBtn" onclick="completeChallenge()">Complete</button>
+<button id="challengeCompleteBtn" onclick="completeChallenge()">I Did This</button>
 <p id="challengeResult"></p>
 <p id="dailyChallengeResetCountdown" class="reset-hint reset-countdown-alert"></p>
-<p id="dailyChallengeFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare daily challenge consistency.</p>
+<p id="dailyChallengeFriendInsight" class="friend-card-note">Optional shared moments can appear here if you choose to connect with a friend.</p>
 </div>
 
 <!-- Daily Wellness Score -->
 <div class="card wellness-score-card">
-<h2>⭐ Daily Wellness Score</h2>
+<h2>⭐ Today’s Wellness Reflection</h2>
 <div class="wellness-score-row">
-  <div id="wellnessScore" class="wellness-badge" data-score="" data-status="Waiting" data-calculated="false">Not Yet Calculated</div>
+  <div id="wellnessScore" class="wellness-badge" data-score="" data-status="Waiting" data-calculated="false">Not Yet Reflected</div>
   <button id="wellnessScoreInfoBtn" class="wellness-info-btn" type="button" aria-label="Show wellness score details" onclick="openWellnessScoreInfoModal()">i</button>
 </div>
-<p id="wellnessStatus" class="wellness-status">Log one item to calculate today’s score.</p>
+<p id="wellnessStatus" class="wellness-status">Your reflection will take shape after a check-in.</p>
 <p id="wellnessScoreResetCountdown" class="reset-hint reset-countdown-alert"></p>
-<p id="wellnessReassurance" class="soft-note">Today’s score will appear after your first new log.</p>
-<p id="wellnessDoNow" class="wellness-do-now"><b>DO NOW:</b> Log your first check-in for today.</p>
+<p id="wellnessReassurance" class="soft-note">A few moments of care can help today’s reflection take shape.</p>
+<p id="wellnessDoNow" class="wellness-do-now"><b>A GENTLE NEXT STEP:</b> Add a check-in whenever you feel ready.</p>
 <ul id="wellnessActions" class="wellness-actions">
-  <li class="wellness-secondary-task">Log your mood or a quick check-in.</li>
-  <li class="wellness-secondary-task">Drink one glass of water or top up your goal.</li>
-  <li class="wellness-secondary-task">Complete one pending task to build momentum.</li>
-  <li class="wellness-secondary-task">Add one gratitude note tonight.</li>
+  <li class="wellness-secondary-task">Notice how you are feeling.</li>
+  <li class="wellness-secondary-task">Have a glass of water if it sounds good.</li>
+  <li class="wellness-secondary-task">Choose one task, or leave it for later.</li>
+  <li class="wellness-secondary-task">Write a gratitude note if one comes to mind.</li>
 </ul>
-<p id="wellnessFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare daily wellness score.</p>
+<p id="wellnessFriendInsight" class="friend-card-note">Optional shared wellness reflections can appear here if you choose to connect with a friend.</p>
 </div>
 
 <!-- Mood & Recovery -->
@@ -641,7 +644,7 @@
 <div class="crash-meter"><div id="crashRiskFill" class="crash-meter-fill"></div></div>
 <p id="crashRiskReason" class="crash-risk-sub">A gentle reflection based on your check-ins. Take things one step at a time.</p>
 <details class="risk-explanation">
-  <summary>How this estimate works</summary>
+  <summary>How this reflection works</summary>
   <p>This mood-risk estimate uses information logged in Lumevine, including your mood, sleep, hydration, pending tasks, gratitude and challenge check-ins, and wellness score. Completing recovery actions can also affect it.</p>
   <p>It is a rough guide based only on available app data—not a medical assessment, diagnosis, or prediction of what will happen. Missing or outdated logs can make it less useful. It cannot replace professional care.</p>
 </details>
@@ -651,52 +654,52 @@
 
 <!-- Weekly Review + AI Coach -->
 <div class="card scroll-card inner-scroll-card">
-<h2>🧠 Weekly Review + AI Coach</h2>
+<h2>🧠 Weekly Reflection + AI Coach</h2>
 <div class="card-scroll-body weekly-scroll-body">
-<p id="weeklyRange" class="weekly-range">Last 7 days review</p>
+<p id="weeklyRange" class="weekly-range">A gentle look at the past 7 days</p>
 
-<p class="weekly-section-title">✅ What Improved</p>
+<p class="weekly-section-title">✅ What Went Well</p>
 <ul id="weeklyImproved" class="weekly-list"></ul>
 
-<p class="weekly-section-title">⚠️ What Dropped</p>
+<p class="weekly-section-title">🌱 What Felt Different</p>
 <ul id="weeklyDropped" class="weekly-list"></ul>
 
-<p class="weekly-section-title">🎯 Top 3 Next-Week Actions</p>
+<p class="weekly-section-title">🌿 Gentle Ideas for Next Week</p>
 <ul id="weeklyActions" class="weekly-list"></ul>
 
-<p class="weekly-section-title">🧩 Mood Pattern Analysis</p>
+<p class="weekly-section-title">🧩 Mood Patterns</p>
 <ul id="weeklyPatternInsights" class="weekly-list"></ul>
 
-<p class="weekly-section-title">📊 Weekly Goal Scorecard</p>
+<p class="weekly-section-title">📊 Weekly Check-in Snapshot</p>
 <ul id="weeklyGoalScorecard" class="weekly-list"></ul>
 
-<p class="weekly-section-title">🏅 Progress Milestones</p>
+<p class="weekly-section-title">🏅 Moments of Progress</p>
 <ul id="progressMilestones" class="weekly-list"></ul>
 
 <div class="weekly-target-box">
-  <p id="weeklyTargetsDisplay" class="weekly-target-text">Targets: Water -, Sleep -, Tasks -</p>
-  <button class="weekly-target-btn" onclick="setNextWeekTargets()">Set Next Week Targets</button>
+  <p id="weeklyTargetsDisplay" class="weekly-target-text">Your intentions: Water -, Sleep -, Tasks -</p>
+  <button class="weekly-target-btn" onclick="setNextWeekTargets()">Set Gentle Intentions</button>
 </div>
 </div>
 </div>
 
 <!-- Adaptive Habit Quest -->
 <div class="card quest-card scroll-card inner-scroll-card" id="questCard">
-<h2>🎮 Adaptive Habit Quest</h2>
+<h2>🎮 Habit Journey</h2>
 <div class="card-scroll-body quest-scroll-body">
-<p class="micro-tip">Tip: Finish all 4 quests before today’s reset countdown ends to lock streak progress.</p>
+<p class="micro-tip">Move through these at your own pace; each small step adds to your journey.</p>
 <div class="quest-top">
-  <div id="questXp" class="quest-stat">XP 0/100</div>
+  <div id="questXp" class="quest-stat">Progress 0/100</div>
 </div>
-<p id="questRecoveryBonus" class="soft-note quest-recovery-bonus" aria-live="polite">A small recovery bonus may be available for a water check-in or completing a task.</p>
-<div id="questStreak" class="quest-stat">Streak 0 🔥</div>
+<p id="questRecoveryBonus" class="soft-note quest-recovery-bonus" aria-live="polite">A little extra progress may be available through a water check-in or a completed task.</p>
+<div id="questStreak" class="quest-stat">A new journey begins</div>
 <div id="questWeekStreak" class="challenge-streak">
   <div id="questWeekStreakLabels" class="challenge-streak-labels"></div>
   <div id="questWeekStreakCircles" class="challenge-streak-circles"></div>
 </div>
 <div class="quest-progress"><div id="questProgressFill" class="quest-progress-fill"></div></div>
-<p id="questShield" class="burnout-sub">Streak shield: Inactive</p>
-<p id="questProgressHint" class="soft-note">Complete all 4 quests to secure today’s streak.</p>
+<p id="questShield" class="burnout-sub">Streak support: Resting</p>
+<p id="questProgressHint" class="soft-note">Today’s streak reflects all four steps; take them one at a time.</p>
 <ul id="questList" class="quest-list"></ul>
 </div>
 </div>
@@ -719,8 +722,8 @@
 
 <!-- Insights -->
 <div class="card" id="insightsCard">
-<h2>📈 Insights & Streaks</h2>
-<p class="micro-tip">Tip: Trends get sharper when you log daily at similar times.</p>
+<h2>📈 Patterns &amp; Progress</h2>
+<p class="micro-tip">These are clues, not grades. A few check-ins over time can help patterns take shape.</p>
 
 <div class="insight-task-top">
   <small id="insightTaskTopLabel" class="insight-task-label">Tasks completed 0/0</small>
@@ -728,7 +731,7 @@
 </div>
 
 <div class="insight-switch-head">
-  <p id="insightMetricTitle" class="insight-metric-title">Productivity Trend</p>
+  <p id="insightMetricTitle" class="insight-metric-title">Task Rhythm</p>
   <button id="insightNextBtn" onclick="nextInsightMetric()">Next</button>
 </div>
 <small id="insightMetricLabel" class="insight-metric-label">0%</small>
@@ -753,10 +756,10 @@
 <!-- Daily Routine -->
 <div class="card startup-scroll-card daily-routine-card">
 <div class="daily-routine-header">
-  <h2>🗓️ Daily Routine</h2>
+  <h2>🗓️ A Gentle Daily Rhythm</h2>
 </div>
 <p class="micro-tip">Generate a routine from your wellness trends, or shape it with your own activities.</p>
-<ul id="dailyRoutineList" class="startup-list"><li>Generate a routine to see your schedule.</li></ul>
+<ul id="dailyRoutineList" class="startup-list"><li>Shape a routine when you are ready; it can be simple and flexible.</li></ul>
 <div class="daily-routine-actions">
   <button id="dailyRoutineGenerateBtn" type="button" onclick="generateDailyRoutine()">Generate Routine</button>
   <button id="dailyRoutineAddBtn" type="button" onclick="openDailyRoutineEditor('add')">Add Activity</button>
@@ -765,25 +768,25 @@
   <button id="dailyRoutineDeleteBtn" type="button" onclick="openDailyRoutineDeleteModal()" disabled>Delete Activity</button>
   <button id="dailyRoutineClearBtn" type="button" class="routine-clear-btn" onclick="clearDailyRoutine()" disabled>Clear Routine</button>
 </div>
-<p id="dailyRoutineMeta" class="startup-mini">Your routine is saved to your account and stays here after refresh.</p>
+<p id="dailyRoutineMeta" class="startup-mini">Your routine is saved to your account and will be here when you return.</p>
 </div>
 
 <!-- Weekly Startup Report -->
 <div class="card startup-scroll-card">
-<h2>🧾 Weekly Startup Report</h2>
-<p class="micro-tip">One-click summary of wins, risks, and next actions for sharing.</p>
+<h2>🧾 Weekly Snapshot</h2>
+<p class="micro-tip">A simple overview of recent patterns and possibilities, ready to share if you choose.</p>
 <div class="input-group startup-actions-two">
   <button id="startupGenerateReportBtn" onclick="generateStartupWeeklyReport()">Generate Report</button>
   <button onclick="copyStartupWeeklyReport()">Copy Report</button>
 </div>
-<ul id="startupWeeklyReportText" class="startup-list compact"><li>No report generated yet.</li></ul>
+<ul id="startupWeeklyReportText" class="startup-list compact"><li>Your weekly snapshot will be here whenever you are ready to create one.</li></ul>
 <small id="startupReportResetCountdown" class="insight-reset-note"></small>
 </div>
 
 <!-- Behavior Memory Graph -->
 <div class="card">
-<h2>🧬 Behavior Memory Graph</h2>
-<p class="micro-tip">Signals the patterns that most improve your next-day stability.</p>
+<h2>🧬 Your Patterns</h2>
+<p class="micro-tip">A gentle look at recent check-ins—these are snapshots, not predictions.</p>
 <ul id="startupBehaviorMemory" class="startup-list"></ul>
 </div>
 
@@ -794,6 +797,6 @@
     if (terms && legalTerms) legalTerms.textContent = terms.textContent || "";
   })();
 </script>
-<script src="scripts/app.js"></script>
+<script src="scripts/app.js?v=20261016-1"></script>
 </body>
 </html>

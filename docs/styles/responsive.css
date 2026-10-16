@@ -273,7 +273,7 @@
   opacity:.92;
 }
 
-.weekly-target-btn{margin-top:10px}
+.weekly-target-btn{display:block;width:100%;margin-top:10px}
 
 .startup-list{
   margin:8px 0 0;
@@ -513,7 +513,11 @@
 .quest-progress-fill{
   height:100%;
   width:0%;
-  background:linear-gradient(135deg,var(--primary),var(--accent));
+  background:linear-gradient(90deg,#a8cdbb,#a9c3d5);
+}
+
+.insight-fill{
+  background:linear-gradient(90deg,#a8cdbb,#a9c3d5);
 }
 
 #questShield{

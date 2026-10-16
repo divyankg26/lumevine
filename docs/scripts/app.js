@@ -4,16 +4,16 @@
     if (!calculated) {
       return {
         score: null,
-        category: "Not Yet Calculated",
-        status: "Log one item to calculate today’s score."
+        category: "Not Yet Reflected",
+        status: "Your reflection will take shape after a check-in."
       };
     }
     const score = Math.max(0, Math.min(100, Math.round(Number(scoreValue) || 0)));
-    if (score >= 80) return { score, category: "Very High", status: "Excellent" };
-    if (score >= 60) return { score, category: "High", status: "Good" };
-    if (score >= 40) return { score, category: "Ok", status: "Building" };
-    if (score >= 20) return { score, category: "Low", status: "Needs Focus" };
-    return { score, category: "Very Low", status: "Needs Focus" };
+    if (score >= 80) return { score, category: "Well Supported", status: "Many supportive moments" };
+    if (score >= 60) return { score, category: "Steady", status: "A steady day" };
+    if (score >= 40) return { score, category: "Taking Shape", status: "Taking shape" };
+    if (score >= 20) return { score, category: "Getting Started", status: "A gentle place to begin" };
+    return { score, category: "Getting Started", status: "A gentle place to begin" };
   }
 
   window.openWellnessScoreInfoModal = function openWellnessScoreInfoModalFallback() {
@@ -2623,19 +2623,19 @@ try {
         dailyRoutineState = getDefaultDailyRoutineState();
         renderDailyRoutine();
         refreshStartupFeatures();
-        if (weeklyRange) weeklyRange.innerText = "Last 7 days review";
-        if (weeklyTargetsDisplay) weeklyTargetsDisplay.innerText = "Targets: Water -, Sleep -, Tasks -";
+        if (weeklyRange) weeklyRange.innerText = "A gentle look at the past 7 days";
+        if (weeklyTargetsDisplay) weeklyTargetsDisplay.innerText = "Your intentions: Water -, Sleep -, Tasks -";
         if (weeklyImproved) weeklyImproved.innerHTML = "";
         if (weeklyDropped) weeklyDropped.innerHTML = "";
         if (weeklyActions) weeklyActions.innerHTML = "";
         if (weeklyPatternInsights) weeklyPatternInsights.innerHTML = "";
         if (weeklyGoalScorecard) weeklyGoalScorecard.innerHTML = "";
         if (progressMilestones) progressMilestones.innerHTML = "";
-        if (questXpEl) questXpEl.innerText = "XP 0/100";
+        if (questXpEl) questXpEl.innerText = "Progress 0/100";
         updateQuestRecoveryBonusUI();
-        if (questStreakEl) questStreakEl.innerText = "Streak 0 🔥";
+        if (questStreakEl) questStreakEl.innerText = "A new journey begins";
         if (questProgressFill) questProgressFill.style.width = "0%";
-        if (questShieldEl) questShieldEl.innerText = "Streak shield: Inactive";
+        if (questShieldEl) questShieldEl.innerText = "Streak support: Resting";
         if (questListEl) questListEl.innerHTML = "";
         closeWelcomeGuide();
         welcomeGuideStepIndex = 0;
@@ -3293,12 +3293,12 @@ function forceDashboardCardLoad(sessionUserId) {
   dashboard.style.display = "grid";
   dashboard.classList.remove("preload-shell");
 
-  forceCardContainerLoad(chat, ".chat-message", getRandomEmptyMessage("chat", "No conversations yet. Start the first one to get AI help."));
-  forceCardContainerLoad(reminders, ".item-row", getRandomEmptyMessage("reminders", "No reminders yet. Add one to keep things moving."));
-  forceCardContainerLoad(taskList, ".item-row", getRandomEmptyMessage("tasks", "No tasks yet. Add one small task to start."));
-  forceCardContainerLoad(moodLogs, ".mood-item", getRandomEmptyMessage("mood", "No mood logs yet. Add today’s check-in."));
-  forceCardContainerLoad(gratitudeLogs, ".item-row", getRandomEmptyMessage("gratitude", "No gratitude notes yet. Add your first one."));
-  forceCardContainerLoad(questListEl, ".quest-item", getRandomEmptyMessage("quests", "No quests yet. Log today’s stats to generate quests."));
+  forceCardContainerLoad(chat, ".chat-message", getRandomEmptyMessage("chat", "Your conversation space is here whenever you would like to talk."));
+  forceCardContainerLoad(reminders, ".item-row", getRandomEmptyMessage("reminders", "No reminders here yet. Add one if something would be useful to remember."));
+  forceCardContainerLoad(taskList, ".item-row", getRandomEmptyMessage("tasks", "Your list is clear for now. Add a task whenever you are ready."));
+  forceCardContainerLoad(moodLogs, ".mood-item", getRandomEmptyMessage("mood", "No mood notes yet. Check in whenever you feel ready."));
+  forceCardContainerLoad(gratitudeLogs, ".item-row", getRandomEmptyMessage("gratitude", "No gratitude notes yet. Write one if something comes to mind."));
+  forceCardContainerLoad(questListEl, ".quest-item", getRandomEmptyMessage("quests", "Your next small steps will appear after a check-in."));
 
   updateWeeklyReview();
   refreshStartupFeatures();
@@ -3712,26 +3712,26 @@ document.documentElement.classList.toggle("mobile-device", IS_MOBILE_DEVICE);
 const SHORTCUT_MOD_LABEL = IS_MAC_OS ? "Option" : "Alt";
 const CARD_SHORTCUTS = [
   { cardIndex: 0, keys: ["a", "i"], label: "AI Companion" },
-  { cardIndex: 1, keys: ["r", "e"], label: "Reminders" },
-  { cardIndex: 2, keys: ["p", "r"], label: "Productivity" },
-  { cardIndex: 6, keys: ["g", "f"], label: "Grocery Financing" },
-  { cardIndex: 4, keys: ["m", "t"], label: "Mood Tracker" },
-  { cardIndex: 5, keys: ["w", "t"], label: "Water Intake" },
-  { cardIndex: 3, keys: ["s", "l"], label: "Sleep" },
-  { cardIndex: 7, keys: ["m", "u"], label: "Wellness Music" },
-  { cardIndex: 8, keys: ["t", "m"], label: "Time Traveller Mirror" },
-  { cardIndex: 9, keys: ["q", "t"], label: "Motivational Quotes" },
+  { cardIndex: 1, keys: ["r", "e"], label: "Gentle Reminders" },
+  { cardIndex: 2, keys: ["p", "r"], label: "Tasks & Focus" },
+  { cardIndex: 6, keys: ["g", "f"], label: "Grocery Planning" },
+  { cardIndex: 4, keys: ["m", "t"], label: "Mood Check-in" },
+  { cardIndex: 5, keys: ["w", "t"], label: "Hydration" },
+  { cardIndex: 3, keys: ["s", "l"], label: "Sleep & Rest" },
+  { cardIndex: 7, keys: ["m", "u"], label: "Music for a Moment" },
+  { cardIndex: 8, keys: ["t", "m"], label: "Future Self Reflection" },
+  { cardIndex: 9, keys: ["q", "t"], label: "Words to Carry With You" },
   { cardIndex: 10, keys: ["g", "j"], label: "Gratitude Journal" },
-  { cardIndex: 11, keys: ["d", "c"], label: "Daily Challenge" },
-  { cardIndex: 12, keys: ["w", "s"], label: "Daily Wellness Score" },
+  { cardIndex: 11, keys: ["d", "c"], label: "A Small Daily Invitation" },
+  { cardIndex: 12, keys: ["w", "s"], label: "Today’s Wellness Reflection" },
   { cardIndex: 13, keys: ["m", "c"], label: "Mood & Recovery" },
-  { cardIndex: 14, keys: ["w", "r"], label: "Weekly Review + AI Coach" },
-  { cardIndex: 15, keys: ["h", "q"], label: "Adaptive Habit Quest" },
+  { cardIndex: 14, keys: ["w", "r"], label: "Weekly Reflection + AI Coach" },
+  { cardIndex: 15, keys: ["h", "q"], label: "Habit Journey" },
   { cardIndex: 16, keys: ["b", "r"], label: "Recovery Outlook" },
-  { cardIndex: 17, keys: ["i", "s"], label: "Insights & Streaks" },
-  { cardIndex: 18, keys: ["d", "r"], label: "Daily Routine" },
-  { cardIndex: 19, keys: ["s", "r"], label: "Weekly Startup Report" },
-  { cardIndex: 20, keys: ["b", "g"], label: "Behavior Memory Graph" }
+  { cardIndex: 17, keys: ["i", "s"], label: "Patterns & Progress" },
+  { cardIndex: 18, keys: ["d", "r"], label: "A Gentle Daily Rhythm" },
+  { cardIndex: 19, keys: ["s", "r"], label: "Weekly Snapshot" },
+  { cardIndex: 20, keys: ["b", "g"], label: "Your Patterns" }
 ];
 let welcomeGuideStepIndex = 0;
 let welcomeGuideUserId = "";
@@ -3883,27 +3883,27 @@ const WELCOME_GUIDE_STEPS = [
   {
     title: "Dashboard Overview",
     text: "Use the cards to log mood, water, sleep, reminders, tasks, gratitude, and more in one flow.",
-    tip: "Tip: Start with Mood, Water, and Sleep every day for the fastest progress gains. Use Shift+Enter to add a new line in text boxes."
+    tip: "Start wherever feels easy, and check in when it suits you. Use Shift+Enter to add a new line in text boxes."
   },
   {
     title: "Daily Limits",
-    text: "Each tracker has a daily safety limit and reset timer to keep entries realistic and consistent.",
-    tip: "Tip: If a button is disabled, the countdown note shows when it resets."
+    text: "Trackers have daily limits and reset times to help keep your entries comfortable and manageable.",
+    tip: "If a button is unavailable, its note will show when it becomes available again."
   },
   {
-    title: "Habit Quest",
-    text: "You get 4 random quests each day. Complete all 4 to lock the streak day and activate your streak shield.",
-    tip: "Tip: Finish all quests before today’s reset countdown ends to keep your streak momentum."
+    title: "Habit Journey",
+    text: "A few small check-ins can help you explore your habits. Take each step at a pace that feels comfortable.",
+    tip: "There is no need to rush; choose the steps that feel right for you."
   },
   {
-    title: "Insights & Weekly Review",
+    title: "Patterns & Weekly Reflection",
     text: "Your logs feed into weekly insight bars and AI coaching so you can spot patterns quickly.",
     tip: "Tip: Use the Insights Next button to switch mood/water/sleep views."
   },
   {
     title: "Friends & Requests",
     text: "Open Account to send friend requests by username, accept or decline incoming requests, and view current friends.",
-    tip: "Tip: Friends unlock shared progress insights so you can stay accountable together."
+    tip: "Friends can share gentle check-in reflections, if that feels helpful."
   },
   {
     title: "Account Controls",
@@ -3912,7 +3912,7 @@ const WELCOME_GUIDE_STEPS = [
   },
   {
     title: "Keyboard Shortcuts",
-    text: "All dashboard cards have shortcuts. Hold {shortcut_mod}, then press two letters quickly to jump to a card, including Daily Routine, Weekly Startup Report, and Behavior Memory Graph.",
+    text: "All dashboard cards have shortcuts. Hold {shortcut_mod}, then press two letters quickly to jump to a card, including A Gentle Daily Rhythm, Weekly Snapshot, and Your Patterns.",
     tip: "Shortcut list is shown below.",
     showShortcutList: true
   },
@@ -3982,7 +3982,7 @@ function renderKeyboardShortcutsBox() {
   if (IS_MOBILE_DEVICE) return;
 
   if (keyboardShortcutsSubtitle) {
-    keyboardShortcutsSubtitle.innerText = `Showing ${IS_MAC_OS ? "macOS" : "Windows/Linux"} shortcuts for this device. Hold ${SHORTCUT_MOD_LABEL}, then press the two letters. Includes Daily Routine, Weekly Startup Report, and Behavior Memory Graph shortcuts.`;
+    keyboardShortcutsSubtitle.innerText = `Showing ${IS_MAC_OS ? "macOS" : "Windows/Linux"} shortcuts for this device. Hold ${SHORTCUT_MOD_LABEL}, then press the two letters. Includes A Gentle Daily Rhythm, Weekly Snapshot, and Your Patterns.`;
   }
   if (!keyboardShortcutsList) return;
   const visibleShortcuts = keyboardShortcutsExpanded ? CARD_SHORTCUTS : CARD_SHORTCUTS.slice(0, 3);
@@ -6338,19 +6338,19 @@ function buildFriendMotivationLine(friendProfile, myProfile) {
   const friendTasks = Number(friendMetrics.avgTasksCompletedDaily) || 0;
   const myTasks = Number(myMetrics.avgTasksCompletedDaily) || 0;
 
-  if (friendMood > myMood + 0.12) {
-    return `${friendName}'s average mood is ${friendMetrics.avgMoodLabel || "higher"} and yours is ${myMetrics.avgMoodLabel || "lower"}. Try improving sleep + hydration consistency today.`;
+  if (friendMood > 0 || myMood > 0) {
+    return `Mood check-ins can be different for everyone. You noted ${myMetrics.avgMoodLabel || "no mood yet"}; ${friendName} noted ${friendMetrics.avgMoodLabel || "no mood yet"}.`;
   }
-  if (friendSleep > mySleep + 0.4) {
-    return `${friendName} averages ${friendSleep.toFixed(1)}h sleep while you average ${mySleep.toFixed(1)}h. Better sleep can lift mood and focus.`;
+  if (friendSleep > 0 || mySleep > 0) {
+    return `Sleep check-ins are a personal snapshot: you averaged ${mySleep.toFixed(1)} hours and ${friendName} averaged ${friendSleep.toFixed(1)} hours.`;
   }
-  if (friendWater > myWater + 0.5) {
-    return `${friendName} averages ${friendWater.toFixed(1)} cups/day and you average ${myWater.toFixed(1)}. Match hydration pace to stay competitive.`;
+  if (friendWater > 0 || myWater > 0) {
+    return `Hydration looks different for everyone: you logged ${myWater.toFixed(1)} cups/day and ${friendName} logged ${friendWater.toFixed(1)} cups/day.`;
   }
-  if (friendTasks > myTasks + 0.3) {
-    return `${friendName} completes about ${friendTasks.toFixed(1)} tasks/day vs your ${myTasks.toFixed(1)}. One extra focused sprint can close the gap.`;
+  if (friendTasks > 0 || myTasks > 0) {
+    return `Your task rhythms are personal: you completed about ${myTasks.toFixed(1)} tasks/day and ${friendName} completed about ${friendTasks.toFixed(1)}.`;
   }
-  return `You and ${friendName} are close right now. Keep your consistency to stay ahead.`;
+  return `Shared check-ins with ${friendName} will appear here when you both have a little data.`;
 }
 
 function pickBestFriendMetric(profileRows, metricKey, todayMetricKey = "") {
@@ -6390,29 +6390,20 @@ function getComparisonFriendProfiles(profileRows, maxCount = MAX_FRIENDS) {
   return unique.slice(0, Math.max(1, Number(maxCount) || 5));
 }
 
-function formatLeaderNames(names) {
-  const unique = [...new Set((names || []).filter(Boolean))];
-  if (!unique.length) return "A friend";
-  if (unique.length === 1) return unique[0];
-  if (unique.length === 2) return `${unique[0]} and ${unique[1]}`;
-  return `${unique.slice(0, -1).join(", ")}, and ${unique[unique.length - 1]}`;
-}
-
 function buildNumericFriendComparisonText({
   friends,
   myValue,
   unit,
   digits = 1,
-  leadThreshold = 0.2,
   noDataMessage = "no comparison data yet"
 }) {
   const compareFriends = Array.isArray(friends) ? friends : [];
   const friendNames = compareFriends.map((entry) => entry.name);
-  const header = `You vs ${friendNames.join(" vs ")}`;
+  const header = `Shared check-in with ${friendNames.join(", ")}`;
   const allValues = [Number(myValue) || 0, ...compareFriends.map((entry) => Number(entry.value) || 0)];
   const hasAnyData = allValues.some((value) => value > 0);
   if (!hasAnyData) {
-    return `${header}: ${noDataMessage}.`;
+    return `${header}: ${noDataMessage}. Everyone’s pace is personal.`;
   }
 
   const formatValue = (value) => {
@@ -6420,58 +6411,11 @@ function buildNumericFriendComparisonText({
     return digits <= 0 ? `${Math.round(safe)}` : safe.toFixed(digits);
   };
 
-  const toComparableValue = (value) => {
-    const safe = Number(value) || 0;
-    return digits <= 0 ? Math.round(safe) : Number(safe.toFixed(digits));
-  };
-
   const mySafeValue = Number(myValue) || 0;
-  const myComparableValue = toComparableValue(mySafeValue);
-  const friendComparableRows = compareFriends.map((entry) => {
-    const rawValue = Number(entry.value) || 0;
-    return {
-      name: entry.name,
-      rawValue,
-      comparableValue: toComparableValue(rawValue)
-    };
-  });
   const friendSummary = compareFriends
     .map((entry) => `${entry.name} ${formatValue(entry.value)}`)
     .join("; ");
-
-  const topComparableValue = Math.max(
-    myComparableValue,
-    ...friendComparableRows.map((entry) => entry.comparableValue)
-  );
-  const iAmTop = myComparableValue === topComparableValue;
-  const topFriendNames = friendComparableRows
-    .filter((entry) => entry.comparableValue === topComparableValue)
-    .map((entry) => entry.name);
-  const tieWithFriends = iAmTop && topFriendNames.length > 0;
-
-  const closestGap = Math.abs(topComparableValue - myComparableValue);
-  const comparisonSeed = [
-    header,
-    unit,
-    myComparableValue,
-    ...friendComparableRows.map((entry) => `${entry.name}:${entry.comparableValue}`)
-  ].join("|");
-  let motivation = "Comparison is close. Stay consistent and push one more small win.";
-  if (tieWithFriends) {
-    const tpl = pickPoolItem(FRIEND_MOTIVATION_TIED_POOL, `friend_tied|${comparisonSeed}`) || `You are tied with ${formatLeaderNames(topFriendNames)}. One small action now can put you ahead.`;
-    motivation = tpl.replaceAll('{names}', formatLeaderNames(topFriendNames)).replaceAll('{gap}', formatValue(topComparableValue - myComparableValue));
-  } else if (iAmTop) {
-    const tpl = pickPoolItem(FRIEND_MOTIVATION_LEADING_POOL, `friend_leading|${comparisonSeed}`) || "You are leading. Keep the momentum going.";
-    motivation = tpl.replaceAll('{names}', formatLeaderNames(topFriendNames)).replaceAll('{gap}', formatValue(topComparableValue - myComparableValue));
-  } else if (closestGap > leadThreshold) {
-    const tpl = pickPoolItem(FRIEND_MOTIVATION_BEHIND_POOL, `friend_behind|${comparisonSeed}`) || `{names} {verb} currently ahead by {gap}. One focused push now can close the gap.`;
-    motivation = tpl
-      .replaceAll('{names}', formatLeaderNames(topFriendNames))
-      .replaceAll('{verb}', topFriendNames.length > 1 ? "are" : "is")
-      .replaceAll('{gap}', formatValue(topComparableValue - myComparableValue));
-  }
-
-  return `${header}: You ${formatValue(mySafeValue)} ${unit}; ${friendSummary} ${unit}. ${motivation}`;
+  return `${header}: You ${formatValue(mySafeValue)} ${unit}; ${friendSummary} ${unit}. This is just a snapshot—everyone’s rhythm is different.`;
 }
 
 function renderFriendMetricCardInsights() {
@@ -6489,13 +6433,13 @@ function renderFriendMetricCardInsights() {
   }
 
   if (!Array.isArray(friendInsightProfiles) || !friendInsightProfiles.length) {
-    if (taskFriendInsight) taskFriendInsight.innerText = "Friend benchmark: add a friend to compare productivity pace.";
-    if (waterFriendInsight) waterFriendInsight.innerText = "Friend benchmark: add a friend to compare hydration consistency.";
-    if (sleepFriendInsight) sleepFriendInsight.innerText = "Friend benchmark: add a friend to compare sleep consistency.";
-    if (moodFriendInsight) moodFriendInsight.innerText = "Friend benchmark: add a friend to compare average mood of the day.";
-    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Friend benchmark: add a friend to compare gratitude consistency.";
-    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Friend benchmark: add a friend to compare daily challenge consistency.";
-    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Friend benchmark: add a friend to compare daily wellness score.";
+    if (taskFriendInsight) taskFriendInsight.innerText = "Optional shared task reflections can appear here if you choose to connect with a friend.";
+    if (waterFriendInsight) waterFriendInsight.innerText = "Optional shared hydration reflections can appear here if you choose to connect with a friend.";
+    if (sleepFriendInsight) sleepFriendInsight.innerText = "Optional shared sleep reflections can appear here if you choose to connect with a friend.";
+    if (moodFriendInsight) moodFriendInsight.innerText = "Optional shared mood reflections can appear here if you choose to connect with a friend.";
+    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Optional shared gratitude reflections can appear here if you choose to connect with a friend.";
+    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Optional shared moments can appear here if you choose to connect with a friend.";
+    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Optional shared wellness reflections can appear here if you choose to connect with a friend.";
     return;
   }
 
@@ -6504,18 +6448,18 @@ function renderFriendMetricCardInsights() {
 
   const compareProfiles = getComparisonFriendProfiles(friendInsightProfiles, MAX_FRIENDS);
   if (!compareProfiles.length) {
-    if (taskFriendInsight) taskFriendInsight.innerText = "Friend benchmark: add a friend to compare productivity pace.";
-    if (waterFriendInsight) waterFriendInsight.innerText = "Friend benchmark: add a friend to compare hydration consistency.";
-    if (sleepFriendInsight) sleepFriendInsight.innerText = "Friend benchmark: add a friend to compare sleep consistency.";
-    if (moodFriendInsight) moodFriendInsight.innerText = "Friend benchmark: add a friend to compare average mood of the day.";
-    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Friend benchmark: add a friend to compare gratitude consistency.";
-    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Friend benchmark: add a friend to compare daily challenge consistency.";
-    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Friend benchmark: add a friend to compare daily wellness score.";
+    if (taskFriendInsight) taskFriendInsight.innerText = "Optional shared task reflections can appear here if you choose to connect with a friend.";
+    if (waterFriendInsight) waterFriendInsight.innerText = "Optional shared hydration reflections can appear here if you choose to connect with a friend.";
+    if (sleepFriendInsight) sleepFriendInsight.innerText = "Optional shared sleep reflections can appear here if you choose to connect with a friend.";
+    if (moodFriendInsight) moodFriendInsight.innerText = "Optional shared mood reflections can appear here if you choose to connect with a friend.";
+    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Optional shared gratitude reflections can appear here if you choose to connect with a friend.";
+    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Optional shared moments can appear here if you choose to connect with a friend.";
+    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Optional shared wellness reflections can appear here if you choose to connect with a friend.";
     return;
   }
 
   const friendNames = compareProfiles.map((profile) => getFriendDisplayName(profile, "Friend"));
-  const header = `You vs ${friendNames.join(" vs ")}`;
+  const header = `Shared check-in with ${friendNames.join(", ")}`;
 
   if (taskFriendInsight) {
     const myToday = Number(myMetrics.tasksToday) || 0;
@@ -6534,8 +6478,7 @@ function renderFriendMetricCardInsights() {
       myValue,
       unit: taskUnit,
       digits: 1,
-      leadThreshold: 0.2,
-      noDataMessage: "no productivity comparison data yet. Log and complete your first task today to start the race"
+      noDataMessage: "There are no task check-ins to show yet"
     });
   }
 
@@ -6556,8 +6499,7 @@ function renderFriendMetricCardInsights() {
       myValue,
       unit: waterUnit,
       digits: 1,
-      leadThreshold: 0.3,
-      noDataMessage: "no hydration comparison yet. Start with one glass now and build your streak"
+      noDataMessage: "There are no hydration check-ins to show yet"
     });
   }
 
@@ -6574,8 +6516,7 @@ function renderFriendMetricCardInsights() {
       myValue,
       unit: sleepUnit,
       digits: 1,
-      leadThreshold: 0.3,
-      noDataMessage: "no sleep comparison yet. Log sleep today to start today-only comparison"
+      noDataMessage: "There are no sleep check-ins to show yet"
     });
   }
 
@@ -6600,42 +6541,18 @@ function renderFriendMetricCardInsights() {
 
     const availableMoodRows = moodRows.filter((entry) => (Number(entry.value) || 0) > 0);
     if (!availableMoodRows.length && !(Number(myValue) > 0)) {
-      moodFriendInsight.innerText = `${header}: No mood comparison yet. Add a mood check-in and track your average mood of the day.`;
+      moodFriendInsight.innerText = `${header}: No mood check-ins to show yet. Every mood is welcome, and there is no need to compare.`;
     } else {
-      const myComparable = Number((Number(myValue) || 0).toFixed(2));
-      const topComparable = Math.max(
-        myComparable,
-        ...availableMoodRows.map((entry) => Number((Number(entry.value) || 0).toFixed(2)))
-      );
-      const leaders = availableMoodRows
-        .filter((entry) => Number((Number(entry.value) || 0).toFixed(2)) === topComparable)
-        .map((entry) => entry.name);
-      const iAmLeading = myComparable === topComparable;
-      const tied = iAmLeading && leaders.length > 0;
-
       const myMoodLabel = Number(myValue) > 0 ? getMoodLabelFromScore(myValue) : "Not logged";
       const yourMoodLine = Number(myValue) > 0
-        ? `Your average mood of the day was ${myMoodLabel}`
-        : "Your average mood of the day is not logged yet";
+        ? `Your check-in: ${myMoodLabel}`
+        : "Your check-in: not logged";
 
       const friendSummary = availableMoodRows.length
-        ? availableMoodRows.map((entry) => {
-          const friendName = String(entry.name || "Friend");
-          const possessiveName = /s$/i.test(friendName) ? `${friendName}'` : `${friendName}'s`;
-          return `${possessiveName} average mood of the day was ${getMoodLabelFromScore(entry.value)}`;
-        }).join("; ")
-        : "No friend mood data yet";
+        ? availableMoodRows.map((entry) => `${entry.name}: ${getMoodLabelFromScore(entry.value)}`).join("; ")
+        : "No friend mood check-ins yet";
 
-      let motivation = "Consistency in logging helps improve this benchmark.";
-      if (tied) {
-        motivation = `You are tied with ${formatLeaderNames(leaders)}. One positive reset now can move you ahead.`;
-      } else if (iAmLeading) {
-        motivation = "You are currently leading on mood quality today.";
-      } else {
-        motivation = `${formatLeaderNames(leaders)} ${leaders.length > 1 ? "are" : "is"} currently ahead. A small reset can close the gap.`;
-      }
-
-      moodFriendInsight.innerText = `Friend benchmark: ${header}: ${yourMoodLine}; ${friendSummary}. ${motivation}`;
+      moodFriendInsight.innerText = `${header}: ${yourMoodLine}; ${friendSummary}. Every mood is valid.`;
     }
   }
 
@@ -6649,28 +6566,13 @@ function renderFriendMetricCardInsights() {
     const hasAnyData = allCounts.some((value) => value > 0);
 
     if (!hasAnyData) {
-      gratitudeFriendInsight.innerText = `${header}: no gratitude comparison yet. Add one gratitude note now to start your consistency streak.`;
+      gratitudeFriendInsight.innerText = `${header}: No gratitude notes to show yet. Add one only if it feels right.`;
     } else {
       const friendSummary = gratitudeRows
         .map((entry) => `${entry.name} wrote ${entry.count} gratitude note${entry.count === 1 ? "" : "s"} today`)
         .join("; ");
 
-      const topFriendCount = Math.max(0, ...gratitudeRows.map((entry) => entry.count));
-      const leaders = gratitudeRows
-        .filter((entry) => entry.count === topFriendCount && topFriendCount > 0)
-        .map((entry) => entry.name);
-
-      let motivation = "Great consistency. Keep logging one more gratitude note to build momentum.";
-      if (myCount > topFriendCount) {
-        motivation = "You are ahead right now. Keep the streak strong and inspire your circle.";
-      } else if (myCount === topFriendCount && topFriendCount > 0) {
-        motivation = `You are tied with ${formatLeaderNames(leaders)}. One more gratitude note puts you in front.`;
-      } else if (myCount < topFriendCount) {
-        const gap = topFriendCount - myCount;
-        motivation = `${formatLeaderNames(leaders)} ${leaders.length > 1 ? "are" : "is"} ahead by ${gap} note${gap === 1 ? "" : "s"}. Add one now and close the gap.`;
-      }
-
-      gratitudeFriendInsight.innerText = `${header}: You wrote ${myCount} gratitude note${myCount === 1 ? "" : "s"} today; ${friendSummary}. ${motivation}`;
+      gratitudeFriendInsight.innerText = `${header}: You wrote ${myCount} gratitude note${myCount === 1 ? "" : "s"} today; ${friendSummary}. Share only when it feels comfortable.`;
     }
   }
 
@@ -6681,20 +6583,9 @@ function renderFriendMetricCardInsights() {
       completed: (Number(profile?.metrics?.dailyChallengeCompletedToday) || 0) > 0
     }));
     const friendStatuses = challengeRows
-      .map((entry) => `${entry.name}: ${entry.completed ? "Completed" : "Pending"}`)
+      .map((entry) => `${entry.name}: ${entry.completed ? "Done if it felt right" : "Not logged"}`)
       .join("; ");
-    const anyFriendCompleted = challengeRows.some((entry) => entry.completed);
-    let motivation = "Nobody has completed it yet. Be first today and set the tone.";
-    if (myCompleted && challengeRows.every((entry) => !entry.completed)) {
-      motivation = "You are currently ahead. Strong discipline, keep the streak going.";
-    } else if (!myCompleted && anyFriendCompleted) {
-      const firstCompletedFriend = challengeRows.find((entry) => entry.completed)?.name || "A friend";
-      motivation = `${firstCompletedFriend} has already completed their daily challenge. Finish yours now and match that momentum.`;
-    } else if (myCompleted && anyFriendCompleted) {
-      motivation = "Multiple people are already completed. Elite consistency from your circle.";
-    }
-
-    dailyChallengeFriendInsight.innerText = `${header}: You: ${myCompleted ? "Completed" : "Pending"}; ${friendStatuses}. ${motivation}`;
+    dailyChallengeFriendInsight.innerText = `${header}: You: ${myCompleted ? "Done if it felt right" : "Not logged"}; ${friendStatuses}. Everyone’s day is different.`;
   }
 
   if (wellnessFriendInsight) {
@@ -6732,8 +6623,7 @@ function renderFriendMetricCardInsights() {
       myValue,
       unit: "wellness score today",
       digits: 0,
-      leadThreshold: 2,
-      noDataMessage: "no wellness comparison yet. Log mood, sleep, water, and tasks to generate your score"
+      noDataMessage: "There are no wellness check-ins to show yet"
     });
 
     const pendingSyncCount = wellnessFriendsWithSync.length - availableWellnessFriends.length;
@@ -9907,46 +9797,46 @@ function setEmptyState(containerEl, message) {
 
 const EMPTY_STATE_MESSAGE_POOLS = {
   chat: [
-    "No AI chats yet — ask one question to get started.",
-    "Your AI space is empty. Ask anything to begin.",
-    "No conversations yet. Start with a quick question.",
-    "Blank slate — try one short prompt to kick things off.",
-    "AI chat is quiet. Drop a question to wake it up."
+    "Your conversation space is here whenever you would like to talk.",
+    "Bring a question or thought whenever it feels helpful.",
+    "This space is ready whenever you are.",
+    "Start with whatever is on your mind.",
+    "Your next conversation can begin whenever you like."
   ],
   reminders: [
-    "No reminders set yet — add one small prompt for today.",
-    "No reminders yet. Add one to keep things moving.",
-    "Your reminder list is empty. Set a quick nudge.",
-    "Nothing scheduled yet. Create a reminder to stay on track.",
-    "No reminders right now — add one and keep momentum."
+    "No reminders here yet. Add one if something would be useful to remember.",
+    "Your reminder space is clear for now.",
+    "Set a gentle reminder whenever it would help.",
+    "Nothing scheduled yet; you can add a reminder at any time.",
+    "Leave this space empty or add a small nudge, whichever feels right."
   ],
   tasks: [
-    "No tasks yet — add one quick win to begin.",
-    "Your task list is empty. Add a small first step.",
-    "No tasks logged yet. Drop in one tiny action.",
-    "No tasks here yet — start with something easy.",
-    "Nothing on your list yet. Add a starter task."
+    "Your list is clear for now. Add a task whenever you are ready.",
+    "No tasks here yet, and that is okay.",
+    "Add a small next step if it would help.",
+    "This list can stay simple; add something only when you need to.",
+    "Nothing on your list right now. You can return whenever you like."
   ],
   mood: [
-    "No mood logs yet — one check-in is enough to start.",
-    "No mood entries yet. Log a quick check-in.",
-    "Your mood log is empty. Add today’s check-in.",
-    "No mood notes yet — pick one feeling to start.",
-    "No moods logged yet. A quick check-in helps."
+    "No mood notes yet. Check in whenever you feel ready.",
+    "Your mood space is clear for now.",
+    "Every feeling is welcome here, whenever you want to note one.",
+    "A mood check-in is here when it feels right.",
+    "No mood notes today. There is no rush to add one."
   ],
   gratitude: [
-    "No gratitude notes yet — add one small win from today.",
-    "No gratitude entries yet. Add a quick thank-you.",
-    "Your gratitude list is empty. Start with one line.",
-    "Nothing logged yet — add one thing you appreciate.",
-    "No gratitude notes yet. One small win is enough."
+    "No gratitude notes yet. Write one if something comes to mind.",
+    "Your gratitude space is clear for now.",
+    "A word or quiet thought is enough, whenever you feel like writing.",
+    "Nothing noted today. There is no need to search for the perfect words.",
+    "Leave a small note if it feels meaningful."
   ],
   quests: [
-    "No quests yet. Log today’s stats to generate quests.",
-    "No quests available yet — log a few entries to unlock them.",
-    "Quest list is empty. Add today’s logs to populate it.",
-    "No quests yet. A couple logs will generate them.",
-    "No quests right now — log your stats to get started."
+    "Your next small steps will appear after a check-in.",
+    "Your journey is taking shape; check back after a few more moments.",
+    "Your next steps will appear here when they are ready.",
+    "There is nothing to do here just yet. Take your time.",
+    "Check in whenever you feel ready to begin."
   ]
 };
 
@@ -10762,7 +10652,7 @@ function setListItems(listElement, items, fallbackText) {
 
 function renderWeeklyTargets() {
   if (!weeklyTargetsDisplay) return;
-  weeklyTargetsDisplay.innerText = `Targets: Water ${weeklyTargets.waterGoal || "-"} glasses/day • Sleep ${weeklyTargets.sleepTarget || "-"} hrs • Tasks ${weeklyTargets.taskTarget || "-"}/day`;
+  weeklyTargetsDisplay.innerText = `Your intentions: Water ${weeklyTargets.waterGoal || "-"} glasses/day • Sleep ${weeklyTargets.sleepTarget || "-"} hrs • Tasks ${weeklyTargets.taskTarget || "-"}/day`;
 }
 
 function buildWeekDayKeys(startDate, totalDays = 7) {
@@ -10782,7 +10672,7 @@ function renderWeeklyGoalScorecard(currentStart, currentEnd) {
 
   const dayKeys = buildWeekDayKeys(currentStart, 7);
   if (!dayKeys.length) {
-    setListItems(weeklyGoalScorecard, [], "No scorecard data yet.");
+    setListItems(weeklyGoalScorecard, [], "Your weekly check-in snapshot will appear here as entries come in.");
     return;
   }
 
@@ -10824,12 +10714,12 @@ function renderWeeklyGoalScorecard(currentStart, currentEnd) {
 
   const totalDays = dayKeys.length;
   const scoreItems = [
-    `Hydration: ${hydrationHits}/${totalDays} days (${Math.round((hydrationHits / totalDays) * 100)}%) • target ${waterTarget} glasses/day`,
-    `Sleep: ${sleepHits}/${totalDays} days (${Math.round((sleepHits / totalDays) * 100)}%) • target ${sleepTarget}h/day`,
-    `Tasks: ${taskHits}/${totalDays} days (${Math.round((taskHits / totalDays) * 100)}%) • target ${taskTarget} done/day`
+    `Hydration check-ins: ${hydrationHits}/${totalDays} days (${Math.round((hydrationHits / totalDays) * 100)}%) • intention ${waterTarget} glasses/day`,
+    `Sleep check-ins: ${sleepHits}/${totalDays} days (${Math.round((sleepHits / totalDays) * 100)}%) • intention ${sleepTarget}h/day`,
+    `Task check-ins: ${taskHits}/${totalDays} days (${Math.round((taskHits / totalDays) * 100)}%) • intention ${taskTarget} done/day`
   ];
 
-  setListItems(weeklyGoalScorecard, scoreItems, "No scorecard data yet.");
+  setListItems(weeklyGoalScorecard, scoreItems, "Your weekly check-in snapshot will appear here as entries come in.");
 }
 
 function updateWeeklyReview() {
@@ -10843,31 +10733,31 @@ function updateWeeklyReview() {
   if (weeklyRange) {
     const startLabelDate = dateKeyToDate(dateToKey(currentStart)) || currentStart;
     const endLabelDate = dateKeyToDate(dateToKey(currentEnd)) || currentEnd;
-    weeklyRange.innerText = `Review window: ${startLabelDate.toLocaleDateString()} - ${endLabelDate.toLocaleDateString()}`;
+    weeklyRange.innerText = `A gentle look at ${startLabelDate.toLocaleDateString()} – ${endLabelDate.toLocaleDateString()}`;
   }
 
   const improved = [];
   const hasEnoughCurrentDays = (metricDays) => Number(metricDays) >= 3;
-  if (hasEnoughCurrentDays(current.sleepDays) && current.sleepAvg > previous.sleepAvg + 0.2) improved.push(`Sleep improved to ${current.sleepAvg.toFixed(1)}h avg.`);
-  if (hasEnoughCurrentDays(current.waterDays) && current.waterDailyAvg > previous.waterDailyAvg + 0.4) improved.push(`Hydration improved to ${current.waterDailyAvg.toFixed(1)} glasses/day.`);
-  if (hasEnoughCurrentDays(current.taskDays) && current.taskCompletion > previous.taskCompletion + 0.08) improved.push(`Task completion improved to ${Math.round(current.taskCompletion * 100)}%.`);
-  if (hasEnoughCurrentDays(current.moodDays) && current.moodScore > previous.moodScore + 0.15) improved.push("Mood trend improved this week.");
-  if (hasEnoughCurrentDays(current.rescueDays) && current.rescues < previous.rescues) improved.push("Fewer rescue triggers than last week.");
+  if (hasEnoughCurrentDays(current.sleepDays) && current.sleepAvg > previous.sleepAvg + 0.2) improved.push(`Sleep check-ins averaged ${current.sleepAvg.toFixed(1)} hours this week.`);
+  if (hasEnoughCurrentDays(current.waterDays) && current.waterDailyAvg > previous.waterDailyAvg + 0.4) improved.push(`Hydration check-ins averaged ${current.waterDailyAvg.toFixed(1)} glasses/day.`);
+  if (hasEnoughCurrentDays(current.taskDays) && current.taskCompletion > previous.taskCompletion + 0.08) improved.push(`You completed ${Math.round(current.taskCompletion * 100)}% of logged tasks this week.`);
+  if (hasEnoughCurrentDays(current.moodDays) && current.moodScore > previous.moodScore + 0.15) improved.push("Your mood check-ins were a little brighter this week.");
+  if (hasEnoughCurrentDays(current.rescueDays) && current.rescues < previous.rescues) improved.push("You used fewer reset checklists than last week.");
 
   const dropped = [];
-  if (hasEnoughCurrentDays(current.sleepDays) && current.sleepAvg < previous.sleepAvg - 0.2) dropped.push(`Sleep dropped to ${current.sleepAvg.toFixed(1)}h avg.`);
-  if (hasEnoughCurrentDays(current.waterDays) && current.waterDailyAvg < previous.waterDailyAvg - 0.4) dropped.push(`Hydration dipped to ${current.waterDailyAvg.toFixed(1)} glasses/day.`);
-  if (hasEnoughCurrentDays(current.taskDays) && current.taskCompletion < previous.taskCompletion - 0.08) dropped.push(`Task completion dropped to ${Math.round(current.taskCompletion * 100)}%.`);
-  if (hasEnoughCurrentDays(current.moodDays) && current.moodScore < previous.moodScore - 0.15) dropped.push("Mood trend dipped this week.");
-  if (hasEnoughCurrentDays(current.rescueDays) && current.rescues > previous.rescues) dropped.push("Rescue triggers increased this week.");
+  if (hasEnoughCurrentDays(current.sleepDays) && current.sleepAvg < previous.sleepAvg - 0.2) dropped.push(`Sleep check-ins averaged ${current.sleepAvg.toFixed(1)} hours this week, a little less than last week.`);
+  if (hasEnoughCurrentDays(current.waterDays) && current.waterDailyAvg < previous.waterDailyAvg - 0.4) dropped.push(`Hydration check-ins averaged ${current.waterDailyAvg.toFixed(1)} glasses/day, a little less than last week.`);
+  if (hasEnoughCurrentDays(current.taskDays) && current.taskCompletion < previous.taskCompletion - 0.08) dropped.push(`You completed ${Math.round(current.taskCompletion * 100)}% of logged tasks this week; your pace may simply have shifted.`);
+  if (hasEnoughCurrentDays(current.moodDays) && current.moodScore < previous.moodScore - 0.15) dropped.push("Your mood check-ins felt a little heavier this week.");
+  if (hasEnoughCurrentDays(current.rescueDays) && current.rescues > previous.rescues) dropped.push("You used more reset checklists this week; notice whether anything would help you feel supported.");
 
   const actions = [];
-  if (current.sleepAvg < 7) actions.push("Set wind-down reminder 60 minutes before sleep for 5 nights.");
-  if (current.waterDailyAvg < Math.max(8, weeklyTargets.waterGoal || 8)) actions.push("Hit hydration target by scheduling 3 fixed water check-ins.");
-  if (current.taskCompletion < 0.7) actions.push("Limit daily priority tasks to 3 and finish one before noon.");
-  if (current.moodScore < 2) actions.push("Log mood twice daily and run one 2-minute rescue when stress rises.");
-  if (current.rescues >= 3) actions.push("Use preventive reset every afternoon before the usual dip window.");
-  while (actions.length < 3) actions.push("Keep the current routine and protect your strongest streak.");
+  if (current.sleepAvg < 7) actions.push("If it feels useful, try a gentle wind-down reminder before bed.");
+  if (current.waterDailyAvg < Math.max(8, weeklyTargets.waterGoal || 8)) actions.push("Keep water nearby and check in when you feel thirsty.");
+  if (current.taskCompletion < 0.7) actions.push("Try choosing one small priority at a time, if that feels manageable.");
+  if (current.moodScore < 2) actions.push("Make space for a mood check-in or a brief pause when it suits you.");
+  if (current.rescues >= 3) actions.push("Consider adding a gentle pause to your day before you usually feel stretched.");
+  while (actions.length < 3) actions.push("Keep what is supporting you, and let the rest stay flexible.");
 
   const patternInsights = [];
   const behaviorPatterns = buildBehaviorPatternMemoryFromLocal(30);
@@ -10876,22 +10766,22 @@ function updateWeeklyReview() {
     const hydrationHigher = Number(behaviorPatterns.waterMood.highAvg) >= Number(behaviorPatterns.waterMood.lowAvg);
     patternInsights.push(
       hydrationHigher
-        ? "Your mood increases when your water intake is high and drops when your water intake is low."
-        : "Your mood increases when your water intake is low and drops when your water intake is high."
+        ? "Mood check-ins tended to be higher on days with more water logged."
+        : "Mood check-ins tended to be higher on days with less water logged."
     );
   } else {
-    patternInsights.push("Your mood and water-intake pattern needs more logged days to lock a high/low signal.");
+    patternInsights.push("A few more days of mood and water notes may help this pattern take shape.");
   }
 
   if (behaviorPatterns?.sleepMood && (behaviorPatterns.sleepMood.highCount >= 2) && (behaviorPatterns.sleepMood.lowCount >= 2)) {
     const sleepHigher = Number(behaviorPatterns.sleepMood.highAvg) >= Number(behaviorPatterns.sleepMood.lowAvg);
     patternInsights.push(
       sleepHigher
-        ? "Your mood increases when your sleep is high and drops when your sleep is low."
-        : "Your mood increases when your sleep is low and drops when your sleep is high."
+        ? "Mood check-ins tended to be higher on days with more sleep logged."
+        : "Mood check-ins tended to be higher on days with less sleep logged."
     );
   } else {
-    patternInsights.push("Your mood and sleep pattern needs more logged days to lock a high/low signal.");
+    patternInsights.push("A few more days of mood and sleep notes may help this pattern take shape.");
   }
 
   {
@@ -10913,18 +10803,18 @@ function updateWeeklyReview() {
       const improvesWithMusic = withMusicAvg >= withoutMusicAvg;
       patternInsights.push(
         improvesWithMusic
-          ? "Your mood increases when you listen to music."
-          : "Your mood drops when you listen to music."
+          ? "Mood check-ins tended to be higher on days when you listened to music."
+          : "Mood check-ins tended to be lower on days when you listened to music."
       );
     } else {
-      patternInsights.push("Your music-mood pattern needs more music sessions to confirm whether mood drops or increases.");
+      patternInsights.push("A few more music sessions may help this mood pattern take shape.");
     }
   }
 
-  setListItems(weeklyImproved, improved, "No major gains yet — consistency this week will unlock visible progress.");
-  setListItems(weeklyDropped, dropped, "No clear drops this week — maintain the trend.");
-  setListItems(weeklyActions, actions.slice(0, 3), "Set one small target and repeat it daily.");
-  setListItems(weeklyPatternInsights, patternInsights.slice(0, 3), "Pattern analysis will appear after enough logs.");
+  setListItems(weeklyImproved, improved, "Your week is still taking shape. Check back when a few more moments are logged.");
+  setListItems(weeklyDropped, dropped, "Nothing stands out as a dip this week. Your pace can vary from day to day.");
+  setListItems(weeklyActions, actions.slice(0, 3), "Choose one small intention for next week, or wait until you feel ready.");
+  setListItems(weeklyPatternInsights, patternInsights.slice(0, 3), "Mood patterns will appear as more check-ins are logged.");
   renderWeeklyGoalScorecard(currentStart, currentEnd);
   renderWeeklyTargets();
 }
@@ -11345,17 +11235,19 @@ function renderQuestWeekStreak(animatedDateKey = "") {
 }
 
 function renderHabitQuestUI(animatedDateKey = "") {
-  if (questXpEl) questXpEl.innerText = `XP ${questXp}/100`;
+  if (questXpEl) questXpEl.innerText = `Progress ${questXp}/100`;
   updateQuestRecoveryBonusUI();
   const allDoneToday = habitQuests.length > 0 && habitQuests.every((entry) => !!entry.completed);
-  if (questStreakEl) questStreakEl.innerText = allDoneToday ? `Streak ${questStreakCount} 🔥` : "Complete all 4 quests to lock today’s streak";
+  if (questStreakEl) questStreakEl.innerText = allDoneToday
+    ? `A ${questStreakCount}-day journey`
+    : `${habitQuests.filter((entry) => entry.completed).length} of ${habitQuests.length || 4} steps today`;
   const progressPercent = allDoneToday ? 100 : Math.max(0, Math.min(100, questXp));
   if (questProgressFill) questProgressFill.style.width = `${progressPercent}%`;
-  if (questShieldEl) questShieldEl.innerText = `Streak shield: ${questShieldAvailable ? "Active" : "Inactive"}`;
+  if (questShieldEl) questShieldEl.innerText = `Streak support: ${questShieldAvailable ? "Available" : "Resting"}`;
   if (questProgressHintEl) {
     questProgressHintEl.innerText = allDoneToday
-      ? "Perfect day complete — streak secured."
-      : `Progress ${progressPercent}% • complete all 4 quests to lock today’s streak.`;
+      ? "You have made it through today’s journey. Take a moment to notice that."
+      : `${progressPercent}% along the way • Today’s streak reflects all four steps; take them one at a time.`;
   }
   renderQuestWeekStreak(animatedDateKey);
 
@@ -11363,7 +11255,7 @@ function renderHabitQuestUI(animatedDateKey = "") {
   questListEl.innerHTML = "";
 
   if (!habitQuests.length) {
-    questListEl.innerHTML = "<li class=\"quest-item\"><span class=\"quest-text\">No quests yet. Log today’s stats to generate quests.</span></li>";
+    questListEl.innerHTML = "<li class=\"quest-item\"><span class=\"quest-text\">Your next small steps will appear after a check-in.</span></li>";
     return;
   }
 
@@ -11376,7 +11268,7 @@ function renderHabitQuestUI(animatedDateKey = "") {
     text.textContent = quest.text;
 
     const button = document.createElement("button");
-    button.textContent = quest.completed ? "Done" : "Complete";
+    button.textContent = quest.completed ? "Done" : "Try this";
     button.disabled = !!quest.completed;
     button.onclick = () => completeHabitQuest(index);
 
@@ -11388,13 +11280,13 @@ function renderHabitQuestUI(animatedDateKey = "") {
 function updateQuestRecoveryBonusUI() {
   if (!questRecoveryBonusEl) return;
   if (questRecoveryBonusClaimed && questRecoveryBonusDateKey === getTodayKey()) {
-    questRecoveryBonusEl.innerText = "Recovery bonus earned today: +10 XP.";
+    questRecoveryBonusEl.innerText = "A little extra progress has been added for today.";
     questRecoveryBonusEl.classList.add("is-earned");
   } else if (burnoutRadarWarningActive) {
-    questRecoveryBonusEl.innerText = "A recovery bonus is available today: log a glass of water or complete a task for +10 XP.";
+    questRecoveryBonusEl.innerText = "A little extra progress is available through a water check-in or a completed task, if you would like.";
     questRecoveryBonusEl.classList.remove("is-earned");
   } else {
-    questRecoveryBonusEl.innerText = "A small recovery bonus may be available for a water check-in or completing a task.";
+    questRecoveryBonusEl.innerText = "A little extra progress may be available through a water check-in or a completed task.";
     questRecoveryBonusEl.classList.remove("is-earned");
   }
 }
@@ -11440,7 +11332,7 @@ async function awardBurnoutRecoveryBonus(userId, warningWasActive) {
   renderHabitQuestUI();
   try {
     await saveHabitQuestState(userId);
-    showToast("Recovery action complete: +10 bonus XP in Adaptive Habit Quest!");
+    showToast("A little extra progress has been added to your Habit Journey.");
   } finally {
     questRecoveryBonusAwardInFlight = false;
   }
@@ -13277,11 +13169,11 @@ async function ensureTaskDayCurrent(userId) {
 
 function getWellnessScoreMeta(scoreValue = 0) {
   const score = Math.max(0, Math.min(100, Math.round(Number(scoreValue) || 0)));
-  if (score >= 80) return { score, category: "Very High", status: "Excellent" };
-  if (score >= 60) return { score, category: "High", status: "Good" };
-  if (score >= 40) return { score, category: "Ok", status: "Building" };
-  if (score >= 20) return { score, category: "Low", status: "Needs Focus" };
-  return { score, category: "Very Low", status: "Needs Focus" };
+  if (score >= 80) return { score, category: "Well Supported", status: "Many supportive moments" };
+  if (score >= 60) return { score, category: "Steady", status: "A steady day" };
+  if (score >= 40) return { score, category: "Taking Shape", status: "Taking shape" };
+  if (score >= 20) return { score, category: "Getting Started", status: "A gentle place to begin" };
+  return { score, category: "Getting Started", status: "A gentle place to begin" };
 }
 
 function hasWellnessScoreInputToday(todayKey = getTodayKey()) {
@@ -13304,29 +13196,29 @@ function hasWellnessScoreInputToday(todayKey = getTodayKey()) {
 
 function setWellnessScorePendingDisplay() {
   if (wellnessScoreEl) {
-    wellnessScoreEl.innerText = "Not Yet Calculated";
+    wellnessScoreEl.innerText = "Not Yet Reflected";
     wellnessScoreEl.dataset.score = "";
     wellnessScoreEl.dataset.status = "Waiting";
     wellnessScoreEl.dataset.calculated = "false";
   }
   if (wellnessStatusEl) {
-    wellnessStatusEl.innerText = "Log one item to calculate today’s score.";
+    wellnessStatusEl.innerText = "Your reflection will take shape after a check-in.";
   }
   if (wellnessReassuranceEl) {
-    wellnessReassuranceEl.innerText = "Today’s score will appear after your first new log.";
+    wellnessReassuranceEl.innerText = "A few moments of care can help today’s reflection take shape.";
   }
   if (wellnessDoNowEl) {
-    wellnessDoNowEl.innerHTML = "<b>DO NOW:</b> Add one mood, water, sleep, task, gratitude, or challenge log.";
+    wellnessDoNowEl.innerHTML = "<b>A GENTLE NEXT STEP:</b> Add a check-in whenever you feel ready.";
   }
   if (wellnessActionsEl) {
     wellnessActionsEl.innerHTML = [
-      "Log your mood or a quick check-in.",
-      "Track one glass of water.",
-      "Add one small task or complete one pending task.",
-      "Write one gratitude note."
+      "Notice how you are feeling.",
+      "Have a glass of water if it sounds good.",
+      "Choose one task, or leave it for later.",
+      "Write a gratitude note if one comes to mind."
     ].map((item) => `<li class="wellness-secondary-task">${escapeHtml(item)}</li>`).join("");
   }
-  return { score: null, category: "Not Yet Calculated", status: "Waiting", calculated: false };
+  return { score: null, category: "Not Yet Reflected", status: "Waiting", calculated: false };
 }
 
 function setWellnessScoreDisplay(scoreValue = 0) {
@@ -13344,13 +13236,13 @@ function openWellnessScoreInfoModal() {
   if (!wellnessScoreInfoModal) return;
   const calculated = wellnessScoreEl?.dataset?.calculated !== "false";
   const score = calculated ? (Number(wellnessScoreEl?.dataset?.score) || calculateWellnessScoreValue()) : null;
-  const meta = calculated ? getWellnessScoreMeta(score) : { category: "Not Yet Calculated", score: null, status: "Waiting" };
+  const meta = calculated ? getWellnessScoreMeta(score) : { category: "Not Yet Reflected", score: null, status: "Waiting" };
   const status = String(wellnessScoreEl?.dataset?.status || wellnessStatusEl?.innerText || meta.status || "Waiting");
   if (wellnessInfoCategory) wellnessInfoCategory.innerText = meta.category;
-  if (wellnessInfoScore) wellnessInfoScore.innerText = calculated ? `Score: ${meta.score}/100` : "Score: Waiting for today’s first log";
+  if (wellnessInfoScore) wellnessInfoScore.innerText = calculated ? `Score: ${meta.score}/100` : "Score: Waiting for a check-in";
   if (wellnessInfoStatus) wellnessInfoStatus.innerText = calculated
     ? `Status: ${status}`
-    : "Status: Log one mood, water, sleep, task, gratitude, or challenge item to calculate today’s score.";
+    : "Status: Your reflection will take shape after a check-in.";
   wellnessScoreInfoModal.style.display = "flex";
 }
 
@@ -13451,9 +13343,9 @@ function updateWellnessScore() {
   const wellnessMeta = setWellnessScoreDisplay(totalScore);
   if (wellnessReassuranceEl) {
     wellnessReassuranceEl.innerText =
-      wellnessMeta.score >= 80 ? "You’re on track today — protect this rhythm." :
-      wellnessMeta.score >= 60 ? "You’re moving well — one more check-in can lift this further." :
-      "A small action now can shift your whole day upward.";
+      wellnessMeta.score >= 80 ? "You have logged several supportive moments today; let that be enough." :
+      wellnessMeta.score >= 60 ? "You are building a picture of today, one check-in at a time." :
+      "There is no score to chase; a small moment of care is enough.";
   }
 
   const rankedActions = [];
@@ -13468,22 +13360,22 @@ function updateWellnessScore() {
   };
 
   if (!moodMeta.logged) {
-    addRankedAction("Log your mood right now.", 10, 10, 3, "mood");
+    addRankedAction("Check in with how you feel, whenever you are ready.", 10, 10, 3, "mood");
   } else if (moodMeta.label === "Angry") {
-    addRankedAction("Run a 2-minute rescue now before continuing work.", 10, 9, 4, "mood");
+    addRankedAction("Try a brief pause before moving to the next thing, if that feels helpful.", 10, 9, 4, "mood");
   } else if (moodMeta.label === "Stressed") {
-    addRankedAction("Take a 2-minute breathing reset before your next task.", 9, 9, 4, "mood");
+    addRankedAction("A short breathing pause may feel supportive before your next task.", 9, 9, 4, "mood");
   } else if (moodMeta.label === "Low") {
-    addRankedAction("Take a 10-minute walk or breathing reset now.", 8, 7, 3, "mood");
+    addRankedAction("A short walk or breathing pause may feel good, if you have the space.", 8, 7, 3, "mood");
   } else if (moodMeta.label === "Neutral") {
-    addRankedAction("Use one calming reset to keep your mood steady.", 4, 9, 1, "mood");
+    addRankedAction("A quiet moment is here if you would like one.", 4, 9, 1, "mood");
   }
 
   if (waterRatio < 1) {
     const remaining = Math.max(0, effectiveWaterGoal - waterToday);
     if (hasCustomWaterGoal) {
       addRankedAction(
-        `Drink ${remaining} more glass${remaining === 1 ? "" : "es"} to hit your goal.`,
+        `Your goal has ${remaining} glass${remaining === 1 ? "" : "es"} to go, if that feels right.`,
         waterIsBiggestGap ? (waterToday === 0 ? 8 : remaining <= 2 ? 7 : 6) : 3,
         waterIsBiggestGap ? (waterToday === 0 ? 10 : 7) : 8,
         2,
@@ -13492,8 +13384,8 @@ function updateWellnessScore() {
     } else {
       addRankedAction(
         waterToday === 0
-          ? "Log one glass of water to start hydration."
-          : "Drink one more glass of water to keep hydration moving.",
+          ? "Have a glass of water if it sounds good."
+          : "Have another glass if it feels right.",
         waterIsBiggestGap ? (waterToday === 0 ? 7 : 5) : 2,
         waterIsBiggestGap ? (waterToday === 0 ? 10 : 7) : 8,
         2,
@@ -13505,8 +13397,8 @@ function updateWellnessScore() {
   if (sleepToday < 7) {
     addRankedAction(
       sleepToday > 0
-        ? "Protect your sleep window tonight so tomorrow feels easier."
-        : "Set tonight’s sleep target to at least 7-8 hours.",
+        ? "Make a little room for rest tonight, in whatever way is possible."
+        : "If it helps, choose a restful bedtime window that suits your evening.",
       sleepToday <= 5 ? 8 : 6,
       5,
       1,
@@ -13518,10 +13410,8 @@ function updateWellnessScore() {
     const pendingCount = getTodayTaskEntries().filter((entry) => !entry.completed).length;
     addRankedAction(
       pendingCount > 0
-        ? pendingCount === 1
-          ? "Complete your top pending task now."
-          : `Complete one of your ${pendingCount} pending tasks now.`
-        : "Add a small task so today has one clear win.",
+        ? "Choose one of today’s open tasks, if it feels manageable."
+        : "Add a small task only if it would help you feel more settled.",
       pendingCount >= 5 ? 8 : 6,
       7,
       2,
@@ -13529,22 +13419,22 @@ function updateWellnessScore() {
     );
   }
 
-  if (!hasGratitudeToday) addRankedAction("Write one gratitude note now.", 5, 9, 1, "gratitude");
-  if (!dailyChallengeCompleted) addRankedAction("Complete today’s daily challenge.", 6, 6, 1, "challenge");
+  if (!hasGratitudeToday) addRankedAction("Write a gratitude note if something comes to mind.", 5, 9, 1, "gratitude");
+  if (!dailyChallengeCompleted) addRankedAction("Try today’s invitation if it feels right.", 6, 6, 1, "challenge");
 
   if (waterToday > 0 && moodMeta.logged && !hasGratitudeToday) {
-    addRankedAction("Stack a gratitude note after your last check-in.", 4, 9, 1, "gratitude");
+    addRankedAction("You can leave a gratitude note after your check-in, if you like.", 4, 9, 1, "gratitude");
   }
 
   if (moodMeta.logged && !dailyChallengeCompleted && taskRatio >= 0.7) {
-    addRankedAction("Finish today’s daily challenge to lock the streak.", 5, 7, 1, "challenge");
+    addRankedAction("Today’s invitation is here if you would like to try it.", 5, 7, 1, "challenge");
   }
 
   if (!rankedActions.length) {
-    addRankedAction("Protect momentum with one quick check-in now.", 6, 10, 2, "momentum");
-    addRankedAction("Finish one small task before your next break.", 5, 8, 1, "tasks");
-    addRankedAction("Hydrate once more to maintain your streak.", 4, 9, 1, "water");
-    addRankedAction("Write one gratitude note to close the loop.", 4, 9, 1, "gratitude");
+    addRankedAction("Pause for a brief check-in whenever it suits you.", 6, 10, 2, "momentum");
+    addRankedAction("Return to one small task before your next break, if it feels manageable.", 5, 8, 1, "tasks");
+    addRankedAction("Have some water if you feel like it.", 4, 9, 1, "water");
+    addRankedAction("Write a gratitude note if something comes to mind.", 4, 9, 1, "gratitude");
   }
 
   rankedActions.sort((a, b) => b.score - a.score || b.urgency - a.urgency || a.text.localeCompare(b.text));
@@ -13559,14 +13449,14 @@ function updateWellnessScore() {
   });
 
   const fallbackActions = [
-    "Take a 2-minute breathing reset.",
-    "Add one gratitude note to round out today.",
-    "Drink a glass of water if you’re behind.",
-    "Clear one small task before your next break.",
-    "Set tonight’s sleep target before you log off."
+    "Take a brief breathing pause, if it feels helpful.",
+    "Write a gratitude note if something comes to mind.",
+    "Have a glass of water if you feel like it.",
+    "Return to one small task when you have space.",
+    "Choose a restful bedtime window that suits you."
   ];
 
-  const primaryAction = uniqueActions[0]?.text || "Protect momentum with one quick check-in now.";
+  const primaryAction = uniqueActions[0]?.text || "Pause for a brief check-in whenever it suits you.";
   const secondaryActions = uniqueActions.slice(1, 6).map((entry) => entry.text);
   const usedSuggestionKeys = new Set(uniqueActions.slice(0, 6).map((entry) => entry.key));
 
@@ -13581,8 +13471,8 @@ function updateWellnessScore() {
   let fillerIndex = 0;
   while (secondaryActions.length < 5) {
     const filler = fillerIndex === 0
-      ? "Keep your current streak alive with one small check-in."
-      : `Keep your momentum with check-in ${fillerIndex + 1}.`;
+      ? "Take another small moment for yourself, if you would like."
+      : `Choose another gentle check-in ${fillerIndex + 1}, if it feels useful.`;
     const key = `filler:${fillerIndex}`;
     fillerIndex += 1;
     if (usedSuggestionKeys.has(key)) continue;
@@ -13591,7 +13481,7 @@ function updateWellnessScore() {
   }
 
   if (wellnessDoNowEl) {
-    wellnessDoNowEl.innerHTML = `<b>DO NOW:</b> ${escapeHtml(primaryAction)}`;
+    wellnessDoNowEl.innerHTML = `<b>A GENTLE NEXT STEP:</b> ${escapeHtml(primaryAction)}`;
   }
   wellnessActionsEl.innerHTML = secondaryActions
     .map((item) => `<li class="wellness-secondary-task">${escapeHtml(item)}</li>`)
@@ -13777,13 +13667,13 @@ function renderProgressMilestones() {
   }
 
   const upcoming = [
-    `Next: Mood streak ${Math.max(0, 3 - moodStreak)} more day(s) to unlock.`,
-    `Next: Hydration streak ${Math.max(0, 3 - waterStreak)} more day(s) to unlock.`,
-    `Next: Complete ${Math.max(0, 25 - completedTasks)} more tasks for productivity milestone.`,
-    `Next: Reach wellness score +${Math.max(0, 80 - currentScore)} to unlock wellness milestone.`
+    `Mood notes: ${Math.max(0, 3 - moodStreak)} more day(s) toward a 3-day check-in rhythm.`,
+    `Hydration notes: ${Math.max(0, 3 - waterStreak)} more day(s) toward a 3-day check-in rhythm.`,
+    `Task notes: ${Math.max(0, 25 - completedTasks)} more completed task(s) until the next milestone, whenever you get there.`,
+    `Wellness reflection: ${Math.max(0, 80 - currentScore)} points to the next marker; there is no rush.`
   ];
 
-  setListItems(progressMilestones, upcoming, "No milestones yet — start with one log today.");
+  setListItems(progressMilestones, upcoming, "Milestones will appear over time, at your own pace.");
 }
 
 async function runCrashRescueFlow(options = {}) {
@@ -13900,7 +13790,7 @@ function updateInsights() {
   });
   const bestProductivityLabel = bestTaskValue > 0
     ? `Best productivity day: ${taskLabels[bestTaskIndex] || "-"} (${Math.round(bestTaskValue)}% completion)`
-    : "Best productivity day: no completion data yet";
+    : "Task check-in summary: waiting for entries";
 
   const sleepValues = Array.isArray(sleepSeries?.values)
     ? sleepSeries.values.map((value) => Number(value) || 0).filter((value) => value > 0)
@@ -13919,11 +13809,11 @@ function updateInsights() {
     ? `Mood ${roundedMoodChange >= 0 ? "improving" : "down"}: ${roundedMoodChange >= 0 ? "+" : ""}${roundedMoodChange}% vs last week`
     : (hasWeeklyMoodLogs
       ? `Mood baseline this week: ${moodWeeklyLabel} (${weeklyMoodAvgScore.toFixed(2)})`
-      : "Mood baseline this week: Not logged yet");
+      : "Mood check-ins this week: no entries yet");
 
   const metricViews = [
     {
-      title: "Productivity Trend",
+      title: "Task Rhythm",
       label: bestProductivityLabel,
       percent: taskCompletion,
       series: taskSeries
@@ -13954,7 +13844,7 @@ function updateInsights() {
   updateWellnessScore();
   renderFriendMetricCardInsights();
   if (moodFriendInsight && !String(moodFriendInsight.innerText || "").trim()) {
-    moodFriendInsight.innerText = "Friend benchmark: add a friend to compare average mood of the day.";
+    moodFriendInsight.innerText = "Optional shared mood reflections can appear here if you choose to connect with a friend.";
   }
   updateCrashPreventionUI();
   updateBurnoutRadarUI();
@@ -13975,7 +13865,7 @@ function updateInsights() {
     avgSleep: Number(avgSleep.toFixed(1)),
     waterGoalProgress: waterPercent,
     wellnessScore: currentScore,
-    wellnessStatus: wellnessStatusEl.innerText || "Needs Focus",
+    wellnessStatus: wellnessStatusEl.innerText || "A gentle place to begin",
     dailyChallengeCompleted,
     dailyChallenge: currentChallengeText || "",
     patternMemory,
@@ -14068,7 +13958,7 @@ function renderDailyRoutine() {
   const entries = dailyRoutineState.entries;
   syncDailyRoutineStartTimeControls();
   if (!entries.length) {
-    dailyRoutineList.innerHTML = "<li>Generate a routine or add an activity to get started.</li>";
+    dailyRoutineList.innerHTML = "<li>Shape a routine whenever you are ready; it can be simple and flexible.</li>";
   } else {
     const routineStart = Number(dailyRoutineState.preferences?.startHour);
     const orderedEntries = [...entries].sort((left, right) => {
@@ -14089,7 +13979,7 @@ function renderDailyRoutine() {
     } else if (dailyRoutineState.source === "personalized") {
       dailyRoutineMeta.innerText = "Personalized using your recent task, mood, sleep, and hydration data.";
     } else if (dailyRoutineState.source === "starter") {
-      dailyRoutineMeta.innerText = "Starter routine selected because there are no wellness logs yet. Generate again for a different routine.";
+      dailyRoutineMeta.innerText = "A starter routine is ready while your check-in history is still growing. Shape or regenerate it whenever you like.";
     } else {
       dailyRoutineMeta.innerText = "Your routine is saved to your account and stays here after refresh.";
     }
@@ -14919,23 +14809,22 @@ function buildStartupWeeklyReport() {
   const focusItems = buildStartupReportFocusItems();
   const trendWord = (delta) => {
     const value = Number(delta) || 0;
-    if (Math.abs(value) < 0.15) return "steady";
-    return value > 0 ? "up" : "down";
+    if (Math.abs(value) < 0.15) return "similar";
+    return value > 0 ? "a little higher" : "a little lower";
   };
   return [
     `Week of ${getStartupWeekKey()}`,
-    `Wellness score today: ${snapshot.score}/100.`,
-    `Today snapshot: water ${snapshot.waterToday}/${snapshot.todayGoal}, sleep ${snapshot.sleepToday || 0}h, tasks ${snapshot.doneTasks}/${snapshot.totalTasks}.`,
-    `7-day trend: tasks ${trendWord(trends.taskDelta)}, sleep ${trendWord(trends.sleepDelta)}, water ${trendWord(trends.waterDelta)}, mood ${trendWord(trends.moodDelta)}.`,
-    `Focus 1: ${focusItems[0] || "Lock in one meaningful task."}`,
-    `Focus 2: ${focusItems[1] || "Protect sleep and hydration."}`,
-    `Focus 3: ${focusItems[2] || "End the day with a short reset and plan."}`
+    `Wellness reflection today: ${snapshot.score}/100.`,
+    `Today’s check-in snapshot: water ${snapshot.waterToday}/${snapshot.todayGoal}, sleep ${snapshot.sleepToday || 0}h, tasks ${snapshot.doneTasks}/${snapshot.totalTasks}.`,
+    `7-day reflection: tasks ${trendWord(trends.taskDelta)}, sleep ${trendWord(trends.sleepDelta)}, water ${trendWord(trends.waterDelta)}, mood ${trendWord(trends.moodDelta)}.`,
+    `Gentle idea 1: ${focusItems[0] || "Choose one meaningful task, if you have space for it."}`,
+    `Gentle idea 2: ${focusItems[1] || "Make room for rest and hydration in a way that suits you."}`,
+    `Gentle idea 3: ${focusItems[2] || "Close the day with a quiet pause, if you would like."}`
   ];
 }
 
 function renderStartupBehaviorMemory() {
   if (!startupBehaviorMemory) return;
-  const trends = buildTrendSignals();
   const todayKey = getTodayKey();
   const todayDate = dateKeyToDate(todayKey) || getServerNowDate();
   const dayKeys = [];
@@ -14972,58 +14861,45 @@ function renderStartupBehaviorMemory() {
 
   const memories = [];
   const activeDays = dayKeys.filter((key) => moodByDay.has(key) || waterByDay.has(key) || sleepByDay.has(key) || tasksDoneByDay.has(key));
-  memories.push(`Analyzed ${activeDays.length} active day${activeDays.length === 1 ? "" : "s"} from your recent logs.`);
+  memories.push(`Your logs include ${activeDays.length} of the last 14 days.`);
 
-  const sleepMoodInsight = buildSleepMoodPatternInsight(14);
-  if (sleepMoodInsight) {
-    memories.push(sleepMoodInsight.summary);
-  } else {
-    const sleepMoodPairCount = dayKeys.filter((key) => sleepByDay.has(key) && moodByDay.has(key)).length;
-    if (sleepMoodPairCount > 0) {
-      memories.push(`Sleep-mood threshold is still forming (${sleepMoodPairCount} matched days). Keep logging to sharpen this pattern.`);
-    }
+  const sleepMoodPairCount = dayKeys.filter((key) => sleepByDay.has(key) && moodByDay.has(key)).length;
+  if (sleepMoodPairCount > 0) {
+    memories.push(`Sleep and mood were both logged on ${sleepMoodPairCount} day${sleepMoodPairCount === 1 ? "" : "s"}. This is a simple snapshot, not proof of a connection.`);
   }
 
-  const hydrationTarget = waterGoal > 0 ? waterGoal : 8;
-  const waterTaskPairs = dayKeys
-    .filter((key) => waterByDay.has(key) || tasksDoneByDay.has(key))
-    .map((key) => ({
-      water: Number(waterByDay.get(key)) || 0,
-      tasks: Number(tasksDoneByDay.get(key)) || 0
-    }));
-  if (waterTaskPairs.length) {
-    const highHydrationTaskAvg = safeAvg(waterTaskPairs.filter((pair) => pair.water >= hydrationTarget).map((pair) => pair.tasks));
-    const lowHydrationTaskAvg = safeAvg(waterTaskPairs.filter((pair) => pair.water < hydrationTarget).map((pair) => pair.tasks));
-    if (highHydrationTaskAvg > 0 || lowHydrationTaskAvg > 0) {
-      memories.push(`Task completion on hydration-target days: ${highHydrationTaskAvg.toFixed(1)} vs ${lowHydrationTaskAvg.toFixed(1)} on lower-hydration days.`);
-    }
+  const waterTaskPairCount = dayKeys.filter((key) => waterByDay.has(key) && (Number(tasksDoneByDay.get(key)) || 0) > 0).length;
+  if (waterTaskPairCount > 0) {
+    memories.push(`Water and completed-task logs overlap on ${waterTaskPairCount} day${waterTaskPairCount === 1 ? "" : "s"}.`);
   }
 
-  let bestKey = "";
-  let bestScore = -1;
+  let mostCompleteKey = "";
+  let mostCompleteSignalCount = 0;
   dayKeys.forEach((key) => {
-    const moodScore = (Number(moodByDay.get(key)) || 0) * 20;
-    const sleepScore = Math.min(8, Number(sleepByDay.get(key)) || 0) * 8;
-    const waterScore = Math.min(1, (Number(waterByDay.get(key)) || 0) / hydrationTarget) * 20;
-    const taskScore = Math.min(4, Number(tasksDoneByDay.get(key)) || 0) * 6;
-    const score = moodScore + sleepScore + waterScore + taskScore;
-    if (score > bestScore) {
-      bestScore = score;
-      bestKey = key;
+    const signalCount = [
+      moodByDay.has(key),
+      sleepByDay.has(key),
+      waterByDay.has(key),
+      (Number(tasksDoneByDay.get(key)) || 0) > 0
+    ].filter(Boolean).length;
+    if (signalCount && signalCount >= mostCompleteSignalCount) {
+      mostCompleteSignalCount = signalCount;
+      mostCompleteKey = key;
     }
   });
-  if (bestKey) {
-    memories.push(`Best pattern day (${bestKey}): sleep ${Number(sleepByDay.get(bestKey)) || 0}h, water ${Number(waterByDay.get(bestKey)) || 0}, tasks ${Number(tasksDoneByDay.get(bestKey)) || 0}.`);
+  if (mostCompleteKey) {
+    const loggedSignals = [];
+    if (moodByDay.has(mostCompleteKey)) loggedSignals.push("a mood check-in");
+    if (sleepByDay.has(mostCompleteKey)) loggedSignals.push(`${Number(sleepByDay.get(mostCompleteKey)).toFixed(1).replace(/\.0$/, "")}h sleep`);
+    if (waterByDay.has(mostCompleteKey)) loggedSignals.push(`${Number(waterByDay.get(mostCompleteKey))} glasses of water`);
+    const tasksDone = Number(tasksDoneByDay.get(mostCompleteKey)) || 0;
+    if (tasksDone > 0) loggedSignals.push(`${tasksDone} task${tasksDone === 1 ? "" : "s"} completed`);
+    memories.push(`Your most complete check-in day (${mostCompleteKey}) includes ${loggedSignals.join(", ")}.`);
   }
-
-  if (trends.taskDelta > 0) memories.push("Recent task trend is rising — keep the same work blocks.");
-  if (trends.sleepDelta < 0) memories.push("Sleep trend dipped recently — protect bedtime consistency this week.");
-  if (trends.waterDelta < 0) memories.push("Hydration trend is softening — schedule fixed water checkpoints.");
-  if (trends.moodDelta < 0) memories.push("Mood trend dipped — add an early recovery break in the first half of the day.");
 
   if (!activeDays.length) {
     memories.length = 0;
-    memories.push("No recent logs detected yet — first memory will unlock after your next check-in.");
+    memories.push("Your recent logs are still taking shape. A few check-ins can help these patterns become clearer over time.");
   }
 
   startupBehaviorMemory.innerHTML = memories.slice(0, 5).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
@@ -15035,10 +14911,10 @@ function refreshStartupFeatures() {
     startupGenerateReportBtn.innerText = startupReportGeneratedOnce ? "Regenerate Report" : "Generate Report";
     const reportLimited = startupUsageState.reportCount >= STARTUP_REPORT_WEEKLY_LIMIT;
     startupGenerateReportBtn.disabled = reportLimited;
-    startupGenerateReportBtn.title = reportLimited ? buildWeeklyLimitCountdownMessage(`Weekly startup report limit reached (${STARTUP_REPORT_WEEKLY_LIMIT}/week)`) : "";
+    startupGenerateReportBtn.title = reportLimited ? buildWeeklyLimitCountdownMessage(`Weekly snapshot limit reached (${STARTUP_REPORT_WEEKLY_LIMIT}/week)`) : "";
   }
   if (startupWeeklyReportText && !startupWeeklyReportCache) {
-    startupWeeklyReportText.innerHTML = "<li>No report generated yet.</li>";
+    startupWeeklyReportText.innerHTML = "<li>Your weekly snapshot will be here whenever you are ready to create one.</li>";
   }
 }
 
@@ -15051,7 +14927,7 @@ async function generateStartupWeeklyReport() {
 
   await ensureStartupUsageCurrent(user.uid);
   if (startupUsageState.reportCount >= STARTUP_REPORT_WEEKLY_LIMIT) {
-    showToast(buildWeeklyLimitCountdownMessage(`Weekly startup report limit reached (${STARTUP_REPORT_WEEKLY_LIMIT}/week)`));
+    showToast(buildWeeklyLimitCountdownMessage(`Weekly snapshot limit reached (${STARTUP_REPORT_WEEKLY_LIMIT}/week)`));
     refreshStartupFeatures();
     return;
   }
@@ -16197,31 +16073,6 @@ const AI_BYE_POOL = expandAiResponsePool(AI_BYE_BASE, {
   frames: [(text) => text]
 });
 
-// Friend comparison motivation pools
-const FRIEND_MOTIVATION_TIED_BASE = [
-  "You're tied with {names}. One small action now can put you ahead.",
-  "Tied with {names} — a tiny win pushes you in front.",
-  "It's neck-and-neck with {names}. Do one thing now to lead.",
-  "Evenly matched with {names}. A single small push wins it.",
-  "You're level with {names}. Try a quick positive reset to pull ahead."
-];
-
-const FRIEND_MOTIVATION_LEADING_BASE = [
-  "You're leading right now. Keep the streak strong and inspire your circle.",
-  "Nice — you're ahead. Maintain momentum and set the pace.",
-  "You're on top for now. One small consistent move keeps you there.",
-  "Leading the pack — keep your routine steady to stay ahead.",
-  "You are the top performer right now. Hold this advantage with a tiny, repeatable habit."
-];
-
-const FRIEND_MOTIVATION_BEHIND_BASE = [
-  "{names} {verb} ahead by {gap}. One focused push now can close the gap.",
-  "You're behind {names} by {gap}. Try a short sprint to catch up.",
-  "{names} {verb} ahead by {gap}. A quick reset and one task could close the gap.",
-  "Close the gap: {names} {verb} ahead by {gap}. Add one focused action to move up.",
-  "There is a slight gap with {names} ({gap}). A small win brings you level."
-];
-
 // Expand pools to target 100-150 variants for diverse replies
 const AI_TASK_ADDED_POOL = expandAiResponsePool(AI_TASK_ADDED_BASE, { min: AI_RESPONSE_VARIANT_MIN, max: AI_RESPONSE_VARIANT_MAX, frames: AI_TASK_RESPONSE_FRAMES });
 const AI_REMINDER_ADDED_POOL = expandAiResponsePool(AI_REMINDER_ADDED_BASE, { min: AI_RESPONSE_VARIANT_MIN, max: AI_RESPONSE_VARIANT_MAX, frames: AI_REMINDER_RESPONSE_FRAMES });
@@ -16236,9 +16087,6 @@ const AI_FALLBACK_POOL = expandAiResponsePool(AI_FALLBACK_BASE, { min: 12, max: 
 const AI_LOW_EMOTION_POOL = expandAiResponsePool(AI_LOW_EMOTION_BASE, { min: 10, max: 48 });
 const AI_ABUSE_COOLDOWN_POOL = expandAiResponsePool(AI_ABUSE_COOLDOWN_BASE, { min: 6, max: 24 });
 
-const FRIEND_MOTIVATION_TIED_POOL = expandAiResponsePool(FRIEND_MOTIVATION_TIED_BASE, { min: FRIEND_MOTIVATION_TIED_BASE.length, max: FRIEND_MOTIVATION_TIED_BASE.length, frames: [(text) => text] });
-const FRIEND_MOTIVATION_LEADING_POOL = expandAiResponsePool(FRIEND_MOTIVATION_LEADING_BASE, { min: FRIEND_MOTIVATION_LEADING_BASE.length, max: FRIEND_MOTIVATION_LEADING_BASE.length, frames: [(text) => text] });
-const FRIEND_MOTIVATION_BEHIND_POOL = expandAiResponsePool(FRIEND_MOTIVATION_BEHIND_BASE, { min: FRIEND_MOTIVATION_BEHIND_BASE.length, max: FRIEND_MOTIVATION_BEHIND_BASE.length, frames: [(text) => text] });
 const AI_BENEFIT_PLAN_OPENERS = [
   "Here’s one way to make today feel a little easier:",
   "A few small ideas for today:",
@@ -17112,19 +16960,18 @@ function isDirectAiCriticism(input) {
 function buildActionCoaching(snapshot) {
   const actions = [];
   const hydration = buildHydrationPaceInsight(snapshot);
-  if (snapshot.pendingTasks > 0) actions.push("Pick 1 pending task and do a focused 25-minute sprint.");
+  if (snapshot.pendingTasks > 0) actions.push("Return to one open task for a short stretch, if it feels manageable.");
   if (snapshot.waterToday < snapshot.todayGoal) {
-    const left = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
     if (hydration.onTrack) {
-      actions.push(`Hydration pace is okay (${hydration.logged}/${hydration.goal} cups). Log ${Math.max(1, Math.ceil(left))} cup${Math.max(1, Math.ceil(left)) === 1 ? "" : "s"} to stay ahead.`);
+      actions.push(`Your hydration check-ins are taking shape (${hydration.logged}/${hydration.goal} cups). Have some water if it feels helpful.`);
     } else {
-      actions.push(`${hydration.summary} Log ${Math.max(1, Math.ceil(left))} cup${Math.max(1, Math.ceil(left)) === 1 ? "" : "s"} now.`);
+      actions.push(`${hydration.summary} Have some water if it sounds good.`);
     }
   }
-  if (snapshot.sleepToday < 7) actions.push("Plan an earlier wind-down to target 7–8 hours sleep.");
-  if (!snapshot.gratitudeToday) actions.push("Write one gratitude line before bed.");
-  if (!snapshot.moodToday) actions.push("Log your mood to improve your daily insights.");
-  while (actions.length < 3) actions.push("Keep momentum with one small healthy action right now.");
+  if (snapshot.sleepToday < 7) actions.push("Make a little room for rest tonight, in whatever way is possible.");
+  if (!snapshot.gratitudeToday) actions.push("Write a gratitude line if something comes to mind.");
+  if (!snapshot.moodToday) actions.push("Check in with how you are feeling whenever you are ready.");
+  while (actions.length < 3) actions.push("Choose one small moment of care, if it feels useful.");
   return actions.slice(0, 3);
 }
 
@@ -17247,8 +17094,8 @@ function buildSleepMoodPatternInsight(maxDays = 30) {
     lowAvg: best.lowAvg,
     highAvg: best.highAvg,
     diff: best.diff,
-    summary: `Your mood tends to drop when sleep is below ${thresholdLabel}h (avg mood ${best.lowAvg.toFixed(2)} below vs ${best.highAvg.toFixed(2)} at/above, based on ${best.pairCount} matched days).`,
-    shortSummary: `Mood usually dips when sleep is under ${thresholdLabel}h.`
+    summary: `In recent entries, mood check-ins were lower on days with less than ${thresholdLabel}h sleep (based on ${best.pairCount} matched days). This is a possible pattern, not a prediction.`,
+    shortSummary: "Mood check-ins were lower on days with less sleep in these entries."
   };
 }
 
@@ -17351,9 +17198,9 @@ function buildBehaviorPatternMemoryFromLocal(maxDays = 30) {
       ? String(sleepMood.threshold)
       : String(sleepMood.threshold).replace(/\.0$/, "");
     if (sleepMood.diff >= 0) {
-      summaryLines.push(`Mood tends to drop when sleep is below ${thresholdLabel}h (mood ${sleepMood.lowAvg.toFixed(2)} vs ${sleepMood.highAvg.toFixed(2)} at/above).`);
+      summaryLines.push(`Mood check-ins were lower on days with less than ${thresholdLabel}h sleep in these entries.`);
     } else {
-      summaryLines.push(`Mood tends to improve when sleep is below ${thresholdLabel}h (mood ${sleepMood.lowAvg.toFixed(2)} vs ${sleepMood.highAvg.toFixed(2)} at/above).`);
+      summaryLines.push(`Mood check-ins were higher on days with less than ${thresholdLabel}h sleep in these entries.`);
     }
   }
 
@@ -17483,7 +17330,7 @@ function buildPriorityBoard(snapshot, trends) {
   const candidates = [
     {
       id: "task",
-      action: snapshot.pendingTasks > 0 ? "Finish one pending task in a 25-minute sprint." : "Create one meaningful task and start it now.",
+      action: snapshot.pendingTasks > 0 ? "Return to one open task for a short, focused stretch, if it feels manageable." : "Add one meaningful task if having a clear next step would help.",
       impact: snapshot.pendingTasks > 0 ? 82 : 62,
       urgency: snapshot.pendingTasks > 2 ? 22 : 10,
       trendBoost: trends.taskDelta < 0 ? 10 : 0
@@ -17492,30 +17339,30 @@ function buildPriorityBoard(snapshot, trends) {
       id: "water",
       action: waterLeft > 0
         ? (hydration.onTrack
-          ? `You logged ${hydration.logged} cups today. Keep pace and add ${Math.max(1, Math.ceil(waterLeft))} cup${Math.max(1, Math.ceil(waterLeft)) === 1 ? "" : "s"} to stay on target.`
-          : `${hydration.summary} Add ${Math.max(1, Math.ceil(waterLeft))} cup${Math.max(1, Math.ceil(waterLeft)) === 1 ? "" : "s"} now.`)
-        : "Hydration is on track — maintain steady intake.",
+          ? `You logged ${hydration.logged} cups today. Your goal has ${Math.max(1, Math.ceil(waterLeft))} cup${Math.max(1, Math.ceil(waterLeft)) === 1 ? "" : "s"} to go, if that feels right.`
+          : `${hydration.summary} Have some water if it feels helpful.`)
+        : "Your hydration check-ins are in line with the goal you set.",
       impact: waterLeft > 0 ? 74 : 44,
       urgency: waterLeft >= 3 ? 18 : waterLeft > 0 ? 10 : 0,
       trendBoost: trends.waterDelta < 0 ? 12 : 0
     },
     {
       id: "sleep",
-      action: snapshot.sleepToday < 7 ? "Protect tonight’s sleep window (7-8h) and set wind-down alarm." : "Keep sleep quality stable with a fixed bedtime.",
+      action: snapshot.sleepToday < 7 ? "Make a little room for rest tonight, in whatever way is possible." : "Keep a bedtime that feels comfortable for you.",
       impact: snapshot.sleepToday < 7 ? 79 : 46,
       urgency: snapshot.sleepToday < 6 ? 22 : snapshot.sleepToday < 7 ? 12 : 0,
       trendBoost: trends.sleepDelta < 0 ? 11 : 0
     },
     {
       id: "mood",
-      action: !snapshot.moodToday ? "Log your mood now to improve your guidance accuracy." : "Run a 2-minute reset to keep emotional stability high.",
+      action: !snapshot.moodToday ? "Check in with how you are feeling whenever you are ready." : "Take a brief pause if you would like a moment to reset.",
       impact: !snapshot.moodToday ? 63 : 50,
       urgency: !snapshot.moodToday ? 15 : 6,
       trendBoost: trends.moodDelta < 0 ? 14 : 0
     },
     {
       id: "gratitude",
-      action: !snapshot.gratitudeToday ? "Write one gratitude line to lock a positive close." : "Maintain gratitude consistency before day-end.",
+      action: !snapshot.gratitudeToday ? "Write a gratitude line if something comes to mind." : "Return to gratitude whenever it feels meaningful.",
       impact: !snapshot.gratitudeToday ? 55 : 38,
       urgency: !snapshot.gratitudeToday ? 8 : 3,
       trendBoost: 0
@@ -18773,7 +18620,7 @@ async function tryAiAction(input, user, options = {}) {
       await Promise.all(snapshot.docs.map((docSnap) => deleteDoc(docSnap.ref)));
       clearAllReminderTimers();
       reminders.innerHTML = "";
-      scheduleEmptyState(reminders, ".item-row", getRandomEmptyMessage("reminders", "No reminders set yet — add one small prompt for today."));
+      scheduleEmptyState(reminders, ".item-row", getRandomEmptyMessage("reminders", "No reminders here yet. Add one if something would be useful to remember."));
       updateClearDataButtonState();
       return "✅ Cleared all reminders.";
     } catch (err) {
@@ -19515,11 +19362,11 @@ function buildMustDoBenefitBlock(baseText, baseIsHtml, inputText) {
   // Fallback to original formatting if no strategic template available.
   if (baseIsHtml) {
     const safeBase = String(baseText || "").trim();
-    return `${safeBase}<br><br><b>${escapeHtml(opener)}</b><br><b>Do now (under 10 min)</b>: ${escapeHtml(topAction)}<br><b>Expected by tonight</b>: ${escapeHtml(outcomeTonight)}<br><b>Tomorrow checkpoint</b>: ${escapeHtml(tomorrowCheckpoint)}`;
+    return `${safeBase}<br><br><b>${escapeHtml(opener)}</b><br><b>One gentle step (under 10 min)</b>: ${escapeHtml(topAction)}<br><b>A possible outcome by tonight</b>: ${escapeHtml(outcomeTonight)}<br><b>A thought for tomorrow</b>: ${escapeHtml(tomorrowCheckpoint)}`;
   }
 
   const safeBase = String(baseText || "").trim();
-  return `${safeBase}\n\n${opener}\nDo now (under 10 min): ${topAction}\nExpected by tonight: ${outcomeTonight}\nTomorrow checkpoint: ${tomorrowCheckpoint}`;
+  return `${safeBase}\n\n${opener}\nOne gentle step (under 10 min): ${topAction}\nA possible outcome by tonight: ${outcomeTonight}\nA thought for tomorrow: ${tomorrowCheckpoint}`;
 }
 
 function enforceAiResponseQuality(inputText, responseText, isHtml = false) {
@@ -19573,7 +19420,7 @@ function enforceAiResponseQuality(inputText, responseText, isHtml = false) {
   if (shouldEnforceBenefitBlock && (weakGeneric || nonActionable || repeated)) {
     nextText = buildMustDoBenefitBlock(nextText, nextIsHtml, inputText);
     nextIsHtml = nextIsHtml || /<[^>]+>/.test(nextText);
-  } else if (shouldEnforceBenefitBlock && !/Expected by tonight|Tomorrow checkpoint|Do now \(under 10 min\)/i.test(String(nextText))) {
+  } else if (shouldEnforceBenefitBlock && !/A possible outcome by tonight|A thought for tomorrow|One gentle step \(under 10 min\)/i.test(String(nextText))) {
     nextText = buildMustDoBenefitBlock(nextText, nextIsHtml, inputText);
     nextIsHtml = nextIsHtml || /<[^>]+>/.test(nextText);
   }
@@ -20399,7 +20246,7 @@ function renderReminder(entry, options = {}) {
       }
     }
     li.remove();
-    scheduleEmptyState(reminders, ".item-row", getRandomEmptyMessage("reminders", "No reminders set yet — add one small prompt for today."));
+    scheduleEmptyState(reminders, ".item-row", getRandomEmptyMessage("reminders", "No reminders here yet. Add one if something would be useful to remember."));
     updateClearDataButtonState();
 
     if (user) {
@@ -20454,13 +20301,13 @@ async function loadReminders(userId) {
 
     docs.forEach((entry) => renderReminder(entry, { insertAtTop: false }));
     if (!docs.length) {
-      setEmptyState(reminders, getRandomEmptyMessage("reminders", "No reminders set yet — add one small prompt for today."));
+      setEmptyState(reminders, getRandomEmptyMessage("reminders", "No reminders here yet. Add one if something would be useful to remember."));
     }
     await updateReminderLimitUI(userId);
     updateClearDataButtonState();
   } catch (err) {
     if (!isActiveDataLoadUser(userId)) return;
-    setEmptyState(reminders, getRandomEmptyMessage("reminders", "No reminders set yet — add one small prompt for today."));
+    setEmptyState(reminders, getRandomEmptyMessage("reminders", "No reminders here yet. Add one if something would be useful to remember."));
     notifyFirestoreError(err);
   }
 }
@@ -20569,7 +20416,7 @@ function renderTaskList() {
   taskList.innerHTML = "";
   const sortedTasks = sortTasksForDisplay(getTodayTaskEntries());
   if (!sortedTasks.length) {
-    setEmptyState(taskList, "No tasks for today yet — add one quick win to begin.");
+    setEmptyState(taskList, "Your list is clear for now. Add a task whenever you are ready.");
     return;
   }
   sortedTasks.forEach((entry) => renderTask(entry, { insertAtTop: false }));
@@ -20729,7 +20576,7 @@ async function loadTasks(userId) {
     updateWellnessScore();
   } catch (err) {
     if (!isActiveDataLoadUser(userId)) return;
-    setEmptyState(taskList, getRandomEmptyMessage("tasks", "No tasks yet — add one quick win to begin."));
+    setEmptyState(taskList, getRandomEmptyMessage("tasks", "Your list is clear for now. Add a task whenever you are ready."));
     notifyFirestoreError(err);
   }
 }
@@ -22203,7 +22050,7 @@ function getTimeMirrorActionLine(actionKey, bucket, fallback, variantSuffix = ""
 function timeTraveller() {
   const goalText = futureTask.value.trim();
   if (!goalText) {
-    showToast("Enter a goal to preview your future outcome.");
+    showToast("Add something you would like to reflect on.");
     return;
   }
 
@@ -22225,10 +22072,10 @@ function timeTraveller() {
     /water|hydrate|hydration/.test(lower) ? "hydration" :
     "general";
 
-  const energyState = snapshot.sleepToday >= 7 ? "steady" : "low";
-  const focusState = snapshot.pendingTasks <= 2 ? "clear" : "crowded";
+  const energyState = snapshot.sleepToday >= 7 ? "feeling steady" : "a lower-energy day";
+  const focusState = snapshot.pendingTasks <= 2 ? "some room for focus" : "several open tasks";
   const hydrationLeft = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
-  const hydrationState = hydrationLeft > 0 ? "behind" : "good";
+  const hydrationState = hydrationLeft > 0 ? "room for more water, if you want it" : "your water goal is met";
 
   const blockerTag =
     /procrastinat|delay|later|tomorrow/.test(lower) ? "delay" :
@@ -22244,68 +22091,58 @@ function timeTraveller() {
     return "normal";
   })();
 
-  const typeBoost = {
-    learning: "your understanding compounds and recall becomes faster",
-    fitness: "your energy improves and stress load drops noticeably",
-    career: "your momentum builds and confidence in execution rises",
-    recovery: "your nervous system settles and tomorrow starts stronger",
-    hydration: "your focus gets sharper and fatigue drops in the next few hours",
-    general: "your consistency grows and your confidence rises"
-  };
-
-  const skipCost = {
-    learning: "you carry cognitive friction and last-minute pressure",
-    fitness: "stress stays high and motivation weakens tomorrow",
-    career: "momentum stalls and the task feels heavier later",
-    recovery: "fatigue compounds and tomorrow starts with lower focus",
-    hydration: "mental clarity dips and energy feels flat",
-    general: "the task becomes heavier emotionally and mentally"
+  const possibleBenefits = {
+    learning: "A little study time may help the ideas feel more familiar.",
+    fitness: "A little movement may support your energy, if that feels good.",
+    career: "A small step may help make the next part clearer.",
+    recovery: "Making room for rest may help you feel more settled.",
+    hydration: "A drink of water may feel refreshing.",
+    general: "A small step may help you feel more connected to this goal."
   };
 
   const firstStepBase =
-    goalType === "learning" ? "Open your notes and do a 15-minute focused sprint." :
-    goalType === "fitness" ? "Do a 5-minute warm-up and start the first set." :
-    goalType === "career" ? "Break this into one shippable 20-minute action." :
-    goalType === "recovery" ? "Set a wind-down alarm and reduce screen/light now." :
-    goalType === "hydration" ? "Drink one glass now, then set a 30-minute follow-up." :
-    "Do one 10-minute starter action right now.";
+    goalType === "learning" ? "Open your notes and spend a few minutes with one idea." :
+    goalType === "fitness" ? "Try a gentle warm-up or a little movement." :
+    goalType === "career" ? "Choose one small part of the project to look at." :
+    goalType === "recovery" ? "Consider a gentle wind-down when it suits you." :
+    goalType === "hydration" ? "Have some water if it sounds good." :
+    "Choose one small starting point, if that feels manageable.";
 
   const blockerStep =
-    blockerTag === "delay" ? "Use a 5-minute countdown and start before the timer ends." :
-    blockerTag === "clarity" ? "Write the task in one sentence, then pick only the very first sub-step." :
-    blockerTag === "anxiety" ? "Take 3 slow breaths, then do a tiny version of the task for 8 minutes." :
-    blockerTag === "fatigue" ? "Start with a low-friction micro-step for 5 minutes, then reassess." :
+    blockerTag === "delay" ? "If it helps, spend a few minutes getting started, then pause and see how you feel." :
+    blockerTag === "clarity" ? "Write down what feels unclear; one small part may be enough for now." :
+    blockerTag === "anxiety" ? "You could try a few slow breaths, then choose what feels manageable." :
+    blockerTag === "fatigue" ? "A very small step—or a little rest—may be the kindest place to begin." :
     "";
 
   const urgencyStep =
-    urgency === "high" ? "Deadline is close, so protect a 25-minute distraction-free block now." :
-    urgency === "medium" ? "Start today with one focused block to avoid deadline compression." :
-    "Progress compounds best when you start early and repeat daily.";
+    urgency === "high" ? "If the deadline feels close, consider one short focused block today." :
+    urgency === "medium" ? "If useful, set aside a little time today to make the next step clearer." :
+    "You can return to this goal in small steps, at a pace that works for you.";
 
   const actionFirstStep = getTimeMirrorActionLine(actionKey, "nextMoves", firstStepBase, "next");
   const firstStep = blockerStep || actionFirstStep;
-  const readinessHint = `${energyState === "steady" ? "Energy is usable" : "Energy is low, keep actions tiny"} • ${focusState === "clear" ? "focus lane is clear" : "task load is crowded"} • mood: ${moodMeta.label}${hydrationState === "behind" ? ` • hydrate +${hydrationLeft}` : " • hydration on track"}`;
+  const readinessHint = `Today’s check-ins suggest ${energyState} and ${focusState}. Mood: ${moodMeta.label}; ${hydrationState}.`;
 
   const horizonLabel = timeline?.label || "next 24 hours";
   const moodRiskLine = moodMeta.logged && moodMeta.score <= 1
-    ? "Emotional load is elevated, so consistency beats intensity today."
-    : "Emotional baseline is stable enough for focused execution.";
+    ? "You noted a lower-mood check-in, so it may feel good to take this gently."
+    : "Choose a pace that feels comfortable for you.";
 
   const followUpPlanBase =
-    goalType === "learning" ? "Block 2 study sprints and close with a 5-minute recall test." :
-    goalType === "fitness" ? "Lock workout time and prep clothes/shoes now." :
-    goalType === "career" ? "Ship one visible milestone today and define tomorrow's next ship item." :
-    goalType === "recovery" ? "Set bedtime trigger and cap screens 45 minutes before sleep." :
-    goalType === "hydration" ? "Pair each meal with water and complete the remaining glasses before evening." :
-    "Choose one measurable output and finish it before day-end.";
+    goalType === "learning" ? "If you like, return to the notes for another short study session later." :
+    goalType === "fitness" ? "You could choose a time for some gentle movement, if it suits you." :
+    goalType === "career" ? "Choose another small project step when you feel ready." :
+    goalType === "recovery" ? "Make space for a restful evening in a way that works for you." :
+    goalType === "hydration" ? "Keep water nearby and drink when you feel thirsty." :
+    "Leave room for another small step whenever you are ready.";
   const followUpPlan = getTimeMirrorActionLine(actionKey, "plans", followUpPlanBase, "plan");
 
-  const actionWin = getTimeMirrorActionLine(actionKey, "wins", typeBoost[goalType], "win");
-  const actionDelayCost = getTimeMirrorActionLine(actionKey, "delayCosts", skipCost[goalType], "delay");
+  const actionWin = getTimeMirrorActionLine(actionKey, "wins", possibleBenefits[goalType], "win");
 
   const patternNote = Array.isArray(behaviorPatterns?.summaryLines) && behaviorPatterns.summaryLines.length
     ? behaviorPatterns.summaryLines[0]
-    : "Pattern confidence is still building from recent logs.";
+    : "Your recent patterns are still taking shape.";
   const confidenceScore = (() => {
     let score = 50;
     if (snapshot.sleepToday >= 7) score += 12;
@@ -22316,27 +22153,27 @@ function timeTraveller() {
     if (trends.sleepDelta >= 0) score += 4;
     return Math.max(35, Math.min(96, score));
   })();
-  const confidenceBand = confidenceScore >= 78 ? "high" : confidenceScore >= 62 ? "medium" : "guarded";
+  const confidenceBand = confidenceScore >= 78 ? "more established" : confidenceScore >= 62 ? "taking shape" : "early";
   const likelyWin72h = priorityBoard?.[0]?.action || firstStep;
   const riskTrigger = blockerTag === "anxiety"
-    ? "If anxiety spikes, drop intensity and run 3 breathing cycles before restarting."
+    ? "If anxiety rises, you could pause and try a few slow breaths, if comfortable."
     : blockerTag === "fatigue"
-      ? "If energy crashes, switch to a 5-minute micro-step instead of stopping."
+      ? "If energy feels low, try a smaller step or take a rest."
       : blockerTag === "clarity"
-        ? "If you feel stuck, rewrite the next step in one sentence and start a 10-minute timer."
-        : "If momentum drops, restart with a 10-minute sprint immediately.";
-  const trendDirection = `task ${trends.taskDelta >= 0 ? "up" : "down"} (${trends.taskDelta.toFixed(1)}), sleep ${trends.sleepDelta >= 0 ? "up" : "down"} (${trends.sleepDelta.toFixed(1)}h), mood ${trends.moodDelta >= 0 ? "up" : "down"} (${trends.moodDelta.toFixed(2)}).`;
+        ? "If you feel stuck, write down what feels unclear and come back when you are ready."
+        : "If you need a pause, it is okay to return to this goal later.";
+  const trendDirection = `tasks a little ${trends.taskDelta >= 0 ? "higher" : "lower"} (${trends.taskDelta.toFixed(1)}), sleep a little ${trends.sleepDelta >= 0 ? "higher" : "lower"} (${trends.sleepDelta.toFixed(1)}h), mood a little ${trends.moodDelta >= 0 ? "higher" : "lower"} (${trends.moodDelta.toFixed(2)}).`;
 
   timeMirror.innerHTML = `
-    <p>✨ <b>Likely future if you execute: "${escapeHtml(goalText)}"</b><br>
-    By ${escapeHtml(horizonLabel)}: ${escapeHtml(actionWin)}. ${moodRiskLine}</p>
-    <p>⏳ <b>If you delay</b><br>
-    By ${escapeHtml(horizonLabel)}: ${escapeHtml(actionDelayCost)}.</p>
-    <p>🧭 <b>Best next move</b><br>${escapeHtml(firstStep)}<br>${escapeHtml(urgencyStep)}</p>
-    <p>📈 <b>Execution plan</b><br>${followUpPlan}</p>
-    <p>🗺️ <b>72-hour win path</b><br>Do now: ${escapeHtml(likelyWin72h)}<br>By tonight: protect recovery + finish one visible output.<br>By day 3: your control and consistency should noticeably improve if you repeat the same first-hour anchor.</p>
-    <p>🧠 <b>Forecast confidence</b>: ${confidenceBand} (${confidenceScore}/100)<br><small>Trend signal: ${escapeHtml(trendDirection)}</small><br><small>Pattern note: ${escapeHtml(patternNote)}</small></p>
-    <p>🛡️ <b>Fallback rule</b><br>${escapeHtml(riskTrigger)}</p>
+    <p>✨ <b>A possible direction for "${escapeHtml(goalText)}"</b><br>
+    Over ${escapeHtml(horizonLabel)}: ${escapeHtml(actionWin)} ${moodRiskLine}</p>
+    <p>⏳ <b>If you pause for now</b><br>
+    That is okay—you can return to this goal whenever you feel ready.</p>
+    <p>🧭 <b>One small next step, if you want one</b><br>${escapeHtml(firstStep)}<br>${escapeHtml(urgencyStep)}</p>
+    <p>📈 <b>Flexible follow-up idea</b><br>${followUpPlan}</p>
+    <p>🗺️ <b>A gentle 72-hour outline</b><br>One possible step: ${escapeHtml(likelyWin72h)}<br>By tonight: make room for rest as well as progress.<br>Over the next few days, small flexible steps may help you notice what works.</p>
+    <p>🧠 <b>How this estimate fits your check-ins</b>: ${confidenceBand} (${confidenceScore}/100)<br><small>Recent patterns: ${escapeHtml(trendDirection)}</small><br><small>Pattern note: ${escapeHtml(patternNote)}</small></p>
+    <p>🛡️ <b>If things feel harder</b><br>${escapeHtml(riskTrigger)}</p>
     <p>📌 <small>${readinessHint}</small></p>
   `;
 
@@ -23671,6 +23508,7 @@ function pickDailyChallenge() {
 function updateChallengeCompleteButtonState() {
   if (!challengeCompleteBtn) return;
   challengeCompleteBtn.disabled = !!dailyChallengeCompleted;
+  challengeCompleteBtn.innerText = dailyChallengeCompleted ? "Done for Today" : "I Did This";
 }
 
 async function saveDailyChallengeState() {
@@ -23736,7 +23574,7 @@ async function loadDailyChallenge(userId) {
     currentChallengeText = challenge;
     dailyChallengeCompleted = completed;
     dailyChallengeElement.innerText = challenge;
-    challengeResultElement.innerText = completed ? "✅ Challenge completed! Great job!" : "";
+    challengeResultElement.innerText = completed ? "✅ Done for today. Let that be enough." : "";
     updateChallengeCompleteButtonState();
 
     if (completed) {
@@ -23760,7 +23598,7 @@ pickDailyChallenge();
 // Complete challenge function
 async function completeChallenge() {
   if (dailyChallengeCompleted) {
-    challengeResultElement.innerText = "✅ Challenge already completed for today.";
+    challengeResultElement.innerText = "✅ This invitation is already marked done for today.";
     updateChallengeCompleteButtonState();
     return;
   }
@@ -23772,7 +23610,7 @@ async function completeChallenge() {
     challengeDates.push(parsedToday);
   }
 
-  challengeResultElement.innerText = "✅ Challenge completed! Great job!";
+  challengeResultElement.innerText = "✅ Done for today. Let that be enough.";
   updateChallengeCompleteButtonState();
   updateInsights();
   await saveDailyChallengeState();
