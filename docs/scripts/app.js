@@ -13515,7 +13515,7 @@ function updateWellnessScore() {
   }
 
   if (taskRatio < 0.7) {
-    const pendingCount = Math.max(0, totalTasks - doneTasks);
+    const pendingCount = getTodayTaskEntries().filter((entry) => !entry.completed).length;
     addRankedAction(
       pendingCount > 0
         ? pendingCount === 1
@@ -20556,14 +20556,18 @@ function sortTasksForDisplay(entries = []) {
   });
 }
 
+function getTodayTaskEntries() {
+  const todayKey = getTodayKey();
+  return taskEntries.filter((entry) => {
+    const taskDateKey = dateToKey(entry?.time);
+    return taskDateKey === todayKey || !taskDateKey;
+  });
+}
+
 function renderTaskList() {
   if (!taskList) return;
   taskList.innerHTML = "";
-  const todayKey = getTodayKey();
-  const sortedTasks = sortTasksForDisplay(taskEntries.filter((entry) => {
-    const taskDateKey = dateToKey(entry?.time);
-    return taskDateKey === todayKey || !taskDateKey;
-  }));
+  const sortedTasks = sortTasksForDisplay(getTodayTaskEntries());
   if (!sortedTasks.length) {
     setEmptyState(taskList, "No tasks for today yet — add one quick win to begin.");
     return;
@@ -20722,6 +20726,7 @@ async function loadTasks(userId) {
     renderTaskList();
     updateTaskLimitUI();
     updateInsights();
+    updateWellnessScore();
   } catch (err) {
     if (!isActiveDataLoadUser(userId)) return;
     setEmptyState(taskList, getRandomEmptyMessage("tasks", "No tasks yet — add one quick win to begin."));
@@ -20783,6 +20788,7 @@ async function addTask(options = {}){
       const taskMsg = pickNonRepeatingVariant(AI_TASK_ADDED_POOL, 'task_added').replaceAll('{task}', t);
       showToast(taskMsg);
       updateInsights();
+      updateWellnessScore();
       task.value="";
       await trimCollectionToMaxEntries(user.uid, "tasks", MAX_TASK_ENTRIES, (entry) => toDateSafe(entry.time)?.getTime?.() || 0);
       updateTaskLimitUI();
