@@ -1231,9 +1231,6 @@ bindThemeChoiceEvents(themeSetupOptions, { previewOnHover: true });
 bindThemeChoiceEvents(accountThemeOptions);
 applyTheme(getStoredTheme(""));
 const guideNextBtn = document.getElementById("guideNextBtn");
-const crashAlertBanner = document.getElementById("crashAlertBanner");
-const crashBannerText = document.getElementById("crashBannerText");
-const crashAlertDismissBtn = document.getElementById("crashAlertDismissBtn");
 const crashRiskValue = document.getElementById("crashRiskValue");
 const crashRiskFill = document.getElementById("crashRiskFill");
 const crashRiskLevel = document.getElementById("crashRiskLevel");
@@ -2149,8 +2146,6 @@ async function clearAllAccountData() {
   try {
     const previousChallengeText = String(currentChallengeText || "");
     await syncServerClock(user.uid);
-    clearCrashAlertDismissal(user.uid);
-    clearCrashAlertTrigger(user.uid);
     clearAllReminderTimers();
 
     const aiUsageRef = doc(db, "users", user.uid, "settings", "aiUsage");
@@ -2527,7 +2522,6 @@ try {
       } else {
         hideSplash();
         if (lastAuthenticatedUserId) {
-          clearCrashAlertDismissal(lastAuthenticatedUserId);
           lastAuthenticatedUserId = "";
           authenticatedShellReadyAtMs = 0;
         }
@@ -2599,11 +2593,10 @@ try {
         setBedtimeInputError("");
         setWellnessScorePendingDisplay();
         wellnessActionsEl.innerHTML = "<li>Log your first check-in for today.</li><li>Set your water target and drink one glass.</li><li>Add one gratitude note tonight.</li>";
-        if (crashAlertBanner) crashAlertBanner.style.display = "none";
         if (crashRiskValue) crashRiskValue.innerText = "0/100";
         if (crashRiskFill) crashRiskFill.style.width = "0%";
-        if (crashRiskLevel) crashRiskLevel.innerText = "Low Risk";
-        if (crashRiskReason) crashRiskReason.innerText = "Log your first entries to generate risk analysis.";
+        if (crashRiskLevel) crashRiskLevel.innerText = "Steady";
+        if (crashRiskReason) crashRiskReason.innerText = "Your check-in summary will appear after you log something.";
         activeCrashRescue = null;
         renderCrashRescuePlan();
         rescueEvents.length = 0;
@@ -2648,9 +2641,9 @@ try {
         welcomeGuideStepIndex = 0;
         welcomeGuideUserId = "";
         welcomeGuideCheckedThisSession = false;
-        if (burnoutRiskEl) burnoutRiskEl.innerText = "0/100";
-        if (burnoutWindowEl) burnoutWindowEl.innerText = "Low Risk • Stable window";
-        if (burnoutReasonEl) burnoutReasonEl.innerText = "Forecast appears stable right now.";
+        if (burnoutRiskEl) burnoutRiskEl.innerText = "Waiting for check-ins";
+        if (burnoutWindowEl) burnoutWindowEl.innerText = "Your reflection will appear here";
+        if (burnoutReasonEl) burnoutReasonEl.innerText = "Your recent check-ins will shape a gentle reflection here.";
         if (burnoutScheduleEl) burnoutScheduleEl.innerHTML = "";
         challengeResultElement.innerText = "";
         moodHistory.length = 0;
@@ -3731,10 +3724,10 @@ const CARD_SHORTCUTS = [
   { cardIndex: 10, keys: ["g", "j"], label: "Gratitude Journal" },
   { cardIndex: 11, keys: ["d", "c"], label: "Daily Challenge" },
   { cardIndex: 12, keys: ["w", "s"], label: "Daily Wellness Score" },
-  { cardIndex: 13, keys: ["m", "c"], label: "Mood Crash Prevention" },
+  { cardIndex: 13, keys: ["m", "c"], label: "Mood & Recovery" },
   { cardIndex: 14, keys: ["w", "r"], label: "Weekly Review + AI Coach" },
   { cardIndex: 15, keys: ["h", "q"], label: "Adaptive Habit Quest" },
-  { cardIndex: 16, keys: ["b", "r"], label: "Predictive Burnout Radar" },
+  { cardIndex: 16, keys: ["b", "r"], label: "Recovery Outlook" },
   { cardIndex: 17, keys: ["i", "s"], label: "Insights & Streaks" },
   { cardIndex: 18, keys: ["d", "r"], label: "Daily Routine" },
   { cardIndex: 19, keys: ["s", "r"], label: "Weekly Startup Report" },
@@ -5083,7 +5076,6 @@ async function signOutUser() {
   try {
     await signOut(auth);
     if (signingOutUserId) {
-      clearCrashAlertDismissal(signingOutUserId);
       lastAuthenticatedUserId = "";
     }
   } catch (_) {
@@ -9204,72 +9196,72 @@ const CRASH_RESCUE_PROTOCOLS = [
 const BURNOUT_RADAR_PLAN_POOLS = {
   high: [
     {
-      focus: "Reduce load now",
-      reason: "Your recovery signals need a smaller day. Protect capacity before adding effort.",
+      focus: "Make room to recover",
+      reason: "Your recent check-ins suggest a gentler pace may feel supportive.",
       steps: [
-        "Stop adding new tasks for today; finish or park one current task only.",
-        "Take a 5-minute no-screen reset: stand, loosen shoulders, look away from the device.",
-        "Pick one closure action that would make the day feel less heavy.",
-        "Move one optional task to later so recovery has space."
+        "If it feels useful, pause adding tasks and choose just one thing to finish or set aside.",
+        "Take a screen break for a few minutes, stretch, or simply look away from your device.",
+        "Choose one small action that could make the rest of the day feel easier.",
+        "Consider moving one optional task to another time."
       ]
     },
     {
-      focus: "Stabilize first",
-      reason: "The fastest win is lowering pressure, not pushing harder.",
+      focus: "Take things one step at a time",
+      reason: "A little more breathing room may help you find a comfortable pace.",
       steps: [
-        "Choose the one task that actually matters before tonight.",
-        "Delay every optional task until tomorrow or after a real break.",
-        "Do a 3-minute reset: water, slow breathing, and unclenched shoulders.",
-        "Write a shutdown line for anything you are not doing today."
+        "If you want, choose one task that feels most useful to focus on.",
+        "Give yourself permission to leave optional tasks for later.",
+        "Try a brief pause, a drink of water, or a few comfortable breaths.",
+        "Jot down anything you would like to return to another time."
       ]
     },
     {
-      focus: "Protect energy",
-      reason: "Your load looks heavier than your recovery buffer. Make the plan smaller.",
+      focus: "Keep the next step small",
+      reason: "Your recent activity looks full; a smaller next step may feel more manageable.",
       steps: [
-        "Convert one big task into a 10-minute first pass.",
-        "Remove one commitment that is not urgent.",
-        "Take a short walk or stretch before the next screen block.",
-        "End with a done/waiting/tomorrow note."
+        "Break one bigger task into a short first step.",
+        "Consider rescheduling one thing that does not need attention today.",
+        "Take a short walk, stretch, or screen break if that sounds helpful.",
+        "Make a quick note of what is done and what can wait."
       ]
     }
   ],
   moderate: [
     {
-      focus: "Simplify today",
-      reason: "Early fatigue signs are showing. A lighter plan will protect momentum.",
+      focus: "Make today a little lighter",
+      reason: "Your check-ins suggest that a simpler plan may help you keep a comfortable rhythm.",
       steps: [
-        "Choose one priority task and make it half-size.",
-        "Do one short movement reset before the next focus block.",
-        "Remove one non-urgent item from today’s list.",
-        "Write a 2-line shutdown note: done today, next tomorrow."
+        "Choose one useful task and make its first step smaller.",
+        "Take a short movement or screen break before your next task.",
+        "Consider moving one non-urgent item to another time.",
+        "Note what you finished and what you can pick up later."
       ]
     },
     {
-      focus: "Keep it finishable",
-      reason: "Your best move is a clean finish, not a bigger push.",
+      focus: "Choose a finishable step",
+      reason: "A clear, manageable next step may feel better than adding more to your plate.",
       steps: [
-        "Pick one task that can visibly finish today.",
-        "Set a 20-minute work block with one clear endpoint.",
-        "Drink water before starting the block.",
-        "Move one low-value task out of today."
+        "Pick one task you would like to make progress on.",
+        "Try a short focus block with a clear stopping point.",
+        "Have a drink of water if you would like one.",
+        "Consider saving one less-urgent task for later."
       ]
     },
     {
-      focus: "Reduce switching",
-      reason: "Too much task switching can turn moderate pressure into burnout pressure.",
+      focus: "Give one thing your attention",
+      reason: "Focusing on one thing at a time may help make the day feel less busy.",
       steps: [
-        "Close or hide one distracting tab/app.",
-        "Batch small tasks into one short block.",
-        "Do a 2-minute body reset before the next block.",
-        "Choose the next task only after the current block ends."
+        "Close or set aside one tab or app you do not need right now.",
+        "Group a few small tasks into one brief block, if helpful.",
+        "Take a moment to stretch or settle before continuing.",
+        "Choose what comes next when you are ready."
       ]
     }
   ],
   low: [
     {
       focus: "Keep steady",
-      reason: "Burnout pressure is low. Protect that by keeping the day simple.",
+      reason: "Your recent check-ins look steady. A simple, repeatable pace can help you keep that balance.",
       steps: [
         "Keep working in one-task blocks instead of multitasking.",
         "Take a short screen break before fatigue builds.",
@@ -9278,7 +9270,7 @@ const BURNOUT_RADAR_PLAN_POOLS = {
     },
     {
       focus: "Maintain buffer",
-      reason: "You have room to stay consistent without overloading the day.",
+      reason: "Your recent check-ins suggest you may have room to keep a comfortable rhythm.",
       steps: [
         "Finish one useful task before adding another.",
         "Drink water or stretch between work blocks.",
@@ -9371,10 +9363,6 @@ const AI_RESPONSE_VARIANT_MAX = 150;
 const AI_RESPONSE_REPEAT_HISTORY_LIMIT = 120;
 const AI_RESPONSE_SIGNATURE_HISTORY_LIMIT = 150;
 const AI_RESPONSE_SIGNATURE_COMPARE_WINDOW = 80;
-const CRASH_ALERT_BANNER_MIN_RISK = 45;
-const CRASH_ALERT_DISMISS_STORAGE_PREFIX = "lumevineCrashAlertDismissedDate:";
-const CRASH_ALERT_TRIGGERED_STORAGE_PREFIX = "lumevineCrashAlertTriggeredDate:";
-const CRASH_ALERT_RECOVERY_SCORE = 50;
 const challengeDates=[];
 let dailyChallengeCompleted=false;
 let currentChallengeText="";
@@ -11403,10 +11391,10 @@ function updateQuestRecoveryBonusUI() {
     questRecoveryBonusEl.innerText = "Recovery bonus earned today: +10 XP.";
     questRecoveryBonusEl.classList.add("is-earned");
   } else if (burnoutRadarWarningActive) {
-    questRecoveryBonusEl.innerText = "Burnout warning active: log at least 1 glass of water or complete a task for today’s +10 bonus XP.";
+    questRecoveryBonusEl.innerText = "A recovery bonus is available today: log a glass of water or complete a task for +10 XP.";
     questRecoveryBonusEl.classList.remove("is-earned");
   } else {
-    questRecoveryBonusEl.innerText = "Earn +10 bonus XP once per day by logging a glass of water or completing a task while the Burnout Radar warning is active.";
+    questRecoveryBonusEl.innerText = "A small recovery bonus may be available for a water check-in or completing a task.";
     questRecoveryBonusEl.classList.remove("is-earned");
   }
 }
@@ -11820,11 +11808,11 @@ function updateBurnoutDoNowText() {
   if (!burnoutDoNowEl) return;
   const nextStep = getNextBurnoutStep();
   if (burnoutPlanActive && burnoutRecoveryPlan.length && !nextStep) {
-    burnoutDoNowEl.innerHTML = "<b>DO NOW:</b> Recovery plan complete. Keep the rest of today smaller.";
+    burnoutDoNowEl.innerHTML = "<b>ONE GENTLE STEP:</b> Your plan is complete. Take the rest of today at a pace that works for you.";
     return;
   }
-  const fallback = nextStep || burnoutRecoveryPlan[0] || "Keep one simple recovery action visible.";
-  burnoutDoNowEl.innerHTML = `<b>DO NOW:</b> ${escapeHtml(fallback)}`;
+  const fallback = nextStep || burnoutRecoveryPlan[0] || "Choose one small recovery action, if it feels helpful.";
+  burnoutDoNowEl.innerHTML = `<b>ONE GENTLE STEP:</b> ${escapeHtml(fallback)}`;
 }
 
 function renderBurnoutRecoveryPlan(options = {}) {
@@ -11874,7 +11862,7 @@ function renderBurnoutRecoveryPlan(options = {}) {
   if (burnoutPlanActive && burnoutRecoveryPlan.length) {
     const allDone = burnoutRecoveryPlan.every((step) => burnoutRecoveryCompletedSteps.has(step));
     if (allDone) {
-      showToast("Recovery plan complete. Resetting the radar card.");
+      showToast("Your recovery plan is complete. Take a moment to notice what you did.");
       burnoutPlanActive = false;
       burnoutRecoveryCompletedSteps.clear();
       updateBurnoutRadarUI();
@@ -11887,9 +11875,9 @@ function updateBurnoutRadarUI() {
     burnoutRadarWarningActive = false;
     burnoutRadarCalculatedDateKey = "";
     updateQuestRecoveryBonusUI();
-    if (burnoutRiskEl) burnoutRiskEl.innerText = "Not yet calculated";
-    if (burnoutWindowEl) burnoutWindowEl.innerText = "Waiting for wellness data";
-    if (burnoutReasonEl) burnoutReasonEl.innerText = "The forecast will appear after your wellness data has loaded.";
+    if (burnoutRiskEl) burnoutRiskEl.innerText = "Waiting for check-ins";
+    if (burnoutWindowEl) burnoutWindowEl.innerText = "Your reflection will appear here";
+    if (burnoutReasonEl) burnoutReasonEl.innerText = "Once your wellness data has loaded, you’ll see a gentle reflection based on your recent check-ins.";
     if (burnoutScheduleEl) burnoutScheduleEl.innerHTML = "";
     return;
   }
@@ -11915,7 +11903,11 @@ function updateBurnoutRadarUI() {
   }
   forecast = Math.max(0, Math.min(100, forecast));
 
-  const level = forecast >= 75 ? "High Risk" : forecast >= 50 ? "Moderate Risk" : "Low Risk";
+  const level = forecast >= 75
+    ? "Extra support may help"
+    : forecast >= 50
+      ? "Consider a gentler pace"
+      : "Steady";
   burnoutRadarWarningActive = forecast >= 50;
   burnoutRadarCalculatedDateKey = getTodayKey();
   updateQuestRecoveryBonusUI();
@@ -11929,7 +11921,7 @@ function updateBurnoutRadarUI() {
   const planFocus = variant.focus;
   let reason = variant.reason;
   if (moodMeta.label === "Angry" || moodMeta.label === "Stressed") {
-    reason += ` ${moodMeta.label} mood means your next step should be lighter, not bigger.`;
+    reason += ` Since you logged feeling ${moodMeta.label.toLowerCase()}, a gentler next step may feel helpful.`;
   }
 
   burnoutPlanActive = false;
@@ -11946,7 +11938,7 @@ function updateBurnoutRadarUI() {
 async function applyRecoverySchedule() {
   const user = auth.currentUser;
   if (!user) {
-    await appAlert("Please sign in first.");
+    showToast("Sign in to create a gentle recovery plan.");
     return;
   }
 
@@ -11968,11 +11960,9 @@ async function applyRecoverySchedule() {
   burnoutRecoveryPlan.push(...activePlan);
   burnoutRecoveryCompletedSteps.clear();
   burnoutPlanActive = true;
-  if (burnoutWindowEl) burnoutWindowEl.innerText = "Recovery plan active • Keep it simple";
-  if (burnoutReasonEl) burnoutReasonEl.innerText = "Tick off these steps inside this card before adding more work. No reminders were created.";
+  if (burnoutWindowEl) burnoutWindowEl.innerText = "Your plan • One step at a time";
+  if (burnoutReasonEl) burnoutReasonEl.innerText = "Take whichever steps feel useful, at a pace that works for you. No reminders were created.";
   renderBurnoutRecoveryPlan({ interactive: true });
-
-  await appAlert("Simple recovery plan started. Check off each step in the card.", { title: "Recovery plan started" });
 }
 
 function pickChallengeForDate(dateKey) {
@@ -12845,8 +12835,6 @@ async function runDailySystemReset(userId, options = {}) {
     if (!options.force && dailySystemResetKey === todayKey) return;
     const utcDayChanged = !!dailySystemResetKey && dailySystemResetKey !== todayKey;
     dailySystemResetKey = todayKey;
-    clearCrashAlertDismissal(userId);
-
     await Promise.allSettled([
       ensureDailyUsageCurrent(userId),
       ensureAiUsageCurrent(userId),
@@ -13728,146 +13716,17 @@ function getCrashRiskSnapshot() {
   };
 }
 
-function hasAdverseCrashInputToday(snapshot = {}) {
-  const hasLowWater = !!snapshot.hasWaterLoggedToday && Number(snapshot.waterRatio) < 0.7;
-  const hasLowSleep = !!snapshot.hasSleepLoggedToday && Number(snapshot.sleepToday) < 7;
-  const hasLowMood = !!snapshot.hasMoodLoggedToday && ["Angry", "Low", "Stressed"].includes(snapshot.moodLabel);
-  return hasLowWater || hasLowSleep || hasLowMood;
-}
-
-function getCrashAlertDismissStorageKey(userId = "") {
-  const safeUserId = String(userId || "").trim();
-  return safeUserId ? `${CRASH_ALERT_DISMISS_STORAGE_PREFIX}${safeUserId}` : "";
-}
-
-function getCrashAlertDismissedDateKey(userId = "") {
-  const safeUserId = String(userId || "").trim();
-  const storageKey = getCrashAlertDismissStorageKey(safeUserId);
-  if (!storageKey) return "";
-
-  try {
-    return String(localStorage.getItem(storageKey) || "");
-  } catch (_) {
-    return "";
-  }
-}
-
-function setCrashAlertDismissedForToday(userId = "") {
-  const safeUserId = String(userId || "").trim();
-  const storageKey = getCrashAlertDismissStorageKey(safeUserId);
-  if (!storageKey) return "";
-
-  const todayKey = getTodayKey();
-  try {
-    localStorage.setItem(storageKey, todayKey);
-  } catch (_) {}
-  return todayKey;
-}
-
-function clearCrashAlertDismissal(userId = "") {
-  const safeUserId = String(userId || "").trim();
-  const storageKey = getCrashAlertDismissStorageKey(safeUserId);
-  if (!storageKey) return;
-
-  try {
-    localStorage.removeItem(storageKey);
-  } catch (_) {}
-}
-
-function getCrashAlertTriggeredStorageKey(userId = "") {
-  const safeUserId = String(userId || "").trim();
-  return safeUserId ? `${CRASH_ALERT_TRIGGERED_STORAGE_PREFIX}${safeUserId}` : "";
-}
-
-function getCrashAlertTriggeredDateKey(userId = "") {
-  const storageKey = getCrashAlertTriggeredStorageKey(userId);
-  if (!storageKey) return "";
-
-  try {
-    return String(localStorage.getItem(storageKey) || "");
-  } catch (_) {
-    return "";
-  }
-}
-
-function setCrashAlertTriggeredForToday(userId = "") {
-  const storageKey = getCrashAlertTriggeredStorageKey(userId);
-  if (!storageKey) return "";
-
-  const todayKey = getTodayKey();
-  try {
-    localStorage.setItem(storageKey, todayKey);
-  } catch (_) {}
-  return todayKey;
-}
-
-function clearCrashAlertTrigger(userId = "") {
-  const storageKey = getCrashAlertTriggeredStorageKey(userId);
-  if (!storageKey) return;
-
-  try {
-    localStorage.removeItem(storageKey);
-  } catch (_) {}
-}
-
-function isCrashAlertTriggeredForToday(userId = "") {
-  const safeUserId = String(userId || auth.currentUser?.uid || "").trim();
-  if (!safeUserId) return false;
-
-  const triggeredDateKey = getCrashAlertTriggeredDateKey(safeUserId);
-  if (!triggeredDateKey) return false;
-
-  const todayKey = getTodayKey();
-  if (triggeredDateKey === todayKey) return true;
-
-  clearCrashAlertTrigger(safeUserId);
-  return false;
-}
-
-function isCrashAlertDismissedForToday(userId = "") {
-  const safeUserId = String(userId || auth.currentUser?.uid || "").trim();
-  if (!safeUserId) return false;
-
-  const dismissedDateKey = getCrashAlertDismissedDateKey(safeUserId);
-  if (!dismissedDateKey) return false;
-
-  const todayKey = getTodayKey();
-  if (dismissedDateKey === todayKey) return true;
-
-  clearCrashAlertDismissal(safeUserId);
-  return false;
-}
-
-async function dismissCrashAlertBanner() {
-  const user = auth.currentUser;
-  const userId = String(user?.uid || "").trim();
-  if (!userId) {
-    if (crashAlertBanner) crashAlertBanner.style.display = "none";
-    return;
-  }
-
-  if (crashAlertDismissBtn) crashAlertDismissBtn.disabled = true;
-  try {
-    await ensureServerClockCurrent(userId);
-    setCrashAlertDismissedForToday(userId);
-    if (crashAlertBanner) crashAlertBanner.style.display = "none";
-    showToast("Mood crash warning dismissed until tomorrow.");
-  } finally {
-    if (crashAlertDismissBtn) crashAlertDismissBtn.disabled = false;
-  }
-}
-
 function updateCrashPreventionUI() {
-  if (!crashRiskValue || !crashRiskLevel || !crashRiskReason || !crashAlertBanner || !crashBannerText) return;
-
-  if (document.body.classList.contains("splash-active")) {
-    crashAlertBanner.style.display = "none";
-    return;
-  }
+  if (!crashRiskValue || !crashRiskLevel || !crashRiskReason) return;
+  if (document.body.classList.contains("splash-active")) return;
 
   const snapshot = getCrashRiskSnapshot();
   crashRiskValue.innerText = `${snapshot.risk}/100`;
-  crashRiskLevel.innerText = snapshot.level;
+  crashRiskLevel.innerText = snapshot.risk >= 70
+    ? "Extra care"
+    : snapshot.risk >= 45
+      ? "Take it gently"
+      : "Steady";
   if (crashRiskFill) {
     crashRiskFill.style.width = `${snapshot.risk}%`;
     crashRiskFill.classList.remove("is-low", "is-mid", "is-high", "is-critical");
@@ -13876,33 +13735,22 @@ function updateCrashPreventionUI() {
     else if (snapshot.risk >= 30) crashRiskFill.classList.add("is-mid");
     else crashRiskFill.classList.add("is-low");
   }
-  crashRiskReason.innerText = snapshot.reasons[0] || "Keep your streaks active to maintain resilience.";
-
-  const shortReason = snapshot.reasons.slice(0, 2).join(" • ") || "Stay consistent with your health basics.";
-  const userId = String(auth.currentUser?.uid || "").trim();
-  const dismissed = isCrashAlertDismissedForToday(userId);
-  const recovered = snapshot.wellnessScore >= CRASH_ALERT_RECOVERY_SCORE;
-  const adverseInput = hasAdverseCrashInputToday(snapshot);
-
-  if (recovered) {
-    clearCrashAlertTrigger(userId);
-  } else if (snapshot.risk >= CRASH_ALERT_BANNER_MIN_RISK && adverseInput) {
-    setCrashAlertTriggeredForToday(userId);
-  }
-
-  const triggered = isCrashAlertTriggeredForToday(userId);
-  const shouldShow = !dismissed
-    && !recovered
-    && snapshot.hasNonTaskLogToday
-    && (triggered || (snapshot.risk >= CRASH_ALERT_BANNER_MIN_RISK && adverseInput));
-
-  if (shouldShow) {
-    crashAlertBanner.style.display = "block";
-    crashBannerText.innerText = `${snapshot.level}: ${shortReason}`;
-  } else {
-    crashAlertBanner.style.display = "none";
-    crashBannerText.innerText = "Your dip risk is elevated right now.";
-  }
+  const calmReasons = {
+    "Log your first entries to generate risk analysis.": "Your check-in summary will appear after you log something.",
+    "Sleep not logged yet": "No sleep check-in yet.",
+    "Very low sleep": "Your sleep check-in suggests some extra rest may help.",
+    "Sleep slightly below recovery zone": "Sleep was a little below the usual recovery range.",
+    "Water not logged yet": "No hydration check-in yet.",
+    "Hydration below target": "Hydration is a little below your target.",
+    "Hydration low today": "A little extra hydration may feel helpful.",
+    "Mood not logged yet": "No mood check-in yet.",
+    "Anger spike detected": "You noted feeling angry.",
+    "Low mood detected": "You noted feeling low.",
+    "Stress spike detected": "You noted feeling stressed.",
+    "Too many pending tasks": "You have several open tasks.",
+    "Wellness score currently low": "Some recent check-ins may need a little care."
+  };
+  crashRiskReason.innerText = calmReasons[snapshot.reasons[0]] || "A gentle reflection based on your check-ins. Take things one step at a time.";
 }
 
 function renderProgressMilestones() {
@@ -23932,7 +23780,6 @@ Object.assign(window, {
   closeAccountPanel,
   clearAllAccountData,
   runCrashRescueFlow,
-  dismissCrashAlertBanner,
   openWellnessScoreInfoModal,
   closeWellnessScoreInfoModal,
   setNextWeekTargets,

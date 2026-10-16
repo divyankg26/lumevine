@@ -432,19 +432,6 @@
   </div>
 </div>
 
-<div id="crashAlertBanner" class="crash-banner">
-<div class="crash-banner-row">
-  <div>
-      <strong>⚠️ Mood Crash Warning</strong>
-      <p id="crashBannerText" class="crash-risk-sub">Your dip risk is elevated right now.</p>
-  </div>
-  <div class="crash-banner-actions">
-    <button onclick="runCrashRescueFlow()">Start a quick reset</button>
-    <button id="crashAlertDismissBtn" class="crash-dismiss-btn" type="button" onclick="dismissCrashAlertBanner()">Dismiss</button>
-  </div>
-</div>
-</div>
-
 <div id="uxToast">
   <span id="uxToastText"></span>
   <button id="uxToastAction" style="display:none;"></button>
@@ -644,21 +631,21 @@
 <p id="wellnessFriendInsight" class="friend-card-note">Friend benchmark: add a friend to compare daily wellness score.</p>
 </div>
 
-<!-- Mood Crash Prevention -->
+<!-- Mood & Recovery -->
 <div class="card">
-<h2>🚨 Mood Crash Prevention</h2>
+<h2>🌿 Mood &amp; Recovery</h2>
 <div class="crash-risk-head">
   <div id="crashRiskValue" class="crash-risk-value">0/100</div>
-  <div id="crashRiskLevel" class="crash-risk-pill">Low Risk</div>
+  <div id="crashRiskLevel" class="crash-risk-pill">Steady</div>
 </div>
 <div class="crash-meter"><div id="crashRiskFill" class="crash-meter-fill"></div></div>
-<p id="crashRiskReason" class="crash-risk-sub">Log your first entries to generate risk analysis.</p>
+<p id="crashRiskReason" class="crash-risk-sub">A gentle reflection based on your check-ins. Take things one step at a time.</p>
 <details class="risk-explanation">
   <summary>How this estimate works</summary>
   <p>This mood-risk estimate uses information logged in Lumevine, including your mood, sleep, hydration, pending tasks, gratitude and challenge check-ins, and wellness score. Completing recovery actions can also affect it.</p>
   <p>It is a rough guide based only on available app data—not a medical assessment, diagnosis, or prediction of what will happen. Missing or outdated logs can make it less useful. It cannot replace professional care.</p>
 </details>
-<button class="crash-rescue-btn" onclick="runCrashRescueFlow()">Start a quick reset</button>
+<button class="crash-rescue-btn" onclick="runCrashRescueFlow()">Try a gentle reset</button>
 <ul id="crashRescuePlan" class="crash-plan"></ul>
 </div>
 
@@ -701,7 +688,7 @@
 <div class="quest-top">
   <div id="questXp" class="quest-stat">XP 0/100</div>
 </div>
-<p id="questRecoveryBonus" class="soft-note quest-recovery-bonus" aria-live="polite">Earn +10 bonus XP once per day by logging a glass of water or completing a task while the Burnout Radar warning is active.</p>
+<p id="questRecoveryBonus" class="soft-note quest-recovery-bonus" aria-live="polite">A small recovery bonus may be available for a water check-in or completing a task.</p>
 <div id="questStreak" class="quest-stat">Streak 0 🔥</div>
 <div id="questWeekStreak" class="challenge-streak">
   <div id="questWeekStreakLabels" class="challenge-streak-labels"></div>
@@ -714,20 +701,20 @@
 </div>
 </div>
 
-<!-- Predictive Burnout Radar -->
+<!-- Recovery Outlook -->
 <div class="card burnout-scroll-card">
-<h2>📡 Predictive Burnout Radar</h2>
+<h2>🌱 Recovery Outlook</h2>
 <div id="burnoutRisk" class="burnout-risk">0/100</div>
-<p id="burnoutWindow" class="wellness-status">Low Risk • Stable window</p>
-<p id="burnoutReason" class="burnout-sub">Forecast appears stable right now.</p>
+<p id="burnoutWindow" class="wellness-status">Steady • Take things at your own pace</p>
+<p id="burnoutReason" class="burnout-sub">A gentle reflection based on your recent check-ins.</p>
 <details class="risk-explanation">
   <summary>How this estimate works</summary>
-  <p>This burnout-risk estimate combines the mood-risk estimate with mood-related signals, recent recovery activity, and changes in logged sleep.</p>
-  <p>It is a heuristic based on the information available in your account, not a medical assessment, diagnosis, or certainty about future burnout. It may be inaccurate or incomplete and is not a substitute for professional care.</p>
+  <p>This estimate combines mood-related signals, recent recovery activity, and changes in logged sleep to offer a rough reflection of your recent recovery patterns.</p>
+  <p>It is based only on information available in your account. It is not a medical assessment, diagnosis, or certainty about future wellbeing, and may be incomplete or inaccurate. It is not a substitute for professional care.</p>
 </details>
-<p id="burnoutDoNow" class="wellness-do-now burnout-do-now"><b>DO NOW:</b> Keep one simple recovery action visible.</p>
+<p id="burnoutDoNow" class="wellness-do-now burnout-do-now"><b>ONE GENTLE STEP:</b> Choose one small recovery action, if it feels helpful.</p>
 <ul id="burnoutSchedule" class="burnout-list"></ul>
-<button class="burnout-btn" onclick="applyRecoverySchedule()">Start Simple Recovery Plan</button>
+<button class="burnout-btn" onclick="applyRecoverySchedule()">Build a Gentle Recovery Plan</button>
 </div>
 
 <!-- Insights -->
