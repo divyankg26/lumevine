@@ -1,62 +1,80 @@
-# TERMS OF SERVICE
+PROPRIETARY SOFTWARE LICENSE
+
+Copyright (c) 2026 Divyank Goyal. All Rights Reserved.
 
 Last Updated: October 15, 2026
 
-These Terms of Service (“Terms”) govern access to and use of the software, source code, documentation, design elements, algorithms, structure, and any associated materials (collectively, the “Software”) provided by Divyank Goyal (“Licensor,” “we,” “us,” or “our”).
+1. Ownership
 
-By accessing, using, copying, or interacting with the Software in any way, you agree to be bound by these Terms. If you do not agree, you must not use the Software.
+The software, source code, documentation, design elements, algorithms, structure, and all associated materials (collectively, the "Software") are the exclusive intellectual property of Divyank Goyal ("Licensor").
 
-## 1. Ownership
+No ownership rights, title, or interest in the Software are transferred to any person or entity under this License.
 
-The Software is and shall remain the exclusive intellectual property of the Licensor. No ownership rights, title, or interest in the Software are transferred to you under these Terms.
+2. Grant of License
 
-## 2. License to Use
+Subject to the terms and conditions of this License, the Licensor grants you a limited, non-exclusive, non-transferable, and revocable license to use the Software solely for personal, non-commercial purposes.
 
-You are granted a limited, non-exclusive, non-transferable, and revocable license to use the Software for personal, non-commercial purposes.
+No other rights are granted, whether expressly, implicitly, or otherwise.
 
-## 3. Restrictions on Use
+3. Restrictions
 
-Without prior written permission from the Licensor, you are prohibited from:
+Without prior written permission from the Licensor, you may not:
 
-- Copying, reproducing, or distributing the Software in whole or in part.
-- Modifying, adapting, translating, reverse engineering, decompiling, or disassembling the Software.
-- Creating derivative works based on the Software.
-- Using the Software for commercial purposes.
-- Selling, sublicensing, leasing, renting, publishing, or transferring the Software.
-- Using older versions of the Software.
-- Removing, altering, or obscuring proprietary notices or markings.
-- Using the Software in any product, system, or service that competes with the Licensor.
+Copy, reproduce, redistribute, or otherwise distribute the Software, in whole or in part.
+Modify, adapt, translate, reverse engineer, decompile, or disassemble the Software.
+Create derivative works based on the Software.
+Use the Software for commercial purposes.
+Sell, sublicense, lease, rent, publish, or transfer the Software.
+Use older versions of the Software.
+Remove, alter, or obscure proprietary notices, copyright notices, or other markings.
+Incorporate or use the Software in any product, system, or service that competes with the Licensor.
 
-## 4. Enforcement and Remedies
+Any use not expressly authorized by this License is prohibited unless separately authorized in writing by the Licensor.
 
-Violations of these Terms may result in actions including suspension of access or legal remedies where appropriate. The Licensor reserves the right to pursue all available remedies under applicable law, including injunctive relief, damages, and recovery of legal fees.
+4. Termination
 
-## 5. Termination
+This License and your right to use the Software may be suspended or terminated by the Licensor if you violate any provision of this License.
 
-We may suspend or terminate your access to the Software if you violate these Terms. Upon termination, your right to use the Software ends immediately.
+Upon termination, you must immediately cease all use of the Software and discontinue any activities authorized under this License.
 
-## 6. Disclaimer of Warranty
+5. Enforcement and Remedies
 
-The Software is provided “AS IS” and “AS AVAILABLE,” without warranties of any kind, whether express or implied, including warranties of merchantability, fitness for a particular purpose, or non-infringement.
+Violations of this License may result in suspension of access and legal action where appropriate. The Licensor reserves all rights and remedies available under applicable law, including injunctive relief, damages, and recovery of legal fees where permitted by law.
 
-## 7. Governing Law
+6. Disclaimer of Warranty
 
-These Terms are governed by and interpreted in accordance with the laws applicable in the jurisdiction of the Licensor, without regard to conflict-of-law principles.
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
 
-## 8. Entire Agreement
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR DISCLAIMS ALL WARRANTIES RELATING TO THE SOFTWARE.
 
-These Terms represent the entire agreement regarding the Software unless superseded by a separate written agreement signed by the Licensor.
+7. Limitation of Reliance on Wellness Estimates
 
-## 9. Basic Activity Tracking
+Any wellness scores, mood-risk estimates, burnout forecasts, trends, or suggested recovery actions provided by the Software are for general informational and self-reflection purposes only.
 
-To operate core account features, the app stores basic account activity metadata, such as your account creation date and last login date. This tracking is limited to product operation, reliability, and account security.
+These estimates may be incomplete, inaccurate, or out of date. They are not medical assessments, diagnoses, or treatment recommendations and are not a substitute for advice from a qualified healthcare professional. They must not be relied upon for medical decisions. Users with health concerns should seek advice from a qualified healthcare professional.
 
-## 10. Wellness Estimates
+8. Basic Activity Tracking
 
-Wellness scores, mood-risk estimates, burnout forecasts, trends, and suggested recovery actions are provided for general informational and self-reflection purposes only. They are estimates generated from information available in the app, including user-entered mood, sleep, hydration, productivity, gratitude, challenge, and recovery activity data.
+The Software may store basic account activity metadata, including account creation dates and last login dates, to support core account functionality, reliability, and account security. Additional information about data handling is available in the Privacy Policy.
 
-These estimates may be incomplete, inaccurate, or out of date. They are not medical assessments, diagnoses, or treatment recommendations, and are not a substitute for advice from a qualified healthcare professional. Do not use them to make medical decisions. If you have health concerns, seek advice from a qualified professional.
+9. Governing Law
 
-All rights reserved. Unauthorized copying, distribution, or commercial use is strictly prohibited.
+This License shall be governed by and interpreted in accordance with the laws applicable in the Licensor's jurisdiction, without regard to conflict-of-law principles.
 
-You can view the Privacy Policy at https://divyankg26.github.io/privacypolicy.
+10. Entire Agreement
+
+This License constitutes the entire agreement concerning the licensing of the Software unless superseded by a separate written agreement signed by the Licensor.
+
+11. Privacy Policy
+
+Use of the Software may also be subject to the applicable Privacy Policy, available at:
+
+https://divyankg26.github.io/privacypolicy
+
+12. All Rights Reserved
+
+All rights not expressly granted under this License are reserved by the Licensor.
+
+Unauthorized copying, modification, distribution, sublicensing, or commercial use of the Software is strictly prohibited without prior written permission from the Licensor.
+
+For licensing inquiries or permission requests, contact the Licensor through an officially published contact channel.
