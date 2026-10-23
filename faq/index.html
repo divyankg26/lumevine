@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101522">
+  <meta name="description" content="Detailed Lumevine help center covering wellness tracking, routines, insights, AI Companion, privacy, accounts, data management, and troubleshooting.">
+  <title>FAQ & Help Center | Lumevine</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #101522;
+      color: #f3f6ff;
+      font-synthesis: none;
+      --muted: #c3cada;
+      --accent: #a9dfff;
+      --border: rgba(255,255,255,.15);
+      --surface: rgba(255,255,255,.045);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 20px;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 48px 18px;
+      background:
+        radial-gradient(
+          ellipse at 15% 0%,
+          rgba(124,58,98,.34),
+          transparent 42%
+        ),
+        radial-gradient(
+          ellipse at 100% 15%,
+          rgba(79,139,180,.24),
+          transparent 38%
+        ),
+        #101522;
+      line-height: 1.65;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button, a, input, summary {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    a {
+      color: var(--accent);
+      text-underline-offset: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    a:hover {
+      color: #d5f1ff;
+    }
+
+    main {
+      width: min(900px, 100%);
+      margin: 0 auto;
+      padding: clamp(22px, 5vw, 52px);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 24px;
+      background: rgba(255,255,255,.075);
+      box-shadow: 0 24px 70px rgba(0,0,0,.28);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #c8d9ff;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      line-height: 1.1;
+      letter-spacing: -.04em;
+    }
+
+    h2 {
+      margin: 32px 0 10px;
+      color: #d9e5ff;
+      font-size: 1.2rem;
+      scroll-margin-top: 20px;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      color: #e1eaff;
+      font-size: 1rem;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    .updated {
+      margin: 14px 0 28px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .intro {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(255,255,255,.06);
+    }
+
+    .intro p:first-child {
+      margin-top: 0;
+    }
+
+    .intro p:last-child {
+      margin-bottom: 0;
+    }
+
+    .notice {
+      margin-top: 14px;
+      padding: 13px 15px;
+      border-left: 3px solid #a9dfff;
+      border-radius: 8px;
+      background: rgba(169,223,255,.07);
+      color: #d5e6ff;
+      font-size: .91rem;
+    }
+
+    .search-area {
+      margin: 24px 0 16px;
+    }
+
+    .search-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #d9e5ff;
+      font-size: .92rem;
+      font-weight: 700;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      min-height: 52px;
+      padding: 13px 46px 13px 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      outline: none;
+      background: rgba(9,14,27,.55);
+      color: #f3f6ff;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .search-box input::placeholder {
+      color: #8e9bb4;
+    }
+
+    .search-box input:focus {
+      border-color: #a9dfff;
+      box-shadow: 0 0 0 3px rgba(169,223,255,.12);
+    }
+
+    .search-clear {
+      position: absolute;
+      top: 50%;
+      right: 9px;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .search-clear:hover {
+      background: rgba(255,255,255,.08);
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0 18px;
+    }
+
+    .filter-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.035);
+      color: #c3cada;
+      cursor: pointer;
+      font-size: .84rem;
+      transition: background .2s, border-color .2s, color .2s;
+    }
+
+    .filter-btn:hover {
+      border-color: rgba(169,223,255,.5);
+      color: #f3f6ff;
+    }
+
+    .filter-btn[aria-pressed="true"] {
+      border-color: rgba(169,223,255,.6);
+      background: rgba(169,223,255,.13);
+      color: #d5f1ff;
+    }
+
+    .results-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 12px 0 18px;
+      color: #aeb8cc;
+      font-size: .86rem;
+    }
+
+    .text-btn {
+      padding: 4px 0;
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: .86rem;
+    }
+
+    .text-btn:hover {
+      color: #d5f1ff;
+      text-decoration: underline;
+    }
+
+    .faq-section {
+      margin-top: 28px;
+    }
+
+    .faq-section > h2 {
+      margin-top: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+
+    .section-description {
+      margin: 0 0 14px;
+      color: #aeb8cc;
+      font-size: .91rem;
+    }
+
+    .faq-item {
+      margin: 10px 0;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: var(--surface);
+      overflow: hidden;
+      transition: border-color .2s, background .2s;
+    }
+
+    .faq-item[open] {
+      border-color: rgba(169,223,255,.3);
+      background: rgba(255,255,255,.06);
+    }
+
+    .faq-item summary {
+      position: relative;
+      padding: 17px 48px 17px 18px;
+      color: #f3f6ff;
+      cursor: pointer;
+      font-weight: 650;
+      line-height: 1.5;
+      list-style: none;
+    }
+
+    .faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-item summary::after {
+      content: "+";
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: 400;
+    }
+
+    .faq-item[open] summary::after {
+      content: "\2212";
+    }
+
+    .faq-item summary:hover {
+      background: rgba(255,255,255,.035);
+    }
+
+    .faq-item summary:focus-visible,
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .answer {
+      padding: 0 18px 19px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .answer p:first-child {
+      margin-top: 0;
+    }
+
+    .answer p:last-child {
+      margin-bottom: 0;
+    }
+
+    .answer ul,
+    .answer ol {
+      padding-left: 22px;
+    }
+
+    .answer li {
+      margin: 7px 0;
+    }
+
+    .answer strong {
+      color: #e7edff;
+    }
+
+    .answer .steps {
+      margin: 12px 0;
+      padding: 12px 15px;
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 12px;
+      background: rgba(0,0,0,.12);
+    }
+
+    .answer .steps ol {
+      margin-bottom: 0;
+    }
+
+    .contact {
+      margin-top: 34px;
+      padding: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      background: rgba(255,255,255,.08);
+    }
+
+    .contact h2 {
+      margin-top: 0;
+    }
+
+    .contact-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .contact-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 9px 15px;
+      border: 1px solid rgba(169,223,255,.32);
+      border-radius: 10px;
+      background: rgba(169,223,255,.09);
+      color: #d5f1ff;
+      text-decoration: none;
+      font-weight: 650;
+      font-size: .9rem;
+    }
+
+    .contact-link:hover {
+      background: rgba(169,223,255,.16);
+    }
+
+    .no-results {
+      padding: 28px 20px;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .no-results h3 {
+      margin-top: 0;
+    }
+
+    .no-results p {
+      margin-bottom: 14px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    footer {
+      margin-top: 30px;
+      color: #aeb8cc;
+      font-size: .85rem;
+      text-align: center;
+    }
+
+    footer p {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 20px 12px;
+      }
+
+      main {
+        padding: 21px 15px;
+        border-radius: 19px;
+      }
+
+      .faq-item summary {
+        padding: 16px 40px 16px 14px;
+        font-size: .95rem;
+      }
+
+      .faq-item summary::after {
+        right: 13px;
+      }
+
+      .answer {
+        padding: 0 14px 16px;
+        font-size: .94rem;
+      }
+
+      .intro,
+      .contact {
+        padding: 16px;
+      }
+
+      .filter-btn {
+        font-size: .8rem;
+        padding: 7px 10px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<main>
+  <p class="eyebrow">Lumevine · Help Center</p>
+  <h1>Frequently Asked Questions</h1>
+  <p class="updated">
+    Real answers to your questions, problems, and doubts about Lumevine.
+  </p>
+
+  <div class="intro">
+    <p>
+      Welcome to the Lumevine Help Center. This page is designed to help
+      you understand how features work, why something might not look right,
+      how your information is handled, and what to do when you encounter a problem.
+    </p>
+    <p>
+      You can search for a specific issue, browse by category, or expand
+      any question to read the answer and troubleshooting steps.
+    </p>
+    <div class="notice">
+      <strong>Important:</strong> Wellness estimates and AI-generated responses
+      can be imperfect. This page distinguishes known app behavior from things
+      that may require further investigation. Never rely on an estimate as a
+      medical diagnosis.
+    </div>
+  </div>
+
+  <div class="search-area">
+    <label class="search-label" for="faq-search">
+      What do you need help with?
+    </label>
+    <div class="search-box">
+      <input
+        id="faq-search"
+        type="search"
+        placeholder="Try “score not updating” or “delete my data”…"
+        autocomplete="off"
+        aria-controls="faq-content"
+      >
+      <button
+        type="button"
+        class="search-clear hidden"
+        id="clear-search"
+        aria-label="Clear search"
+        title="Clear search"
+      >×</button>
+    </div>
+  </div>
+
+  <nav class="filters" id="faq-filters" aria-label="FAQ categories">
+    <button class="filter-btn" type="button" data-filter="all"
+      aria-pressed="true">All questions</button>
+    <button class="filter-btn" type="button" data-filter="about"
+      aria-pressed="false">Getting started</button>
+    <button class="filter-btn" type="button" data-filter="tracking"
+      aria-pressed="false">Tracking & scores</button>
+    <button class="filter-btn" type="button" data-filter="routines"
+      aria-pressed="false">Routines & tasks</button>
+    <button class="filter-btn" type="button" data-filter="ai"
+      aria-pressed="false">AI Companion</button>
+    <button class="filter-btn" type="button" data-filter="reports"
+      aria-pressed="false">Reports & insights</button>
+    <button class="filter-btn" type="button" data-filter="social"
+      aria-pressed="false">Friends & sharing</button>
+    <button class="filter-btn" type="button" data-filter="privacy"
+      aria-pressed="false">Privacy & data</button>
+    <button class="filter-btn" type="button" data-filter="technical"
+      aria-pressed="false">Troubleshooting</button>
+  </nav>
+
+  <div class="results-bar">
+    <span id="results-count" aria-live="polite">Loading questions…</span>
+    <div>
+      <button class="text-btn" type="button" id="expand-all">
+        Expand visible
+      </button>
+      <span aria-hidden="true"> · </span>
+      <button class="text-btn" type="button" id="collapse-all">
+        Collapse all
+      </button>
+    </div>
+  </div>
+
+  <div id="faq-content">
+
+    <!-- 1. GETTING STARTED -->
+
+    <section class="faq-section" data-category="about">
+      <h2>1. Getting Started with Lumevine</h2>
+      <p class="section-description">
+        Understand the app, its purpose, and how its features fit together.
+      </p>
+
+      <details class="faq-item">
+        <summary>What is Lumevine actually designed to help me do?</summary>
+        <div class="answer">
+          <p>
+            Lumevine brings together wellness tracking, routines, reflection,
+            personal organization, and AI-assisted conversations. Rather than
+            relying on one number to describe your well-being, you can record
+            different parts of your daily life and review them over time.
+          </p>
+          <p>
+            You can use the features that are useful to you without needing
+            to complete every tracker or maintain a perfect routine.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Which features should I set up first?</summary>
+        <div class="answer">
+          <p>
+            Start with the parts of Lumevine you want to use consistently.
+            For example, you might begin with mood check-ins, sleep tracking,
+            hydration, or a daily routine.
+          </p>
+          <p>
+            Record information as you go, then explore the relevant summaries
+            and reflections. If a feature depends on historical entries,
+            it may not provide a meaningful trend immediately.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Do I need to use every feature for Lumevine to be useful?</summary>
+        <div class="answer">
+          <p>
+            No. Track only the information that is relevant to you.
+            Some summaries may have less information available when you leave
+            certain trackers unused, but you should not feel pressured to
+            record everything every day.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Is Lumevine a medical or mental health app?</summary>
+        <div class="answer">
+          <p>
+            Lumevine is a wellness and self-reflection tool, not a substitute
+            for medical assessment, diagnosis, treatment, or professional
+            mental health care. Scores, forecasts, and AI responses do not
+            establish whether you have a health condition.
+          </p>
+          <p>
+            If you have persistent or concerning symptoms, consult a qualified
+            healthcare professional rather than relying on an app-generated result.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I use Lumevine without following a perfect routine?</summary>
+        <div class="answer">
+          <p>
+            Absolutely. Missed days happen. A missed check-in is not a personal
+            failure, and a tracking streak is not a measure of your worth.
+            Use your records to learn what works for you, not to punish yourself
+            for being inconsistent.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why is a feature or section missing from my app?</summary>
+        <div class="answer">
+          <p>
+            First, make sure you are using the intended Lumevine website or
+            application and that the page has finished loading. Some features
+            may depend on your current app version, sign-in state, configuration,
+            or whether the feature has been enabled.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Refresh the app and navigate back to the feature.</li>
+              <li>Check whether you are signed in to the intended account.</li>
+              <li>Look for an error message or a disabled control.</li>
+              <li>If the feature is still missing, contact support with its name
+                and a description of what you see.</li>
+            </ol>
+          </div>
+          <p>
+            Do not assume that a missing section means your account data has
+            been deleted.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 2. TRACKING AND SCORES -->
+
+    <section class="faq-section" data-category="tracking">
+      <h2>2. Tracking, Wellness Scores & Daily Check-ins</h2>
+      <p class="section-description">
+        Questions about recorded information, changing scores, and missing data.
+      </p>
+
+      <details class="faq-item">
+        <summary>Why is my wellness score zero, blank, or unavailable?</summary>
+        <div class="answer">
+          <p>
+            A zero, blank value, or unavailable result does not necessarily
+            mean that your well-being is poor. The result may depend on the
+            information available to the relevant feature, whether required
+            entries have been recorded, or whether a calculation has completed.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Check whether the relevant mood, sleep, hydration, or other
+                requested records have been saved.</li>
+              <li>Look for missing entries or incomplete check-ins.</li>
+              <li>Refresh the page and allow the feature to load.</li>
+              <li>If the value remains unexpected, report the score name,
+                approximate time, and steps that led to it.</li>
+            </ol>
+          </div>
+          <p>
+            The exact meaning of zero or blank can differ by feature. Do not
+            interpret it as a diagnosis or a definitive statement about your health.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why did my wellness score change when my routine stayed the same?</summary>
+        <div class="answer">
+          <p>
+            A routine is only one possible part of a wellness picture.
+            A score or estimate may also depend on recorded check-ins, recent
+            entries, available historical information, or changes to the data
+            used by that feature.
+          </p>
+          <p>
+            Compare the underlying entries for the relevant period before
+            concluding that the score is incorrect. Lumevine does not publish
+            a verified, universal formula for every wellness score on this page,
+            so it would be misleading to attribute a specific change to one
+            particular input without further evidence.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can missing sleep or mood entries affect my insights?</summary>
+        <div class="answer">
+          <p>
+            They can limit how much information is available for a summary
+            or trend that depends on those records. Missing information should
+            not automatically be treated as proof that something did or did
+            not happen.
+          </p>
+          <p>
+            If you forgot to log an entry, add it if the app permits editing
+            historical records. Otherwise, leave the gap as it is rather than
+            entering an invented value.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why does my mood-risk estimate change even when I feel the same?</summary>
+        <div class="answer">
+          <p>
+            An estimate is generated from app data and is not a direct
+            measurement of how you feel. The records available to a calculation
+            can change even when your subjective experience does not.
+          </p>
+          <p>
+            Use your own reflection as the primary account of your experience.
+            Do not make a medical decision or conclude that you are at risk
+            solely because an estimate changes.
+          </p>
+          <p>
+            The exact contribution of individual inputs should not be assumed
+            unless it is explicitly documented by the feature.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why isn't my newly added entry reflected in my score?</summary>
+        <div class="answer">
+          <p>
+            Saving an entry and updating a separate summary may not always
+            happen at exactly the same moment. The summary may need to reload,
+            or the relevant calculation may depend on additional information.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Reopen the tracker and verify that the entry is present.</li>
+              <li>Refresh the relevant dashboard or insight.</li>
+              <li>Check that you are looking at the correct day or reporting period.</li>
+              <li>If the entry is saved but the summary remains unchanged,
+                report both the entry and the affected score.</li>
+            </ol>
+          </div>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I edit or correct a mood, sleep, or hydration entry?</summary>
+        <div class="answer">
+          <p>
+            Use the editing or removal controls available in the relevant tracker.
+            If an edit control is not provided for a particular record, do not
+            assume that changing a different screen will update it.
+          </p>
+          <p>
+            After making a change, reopen the tracker and verify the saved value.
+            If the wrong value remains, contact support with the tracker name,
+            the affected date, and what you tried.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What happens if I miss a day of tracking?</summary>
+        <div class="answer">
+          <p>
+            You can continue tracking on the next day. Depending on the feature,
+            the missing day may appear as a gap or reduce the amount of
+            information available for a trend.
+          </p>
+          <p>
+            A missed entry does not necessarily mean a score will become zero,
+            and you should not invent past values merely to fill a gap.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How accurate are Lumevine's wellness scores and forecasts?</summary>
+        <div class="answer">
+          <p>
+            They are estimates or summaries based on the information and logic
+            available to the relevant feature. Their usefulness depends on
+            the accuracy and completeness of the recorded information and
+            on the limitations of the calculation.
+          </p>
+          <p>
+            They are not clinical measurements, guaranteed predictions,
+            or diagnoses. If a result conflicts with how you feel or with
+            professional advice, do not treat the app's result as authoritative.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Does a low score mean I am doing something wrong?</summary>
+        <div class="answer">
+          <p>
+            No. A score is not a moral judgment or a complete description
+            of your life. It may reflect limited data, a particular set of
+            tracked habits, or the assumptions built into that feature.
+          </p>
+          <p>
+            Focus on useful observations and sustainable changes instead of
+            trying to maximize a number at any cost.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I rely on a burnout forecast or recovery estimate?</summary>
+        <div class="answer">
+          <p>
+            Treat these features as prompts for reflection, not reliable
+            predictions of a medical or psychological outcome. They cannot
+            account for every personal, environmental, or health-related factor.
+          </p>
+          <p>
+            If you feel persistently exhausted, overwhelmed, or unwell,
+            seek appropriate professional support regardless of the forecast.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How should I track something when I don't know the exact value?</summary>
+        <div class="answer">
+          <p>
+            Record an honest estimate only if the tracker supports estimates
+            and you are comfortable providing one. If you do not know the value,
+            leave it blank when possible. False precision can make later
+            reflections less useful.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 3. ROUTINES AND TASKS -->
+
+    <section class="faq-section" data-category="routines">
+      <h2>3. Routines, Habits, Tasks & Reminders</h2>
+      <p class="section-description">
+        Help with schedules, activity durations, task lists, and reminders.
+      </p>
+
+      <details class="faq-item">
+        <summary>Why does my routine start at a different time than expected?</summary>
+        <div class="answer">
+          <p>
+            Check the routine's configured start time and the individual
+            activity durations. Lumevine's routine scheduling can use the
+            start time to position activities in the schedule, so changing
+            that time may shift the displayed activity times.
+          </p>
+          <p>
+            If the schedule still differs from what you configured, compare
+            the saved values with the displayed times and send support a
+            description of the discrepancy.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What happens when I change my routine's start time?</summary>
+        <div class="answer">
+          <p>
+            Where the schedule is calculated relative to the routine start,
+            changing that start can shift the activities together. It does
+            not necessarily mean that each activity has been individually
+            rescheduled.
+          </p>
+          <p>
+            Review the resulting schedule before relying on it. If you need
+            a specific activity to remain at a fixed clock time, verify
+            whether the relevant scheduling controls support that behavior.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why is an activity missing from my routine?</summary>
+        <div class="answer">
+          <p>
+            Reopen the routine and check whether the activity is still
+            configured, whether you edited a different routine, and whether
+            the schedule reflects your latest changes.
+          </p>
+          <p>
+            If you recently changed the routine, refresh the page and inspect
+            the saved configuration. If the activity remains missing, report
+            its name and the steps that made it disappear.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why does my routine show an unexpected duration or end time?</summary>
+        <div class="answer">
+          <p>
+            Check the configured durations and the order of the activities.
+            If activities are arranged consecutively, changing an earlier
+            duration may shift later activities and the overall end time.
+          </p>
+          <p>
+            Compare the total duration with the individual activity durations.
+            If the displayed total does not match the saved configuration,
+            contact support with a concrete example.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I create a routine that fits an irregular schedule?</summary>
+        <div class="answer">
+          <p>
+            Configure the activities and start times using the controls
+            available in Lumevine. If your schedule changes frequently,
+            treat the routine as a flexible guide rather than a commitment
+            that must be followed exactly.
+          </p>
+          <p>
+            The exact support for recurring days, exceptions, and independent
+            activity times depends on the controls available in your version
+            of the routine editor.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why is a completed task still showing as pending?</summary>
+        <div class="answer">
+          <p>
+            First verify that the completion action was accepted and that
+            the correct task was updated. Refresh the task list and check
+            whether you are viewing the intended day or list.
+          </p>
+          <p>
+            If the task still appears pending, avoid repeatedly creating
+            replacement tasks. Report the task's visible status and the
+            action you took so the problem can be investigated.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why didn't my reminder notify me?</summary>
+        <div class="answer">
+          <p>
+            A reminder appearing in the app is not necessarily the same as
+            a notification being delivered by your device. Delivery can
+            depend on the reminder's implementation, browser or device
+            permissions, operating-system settings, and whether the relevant
+            app or browser supports that type of notification.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Verify the reminder's saved date and time.</li>
+              <li>Check browser or device notification permissions if applicable.</li>
+              <li>Check whether the reminder type requires the app to remain open.</li>
+              <li>Test with a new reminder and record the result.</li>
+            </ol>
+          </div>
+          <p>
+            Do not assume that all reminders are delivered as push notifications.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Will changing a routine erase my previous tracking history?</summary>
+        <div class="answer">
+          <p>
+            Editing a schedule and deleting historical records are different
+            operations, but the exact effect depends on the feature's
+            implementation. Before making a major change, use the available
+            export or backup options if the history is important to you.
+          </p>
+          <p>
+            If a routine editor warns that existing records will be replaced
+            or removed, read the warning carefully before continuing.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why does my habit progress not match my actual effort?</summary>
+        <div class="answer">
+          <p>
+            Progress displays generally reflect recorded or completed items,
+            not every effort you made outside the app. A missing completion
+            entry can therefore differ from what actually happened in your day.
+          </p>
+          <p>
+            Check the relevant record and completion controls. Do not treat
+            the displayed progress as a complete account of your effort.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 4. AI COMPANION -->
+
+    <section class="faq-section" data-category="ai">
+      <h2>4. AI Companion</h2>
+      <p class="section-description">
+        Understand AI answers, conversation history, context, and limitations.
+      </p>
+
+      <details class="faq-item">
+        <summary>What can the Lumevine AI Companion actually do?</summary>
+        <div class="answer">
+          <p>
+            The AI Companion provides an AI-generated conversational
+            experience. It can help you think through questions and reflect
+            on information you provide in the conversation.
+          </p>
+          <p>
+            Its actual access to account records, trackers, previous
+            conversations, or other app features depends on how the
+            integration is implemented. Do not assume it can automatically
+            see every item stored in Lumevine.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can the AI Companion see my mood, sleep, and hydration logs?</summary>
+        <div class="answer">
+          <p>
+            The fact that these logs exist in Lumevine does not by itself
+            establish that they are automatically sent to the AI Companion.
+            Access depends on the information the app provides to the AI
+            feature and the context of the conversation.
+          </p>
+          <p>
+            Until the exact integration and data flow are documented,
+            avoid assuming either complete access or complete separation.
+            Do not paste sensitive records into a chat unless you are
+            comfortable sharing that information with the feature.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why did the AI Companion give me a wrong or contradictory answer?</summary>
+        <div class="answer">
+          <p>
+            AI systems can misunderstand a question, overlook context,
+            produce incorrect facts, or give different answers to similar
+            questions. A fluent answer is not proof that the answer is correct.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Restate the question and include the relevant context.</li>
+              <li>Ask the Companion to distinguish known facts from assumptions.</li>
+              <li>Verify important information independently.</li>
+              <li>If the answer is repeatedly incorrect, report the prompt,
+                the response, and the approximate time.</li>
+            </ol>
+          </div>
+          <p>
+            Remove passwords, private conversations, and other sensitive
+            information before sharing examples with support.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Does the AI Companion remember my previous conversations?</summary>
+        <div class="answer">
+          <p>
+            Saved chat history and AI memory are not the same thing.
+            A conversation may be stored for later viewing without every
+            detail being automatically available in a new conversation.
+          </p>
+          <p>
+            Whether the Companion receives earlier messages, summaries,
+            or persistent personal context depends on the integration.
+            Do not rely on it remembering an important detail unless that
+            behavior is explicitly confirmed by the feature.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why does the AI Companion forget something I told it earlier?</summary>
+        <div class="answer">
+          <p>
+            The information may be outside the context available to the
+            current response, the conversation may have changed, or the
+            system may not support persistent memory for that detail.
+          </p>
+          <p>
+            Repeat the relevant information when needed. For anything
+            important, keep your own reliable record rather than relying
+            on an AI conversation to preserve it.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Is my AI Companion conversation history saved?</summary>
+        <div class="answer">
+          <p>
+            AI messages may be stored with your account to provide
+            conversation history or related functionality. The exact
+            retention period, deletion behavior, and access controls
+            depend on the app's implementation and applicable privacy policy.
+          </p>
+          <p>
+            Review the
+            <a href="https://lumevine.runs-at.dev/privacypolicy">
+              Lumevine Privacy Policy
+            </a>
+            for the applicable information. Avoid entering passwords,
+            payment-card details, or other highly sensitive information
+            into conversations.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What happens if I clear my AI chat history?</summary>
+        <div class="answer">
+          <p>
+            The effect depends on the chat controls provided by Lumevine.
+            Removing visible messages may not necessarily remove every
+            associated record, backup, or log held by the underlying services.
+          </p>
+          <p>
+            Read any confirmation shown by the app. If you need permanent
+            deletion of associated personal data, contact support and ask
+            specifically about chat history and related records.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I ask the AI Companion for a medical diagnosis?</summary>
+        <div class="answer">
+          <p>
+            You can ask general wellness questions, but the AI Companion
+            is not a doctor, therapist, or diagnostic system. It can produce
+            inaccurate or inappropriate suggestions and cannot replace
+            a qualified professional's assessment.
+          </p>
+          <p>
+            Do not use an AI response to start, stop, or change medication
+            or to make urgent health decisions.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why is the AI Companion not responding or taking so long?</summary>
+        <div class="answer">
+          <p>
+            A slow or missing response can result from a network problem,
+            a temporary service issue, a request failure, or a limit imposed
+            by the underlying service.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Check your connection and refresh the app.</li>
+              <li>Check whether the message actually appeared in the conversation.</li>
+              <li>Try a short, simple message to see whether the issue persists.</li>
+              <li>Avoid repeatedly submitting the same long request while
+                the original request may still be processing.</li>
+              <li>Record any displayed error and contact support if it continues.</li>
+            </ol>
+          </div>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why does the AI Companion give different answers to the same question?</summary>
+        <div class="answer">
+          <p>
+            AI-generated responses can vary with wording, conversation
+            context, available information, and model behavior. A response
+            is not necessarily a fixed result like a calculator output.
+          </p>
+          <p>
+            For questions requiring a consistent factual answer, check a
+            reliable source and do not rely on the Companion as the only
+            authority.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can the AI Companion take actions in my account?</summary>
+        <div class="answer">
+          <p>
+            Do not assume that the Companion can create tasks, edit routines,
+            change settings, or modify tracker records simply because it can
+            discuss those activities. Such actions require explicit support
+            in the app's AI integration.
+          </p>
+          <p>
+            Verify any proposed change in the actual feature and check
+            whether the app confirms that the action was completed.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 5. REPORTS AND INSIGHTS -->
+
+    <section class="faq-section" data-category="reports">
+      <h2>5. Reports, Trends & Reflections</h2>
+      <p class="section-description">
+        Questions about missing reports, historical patterns, and summaries.
+      </p>
+
+      <details class="faq-item">
+        <summary>Why is my weekly report empty or incomplete?</summary>
+        <div class="answer">
+          <p>
+            A report can only summarize information available to the report
+            feature. Missing check-ins, incomplete records, a period with
+            little activity, or a loading problem can leave parts of a report
+            empty or less informative.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Check that you have selected the intended reporting period.</li>
+              <li>Verify that relevant entries exist for those dates.</li>
+              <li>Refresh the report and allow it to finish loading.</li>
+              <li>If the report remains incomplete despite saved records,
+                contact support with the period and missing section.</li>
+            </ol>
+          </div>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What dates does a weekly report cover?</summary>
+        <div class="answer">
+          <p>
+            Check the dates displayed by the report itself. Do not assume
+            whether a week begins on Sunday or Monday, or whether it uses
+            your local time zone, unless the feature explicitly indicates so.
+          </p>
+          <p>
+            If the displayed period appears incorrect, include the dates
+            shown and your expected period when contacting support.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why is a pattern or trend missing from my insights?</summary>
+        <div class="answer">
+          <p>
+            A trend may require more records or a longer observation period
+            than you currently have. Gaps, inconsistent entries, or a feature's
+            particular requirements can also affect what is shown.
+          </p>
+          <p>
+            Continue recording relevant information consistently when
+            practical. Do not assume that the absence of a displayed trend
+            proves there is no relationship or pattern.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I compare my wellness data across different weeks?</summary>
+        <div class="answer">
+          <p>
+            Use the historical views or reporting controls available in
+            Lumevine. For a meaningful comparison, make sure the periods
+            being compared are clearly identified and that differences in
+            missing data are taken into account.
+          </p>
+          <p>
+            A difference between two summaries does not by itself establish
+            what caused the change.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why does a report disagree with what I remember?</summary>
+        <div class="answer">
+          <p>
+            The report reflects the information available to it, which may
+            not capture everything that happened. Review the underlying
+            entries for the relevant period and check for omissions or
+            incorrectly recorded values.
+          </p>
+          <p>
+            If the underlying records are correct but the report still
+            appears inconsistent, send support a specific example rather
+            than relying on the summary alone.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I export a report or share it with someone?</summary>
+        <div class="answer">
+          <p>
+            Use the export or sharing controls that are actually available
+            for the report you want to use. An option to export general app
+            data does not necessarily mean that every report has its own
+            downloadable format.
+          </p>
+          <p>
+            Before sharing, review the contents for personal wellness
+            information that you do not want others to receive.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why does my recovery outlook not match how recovered I feel?</summary>
+        <div class="answer">
+          <p>
+            A recovery outlook is an estimate, not a direct measurement
+            of your physical or mental state. It may not account for all
+            factors affecting your experience.
+          </p>
+          <p>
+            Give appropriate weight to how you feel and to professional
+            advice. Do not push through pain, severe exhaustion, or other
+            concerning symptoms just because an estimate suggests you are ready.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 6. FRIENDS AND SHARING -->
+
+    <section class="faq-section" data-category="social">
+      <h2>6. Friends, Connections & Sharing</h2>
+      <p class="section-description">
+        Understand connection requests and how to approach shared information.
+      </p>
+
+      <details class="faq-item">
+        <summary>What can my friends see about my Lumevine activity?</summary>
+        <div class="answer">
+          <p>
+            Visibility depends on the information the app makes available
+            through its friend and sharing features. Do not assume that
+            every tracker is private by default or that every tracker is
+            automatically shared.
+          </p>
+          <p>
+            Review any sharing controls and the information shown in the
+            relevant social screen before connecting with someone. The exact
+            visibility of each data field should be confirmed by the app's
+            actual access controls and Privacy Policy.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What happens when I accept a friend request?</summary>
+        <div class="answer">
+          <p>
+            Accepting a request establishes a connection within the app.
+            It should not be assumed to grant access to every item in your
+            account, but the information made available through that
+            connection depends on the app's sharing implementation.
+          </p>
+          <p>
+            Check the resulting friend profile and available privacy
+            controls if you want to understand what has become visible.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why can't I find a friend or see their profile?</summary>
+        <div class="answer">
+          <p>
+            Verify that you are searching for the correct account and that
+            the connection feature has loaded. The other person may not
+            be discoverable through the method you are using, or a request
+            may not have been completed.
+          </p>
+          <p>
+            Refresh the screen and check the status of any existing request.
+            If the problem persists, contact support without sharing private
+            information about the other person's account.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What if I sent a friend request to the wrong person?</summary>
+        <div class="answer">
+          <p>
+            Look for an available cancel, remove, or disconnect control
+            in the relevant social screen. If no such control is available,
+            contact support for guidance.
+          </p>
+          <p>
+            Verify the account before sending another request.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I disconnect from a friend later?</summary>
+        <div class="answer">
+          <p>
+            Use the connection management controls provided by the app,
+            if available. Removing a connection may change future visibility,
+            but it does not necessarily delete information the other person
+            has already seen or independently recorded.
+          </p>
+          <p>
+            If you need to understand the effect of disconnection on
+            previously shared data, review the applicable privacy information
+            or ask support before proceeding.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Does sharing wellness information mean my data is public?</summary>
+        <div class="answer">
+          <p>
+            Not necessarily. Sharing through a friend feature and publishing
+            information publicly are different things. However, the exact
+            audience depends on the controls provided by Lumevine.
+          </p>
+          <p>
+            Check the relevant screen and do not share information with
+            anyone unless you understand the audience and are comfortable
+            with the disclosure.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 7. PRIVACY AND DATA -->
+
+    <section class="faq-section" data-category="privacy">
+      <h2>7. Accounts, Privacy & Data Management</h2>
+      <p class="section-description">
+        Understand cloud storage, browser storage, exports, imports, and deletion.
+      </p>
+
+      <details class="faq-item">
+        <summary>Where does Lumevine store my information?</summary>
+        <div class="answer">
+          <p>
+            Lumevine uses Google Firebase services for authentication
+            and cloud data storage, and the app may use browser storage
+            for preferences or session state.
+          </p>
+          <p>
+            The precise storage location and retention behavior can differ
+            by data type and service. Read the
+            <a href="https://lumevine.runs-at.dev/privacypolicy">
+              Privacy Policy
+            </a>
+            for the applicable details.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Does Lumevine sell my personal information?</summary>
+        <div class="answer">
+          <p>
+            According to the Lumevine Privacy Policy, Lumevine does not
+            sell personal information. Information may still be processed
+            by service providers needed to operate the app.
+          </p>
+          <p>
+            For details about applicable providers and data handling,
+            consult the
+            <a href="https://lumevine.runs-at.dev/privacypolicy">
+              Privacy Policy
+            </a>.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What is the difference between browser storage and cloud data?</summary>
+        <div class="answer">
+          <p>
+            Browser storage is information kept by the browser on your
+            device. Cloud data is stored by a remote service associated
+            with the app. Different kinds of information can be stored
+            in different places.
+          </p>
+          <p>
+            Clearing browser data may remove local preferences, session
+            information, or other locally stored records. It should not
+            be assumed to delete all cloud records, and deleting a cloud
+            record does not necessarily clear every local copy.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Will clearing my browser data delete my Lumevine account?</summary>
+        <div class="answer">
+          <p>
+            Clearing browser data is not the same as explicitly deleting
+            your account. It can remove local session information and
+            may require you to sign in again.
+          </p>
+          <p>
+            Before clearing storage, ensure that you know how to regain
+            access to your account. Do not rely on a browser session as
+            the only way to access important information.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What does “Clear All Data” actually delete?</summary>
+        <div class="answer">
+          <p>
+          Use the confirmation message displayed by the app as
+          the primary reference for determining the scope of the
+          operation. Clearing app data and deleting an account are
+          two distinct actions. Clearing app data removes all
+          account-related data stored locally within the app but
+          does not delete the account or its associated
+          credentials.
+           
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Read the confirmation carefully before proceeding.</li>
+              <li>Export any information you want to preserve, if export is available.</li>
+              <li>Check whether the operation refers to local data, cloud data,
+                or both.</li>
+              <li>Afterward, verify which information remains and whether
+                you can still sign in.</li>
+            </ol>
+          </div>
+          <p>
+            If the scope is unclear, contact support before confirming a
+            potentially destructive operation.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why is my data still visible after I cleared app data?</summary>
+        <div class="answer">
+          <p>
+            The operation may not cover every storage location or account
+            record. Information might remain in cloud storage, browser storage,
+            another signed-in device, or a separate feature's records.
+          </p>
+          <p>
+            Review what the clear-data action says it affects. If the data
+            should have been removed but remains visible, record where it
+            appears and contact support rather than repeatedly clearing
+            unrelated storage.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How do I export my Lumevine data?</summary>
+        <div class="answer">
+          <p>
+            Use the data export control available in Lumevine, if present,
+            and follow the instructions shown by the app. Check the resulting
+            file and its contents before relying on it as a complete backup.
+          </p>
+          <p>
+            Export formats and coverage can differ. Do not assume that
+            a single export contains every chat, preference, account record,
+            or server-side log unless the export description explicitly says so.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Does exporting my data delete it from Lumevine?</summary>
+        <div class="answer">
+          <p>
+            Exporting and deleting are separate operations. Creating a
+            downloadable copy should not be treated as a request to remove
+            the original data from your account.
+          </p>
+          <p>
+            If you want deletion, use the relevant deletion controls or
+            contact support separately.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What happens when I import data from another account?</summary>
+        <div class="answer">
+          <p>
+            Lumevine's import workflow describes replacing current data
+            with the source account's latest cloud backup. Treat this as
+            a potentially destructive operation, not a simple merge.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Verify that the source account is the intended account.</li>
+              <li>Export your current data first, if the export option is available.</li>
+              <li>Read all warnings and confirmation messages.</li>
+              <li>Proceed only if you understand that existing data may be replaced.</li>
+              <li>After the import, check important records and account state.</li>
+            </ol>
+          </div>
+          <p>
+            The import workflow also indicates that the source account
+            receives a security warning on its next login. If the warning
+            or replacement behavior differs from what you see, contact support.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Will importing data merge both accounts together?</summary>
+        <div class="answer">
+          <p>
+            Do not assume that import means merge. Lumevine's described
+            workflow replaces current data with a source backup, so you
+            should assume that destination records may be overwritten.
+          </p>
+          <p>
+            If you need to combine information from two accounts, ask
+            support whether a supported merge process exists before
+            performing an import.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How do I permanently delete my Lumevine account?</summary>
+        <div class="answer">
+          <p>
+            Email
+            <a href="mailto:support.lumevine@gmail.com">
+              support.lumevine@gmail.com
+            </a>
+            to request account deletion and the removal of associated
+            personal data.
+          </p>
+          <p>
+            Clearly state that you want account deletion, not merely a
+            local data reset. Support may need to verify account ownership.
+            Ask for clarification if you need to understand which records
+            can be deleted and whether any retention obligations apply.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Does deleting my account also delete my AI chats and backups?</summary>
+        <div class="answer">
+          <p>
+            Do not assume that every related record is removed immediately
+            by a single action. Chat history, backups, service logs, and
+            other records can have different retention and deletion behavior.
+          </p>
+          <p>
+            Include AI chat history and backups in your deletion request
+            if you want support to clarify their treatment. Refer to the
+            Privacy Policy for the applicable retention terms.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can Lumevine access information on my device?</summary>
+        <div class="answer">
+          <p>
+            Access depends on the permissions and capabilities used by
+            the features you interact with. Browser storage, device
+            permissions, and information you submit are different kinds
+            of access.
+          </p>
+          <p>
+            Review your browser or device permissions and the
+            <a href="https://lumevine.runs-at.dev/privacypolicy">
+              Privacy Policy
+            </a>
+            if you want to understand how particular information is handled.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How can I request a copy of my personal information?</summary>
+        <div class="answer">
+          <p>
+            Contact
+            <a href="mailto:support.lumevine@gmail.com">
+              support.lumevine@gmail.com
+            </a>
+            and describe the information you want to access. If the app's
+            export function meets your needs, you can also use that control.
+          </p>
+          <p>
+            Support may need to verify your account before handling a request.
+            Do not send your password or authentication codes by email.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 8. TROUBLESHOOTING -->
+
+    <section class="faq-section" data-category="technical">
+      <h2>8. Technical Support & Troubleshooting</h2>
+      <p class="section-description">
+        Practical steps for loading problems, saving failures, and unexpected behavior.
+      </p>
+
+      <details class="faq-item">
+        <summary>Lumevine is stuck loading. What should I do?</summary>
+        <div class="answer">
+          <div class="steps">
+            <ol>
+              <li>Wait briefly to see whether the page finishes loading.</li>
+              <li>Check that your internet connection is working.</li>
+              <li>Refresh the page or reopen the app.</li>
+              <li>Try another supported browser if the problem continues.</li>
+              <li>If an error appears, note its exact wording.</li>
+            </ol>
+          </div>
+          <p>
+            Avoid clearing all browser storage as your first troubleshooting
+            step. Doing so can remove local state and sign-in information
+            without necessarily fixing the underlying problem.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why are my changes not being saved?</summary>
+        <div class="answer">
+          <p>
+            A visible change on the screen does not always mean it was
+            successfully saved. A network failure, a rejected request,
+            or a temporary application issue may prevent the change from
+            being persisted.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Look for a save confirmation or error message.</li>
+              <li>Reopen the relevant section and check the saved value.</li>
+              <li>Check your connection and retry once if appropriate.</li>
+              <li>Do not close the page until an important change is confirmed.</li>
+              <li>If it fails again, report the action and the resulting error.</li>
+            </ol>
+          </div>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>My data disappeared after I signed in again. Has it been deleted?</summary>
+        <div class="answer">
+          <p>
+            Not necessarily. First check that you signed in using the
+            intended account and that you are viewing the correct section
+            or reporting period. Local-only information and cloud-saved
+            information may behave differently.
+          </p>
+          <p>
+            Avoid creating large amounts of replacement data or importing
+            another backup until you understand what happened. If important
+            records are missing, contact support and describe when they
+            were last visible.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why isn't my data syncing between devices?</summary>
+        <div class="answer">
+          <p>
+            First verify that both devices are using the same intended
+            account. Data stored locally may not automatically appear on
+            another device unless the relevant feature saves it to the cloud.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Check the account on each device.</li>
+              <li>Confirm that the record appears on the device where it was created.</li>
+              <li>Refresh the destination device and revisit the relevant feature.</li>
+              <li>Check for an error or an indication that saving failed.</li>
+              <li>Contact support if the records remain inconsistent.</li>
+            </ol>
+          </div>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What should I do if I lose access to my account?</summary>
+        <div class="answer">
+          <p>
+            Use the sign-in or recovery options provided by Lumevine.
+            Make sure you are using the correct authentication method and
+            account details.
+          </p>
+          <p>
+            If you cannot recover access, email
+            <a href="mailto:support.lumevine@gmail.com">
+              support.lumevine@gmail.com
+            </a>
+            with a description of the issue. Never send your password,
+            one-time authentication code, or recovery secret.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why does Lumevine look broken on my phone or browser?</summary>
+        <div class="answer">
+          <p>
+            Display issues can result from an outdated browser, zoom or
+            viewport settings, blocked scripts, cached resources, or a
+            temporary loading failure.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>Refresh the page.</li>
+              <li>Return browser zoom to a normal setting.</li>
+              <li>Update your browser if an update is available.</li>
+              <li>Try a private window or another supported browser.</li>
+              <li>Report the affected screen and device/browser details.</li>
+            </ol>
+          </div>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Should I clear my cache or all site data to fix an error?</summary>
+        <div class="answer">
+          <p>
+            A normal refresh is the safer first step. Clearing cached files
+            can sometimes resolve a stale-resource problem, but clearing
+            all site data may also remove session information and locally
+            stored records.
+          </p>
+          <p>
+            Before clearing site data, make sure you know how to sign in
+            again and have exported any important information that might
+            exist only locally.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why is a button not responding?</summary>
+        <div class="answer">
+          <p>
+            The control may be waiting for data, disabled until a required
+            field is completed, or affected by a temporary script or
+            network error.
+          </p>
+          <p>
+            Check whether any required fields are missing, wait for any
+            loading indicator, and try refreshing. If the issue persists,
+            include the button's label, the screen where it appears, and
+            what happens when you select it.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What information should I include in a bug report?</summary>
+        <div class="answer">
+          <p>
+            A useful report helps support reproduce the issue without
+            requiring access to your private account information.
+          </p>
+          <div class="steps">
+            <ol>
+              <li>The feature or page where the issue occurred.</li>
+              <li>The steps you took immediately beforehand.</li>
+              <li>What you expected to happen.</li>
+              <li>What actually happened, including any exact error message.</li>
+              <li>Your browser or device type and the approximate time.</li>
+              <li>A screenshot with private information removed, if helpful.</li>
+            </ol>
+          </div>
+          <p>
+            Never include your password, authentication codes, payment
+            information, or unnecessary personal wellness records.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What if the problem happens only sometimes?</summary>
+        <div class="answer">
+          <p>
+            Intermittent problems are easier to investigate when you can
+            describe when they occur. Note the affected feature, approximate
+            time, steps, and whether refreshing changes the result.
+          </p>
+          <p>
+            If a problem happens repeatedly, send support those observations
+            even if you cannot reproduce it every time.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What if the app displays an error I don't understand?</summary>
+        <div class="answer">
+          <p>
+            Record the exact error text and the action that triggered it.
+            Avoid guessing what the message means or repeating an action
+            that could overwrite or duplicate important information.
+          </p>
+          <p>
+            Send the error to
+            <a href="mailto:support.lumevine@gmail.com">
+              support.lumevine@gmail.com
+            </a>
+            with a short description of what you were trying to do.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 9. OTHER FEATURES AND LIMITS -->
+
+    <section class="faq-section" data-category="about">
+      <h2>9. Other Features & Usage Limits</h2>
+      <p class="section-description">
+        Questions about personal tools, feature availability, and limitations.
+      </p>
+
+      <details class="faq-item">
+        <summary>Why is a gratitude note, intention, or journal entry missing?</summary>
+        <div class="answer">
+          <p>
+            Verify that the entry was saved and that you are viewing the
+            correct date or section. A change made in one tool should not
+            be assumed to update every other reflection or summary automatically.
+          </p>
+          <p>
+            If the entry was previously visible but is now missing, note
+            when you last saw it and whether you changed accounts, cleared
+            browser data, or imported another backup.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why doesn't a grocery list or other personal tool reflect my changes?</summary>
+        <div class="answer">
+          <p>
+            Check that you edited the intended list or item and that the
+            change was saved. Refresh the feature and verify the resulting
+            state before repeating a potentially destructive action.
+          </p>
+          <p>
+            If the list reverts or items disappear, report the affected
+            items and the steps that led to the problem.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why isn't my music or another optional feature working?</summary>
+        <div class="answer">
+          <p>
+            Optional features can have different dependencies from the
+            main tracking tools. Check any displayed instructions, required
+            permissions, loading messages, or external-service requirements.
+          </p>
+          <p>
+            If the feature relies on a separate provider, verify that the
+            provider itself is available. Include the feature name and
+            error message when contacting support.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Does Lumevine have usage limits?</summary>
+        <div class="answer">
+          <p>
+            Limits can differ between features and the services that power
+            them. Do not assume that every feature has the same limit or
+            that a limit resets on a particular schedule unless the app
+            explicitly says so.
+          </p>
+          <p>
+            If you see a limit message, note its exact wording and any
+            reset time shown. If no reset time is provided, contact support
+            rather than assuming one.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why did a feature stop working after previously working?</summary>
+        <div class="answer">
+          <p>
+            A feature can stop responding because of a temporary service
+            failure, a changed configuration, a browser issue, or a problem
+            with the data it needs.
+          </p>
+          <p>
+            Refresh the app, verify that your account is accessible, and
+            check whether the problem affects one feature or several.
+            If it persists, send support the last time it worked and what
+            changed afterward, if anything.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How do I suggest a feature or report a confusing design?</summary>
+        <div class="answer">
+          <p>
+            Email
+            <a href="mailto:support.lumevine@gmail.com">
+              support.lumevine@gmail.com
+            </a>
+            with the feature you are referring to, what you expected,
+            and how the current experience could be improved.
+          </p>
+          <p>
+            Specific examples are more useful than general descriptions.
+            If a workflow is confusing, describe the steps that led to
+            the confusion and what you expected each step to do.
+          </p>
+        </div>
+      </details>
+    </section>
+
+  </div>
+
+  <div class="no-results hidden" id="no-results">
+    <h3>No matching questions found</h3>
+    <p>
+      Try different keywords or browse another category. If your issue
+      is not covered, contact the Lumevine support team.
+    </p>
+    <button type="button" class="filter-btn" id="reset-search">
+      Show all questions
+    </button>
+  </div>
+
+  <div class="contact">
+    <p class="eyebrow">Need more help?</p>
+    <h2>Still have a question?</h2>
+    <p>
+      If you cannot find an answer here, contact the Lumevine support team.
+      Include the question or issue, what you expected, and what happened.
+      Please do not send passwords or authentication codes.
+    </p>
+    <div class="contact-actions">
+      <a
+        class="contact-link"
+        href="mailto:support.lumevine@gmail.com?subject=Lumevine%20Support%20Request"
+      >
+        Contact Support
+      </a>
+      <a
+        class="contact-link"
+        href="https://lumevine.runs-at.dev/privacypolicy"
+      >
+        Privacy Policy
+      </a>
+    </div>
+  </div>
+
+  <footer>
+    © <span id="year"></span> Lumevine. All rights reserved.
+    <p>
+      <a href="https://lumevine.runs-at.dev/privacypolicy">
+        Privacy Policy
+      </a>
+      ·
+      <a href="mailto:support.lumevine@gmail.com">
+        Contact Us
+      </a>
+    </p>
+  </footer>
+</main>
+
+<script>
+  (() => {
+    "use strict";
+
+    const searchInput = document.getElementById("faq-search");
+    const clearSearchButton = document.getElementById("clear-search");
+    const filterButtons = Array.from(
+      document.querySelectorAll(".filter-btn[data-filter]")
+    );
+    const sections = Array.from(
+      document.querySelectorAll(".faq-section")
+    );
+    const faqItems = Array.from(
+      document.querySelectorAll(".faq-item")
+    );
+    const resultsCount = document.getElementById("results-count");
+    const noResults = document.getElementById("no-results");
+    const expandAllButton = document.getElementById("expand-all");
+    const collapseAllButton = document.getElementById("collapse-all");
+    const resetSearchButton = document.getElementById("reset-search");
+
+    let activeCategory = "all";
+
+    document.getElementById("year").textContent =
+      new Date().getFullYear();
+
+    // Build searchable text from the actual questions and answers.
+    faqItems.forEach((item) => {
+      item.dataset.searchText = item.textContent
+        .toLocaleLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+    });
+
+    function updateFilters() {
+      const query = searchInput.value
+        .toLocaleLowerCase()
+        .trim();
+
+      let visibleCount = 0;
+      let totalMatches = 0;
+
+      sections.forEach((section) => {
+        const category = section.dataset.category;
+        const categoryMatches =
+          activeCategory === "all" || activeCategory === category;
+
+        let sectionMatches = 0;
+
+        const items = Array.from(
+          section.querySelectorAll(".faq-item")
+        );
+
+        items.forEach((item) => {
+          const matchesSearch =
+            !query || item.dataset.searchText.includes(query);
+
+          const visible = categoryMatches && matchesSearch;
+
+          item.classList.toggle("hidden", !visible);
+
+          if (visible) {
+            sectionMatches++;
+            totalMatches++;
+          }
+        });
+
+        section.classList.toggle(
+          "hidden",
+          sectionMatches === 0
+        );
+
+        visibleCount += sectionMatches;
+      });
+
+      resultsCount.textContent =
+        query || activeCategory !== "all"
+          ? `Showing ${visibleCount} of ${faqItems.length} questions`
+          : `${faqItems.length} questions across ${sections.length} sections`;
+
+      noResults.classList.toggle(
+        "hidden",
+        visibleCount !== 0
+      );
+
+      clearSearchButton.classList.toggle(
+        "hidden",
+        !searchInput.value
+      );
+
+      // Keep category selection accessible to screen readers.
+      filterButtons.forEach((button) => {
+        button.setAttribute(
+          "aria-pressed",
+          String(button.dataset.filter === activeCategory)
+        );
+      });
+    }
+
+    searchInput.addEventListener("input", updateFilters);
+
+    clearSearchButton.addEventListener("click", () => {
+      searchInput.value = "";
+      updateFilters();
+      searchInput.focus();
+    });
+
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeCategory = button.dataset.filter;
+        updateFilters();
+      });
+    });
+
+    expandAllButton.addEventListener("click", () => {
+      faqItems.forEach((item) => {
+        if (!item.classList.contains("hidden")) {
+          item.open = true;
+        }
+      });
+    });
+
+    collapseAllButton.addEventListener("click", () => {
+      faqItems.forEach((item) => {
+        item.open = false;
+      });
+    });
+
+    resetSearchButton.addEventListener("click", () => {
+      searchInput.value = "";
+      activeCategory = "all";
+      updateFilters();
+      searchInput.focus();
+    });
+
+    // Improve keyboard navigation without changing native accordion behavior.
+    faqItems.forEach((item) => {
+      const summary = item.querySelector("summary");
+
+      summary.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && item.open) {
+          item.open = false;
+          summary.focus();
+        }
+      });
+    });
+
+    updateFilters();
+  })();
+</script>
+</body>
+</html>
