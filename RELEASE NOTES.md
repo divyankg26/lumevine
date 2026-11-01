@@ -1,19 +1,9 @@
 # Release Notes:
 
-- Updated the `FAQ &amp; Help Center` with answers that better match how Lumevine works. Replaced vague or evasive explanations with clear guidance on:
+- “What do you know about me?” now presents saved details in clear, categorized sections, including your goals, preferences, interests, challenges, context, progress, and details you explicitly asked the AI to remember. It also explains how to correct or clear saved information.
 
-Today’s Focus and adaptive priorities.
+- Memory persists in Firebase and can personalize future suggestions. The profile can learn from conversation details and recognizes requests such as “Call me Alex” and “Remember: I work nights.”
 
-Water logs, wellness scores, and changing estimates.
+- Profile answers now keep their formatting while typing. The typewriter reveals text in the same formatted layout used by the finished message, so headings and lists don’t switch from plain text to spaced formatting at the end.
 
-Routine scheduling and reminders.
-
-AI memory, saved chats, and clearing chat data.
-
-Friend connections and account data controls.
-
-Daily usage limits and contacting support.
-
-- Updated `About Us` to describe Lumevine’s current features and supportive approach, including Today’s Focus, Daily Routine, weekly reflections, Habit Journey, AI Companion memory, and personal data controls.
-
-- Reset and countdown text now uses blue **only in Orchid**. Moss and Mist retain their normal theme colors. Updated `components.css`.
+- Updated the app’s script cache version.
