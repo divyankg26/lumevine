@@ -1,4 +1,4 @@
-#Release Notes:
+# Release Notes:
 
 ## Today’s Focus and adaptive priorities
 
