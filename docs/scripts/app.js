@@ -9,11 +9,11 @@
       };
     }
     const score = Math.max(0, Math.min(100, Math.round(Number(scoreValue) || 0)));
-    if (score >= 80) return { score, category: "Well Supported", status: "Many supportive moments" };
-    if (score >= 60) return { score, category: "Steady", status: "A steady day" };
-    if (score >= 40) return { score, category: "Taking Shape", status: "Taking shape" };
-    if (score >= 20) return { score, category: "Getting Started", status: "A gentle place to begin" };
-    return { score, category: "Getting Started", status: "A gentle place to begin" };
+    if (score >= 80) return { score, category: "Well Supported", status: "Several supportive parts of today are in place" };
+    if (score >= 60) return { score, category: "Steady", status: "Some steady supports are in place today" };
+    if (score >= 40) return { score, category: "Taking Shape", status: "Today is beginning to take shape" };
+    if (score >= 20) return { score, category: "Getting Started", status: "A gentle starting point for today" };
+    return { score, category: "Getting Started", status: "A gentle starting point for today" };
   }
 
   window.openWellnessScoreInfoModal = function openWellnessScoreInfoModalFallback() {
@@ -394,6 +394,7 @@ const FIRESTORE_SCHEMAS = {
     types: {
       reportWeekKey: 'string',
       reportCount: 'number',
+      reportLines: 'array',
       updatedAt: 'timestamp'
     }
   },
@@ -986,6 +987,7 @@ function getTransferClients() {
 // ---------- DOM REFERENCES ----------
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
+const passwordVisibilityBtn = document.getElementById("passwordVisibilityBtn");
 const usernameInput = document.getElementById("usernameInput");
 const displayNameInput = document.getElementById("displayNameInput");
 const googleIdentityModal = document.getElementById("googleIdentityModal");
@@ -994,6 +996,7 @@ const googleIdentityNote = document.getElementById("googleIdentityNote");
 const googleIdentityUsernameInput = document.getElementById("googleIdentityUsernameInput");
 const googleIdentityDisplayNameInput = document.getElementById("googleIdentityDisplayNameInput");
 const googleIdentityPasswordInput = document.getElementById("googleIdentityPasswordInput");
+const googleIdentityPasswordVisibilityBtn = document.getElementById("googleIdentityPasswordVisibilityBtn");
 const googleIdentitySaveBtn = document.getElementById("googleIdentitySaveBtn");
 const googleIdentityError = document.getElementById("googleIdentityError");
 const googleAuthButton = document.getElementById("googleAuthButton");
@@ -1048,6 +1051,12 @@ const welcomeGuideModal = document.getElementById("welcomeGuideModal");
 const tosModal = document.getElementById("tosModal");
 const tosAgreeBtn = document.getElementById("tosAgreeBtn");
 const tosError = document.getElementById("tosError");
+const tosReadCheckbox = document.getElementById("tosReadCheckbox");
+tosReadCheckbox?.addEventListener("change", () => {
+  if (!tosReadCheckbox.checked) return;
+  tosReadCheckbox.closest(".tos-consent")?.classList.remove("needs-attention");
+  showTosError("");
+});
 const guideStepCounter = document.getElementById("guideStepCounter");
 const guideStepTitle = document.getElementById("guideStepTitle");
 const guideStepText = document.getElementById("guideStepText");
@@ -1057,18 +1066,18 @@ const guidePrevBtn = document.getElementById("guidePrevBtn");
 
 const LUMEVINE_THEMES = {
   burgundy: {
-    label: "Burgundy",
-    description: "Warm, bold, and classic",
+    label: "Orchid",
+    description: "Reflect",
     swatch: "linear-gradient(145deg,#D7B7D5,#7C3A62 72%)"
   },
   glacier: {
-    label: "Glacier",
-    description: "Cool and focused",
+    label: "Mist",
+    description: "Restore",
     swatch: "linear-gradient(145deg,#E2F7FF,#7BB9DF 72%)"
   },
   nature: {
-    label: "Nature",
-    description: "Calm and grounded",
+    label: "Moss",
+    description: "Ground",
     swatch: "linear-gradient(145deg,#E6F0D9,#7EA98D 72%)"
   }
 };
@@ -1265,6 +1274,7 @@ const accountDisplayNameError = document.getElementById("accountDisplayNameError
 const editDisplayNameBtn = document.getElementById("editDisplayNameBtn");
 const accountEmail = document.getElementById("accountEmail");
 const accountVerifyStatus = document.getElementById("accountVerifyStatus");
+const accountResetPasswordStatus = document.getElementById("accountResetPasswordStatus");
 const accountUid = document.getElementById("accountUid");
 const clearDataBtn = document.getElementById("clearDataBtn");
 const signOutBtn = document.getElementById("signOutBtn");
@@ -1321,6 +1331,7 @@ const dailyRoutineTimeSelect = document.getElementById("dailyRoutineTimeSelect")
 const dailyRoutineTimeInput = document.getElementById("dailyRoutineTimeInput");
 const dailyRoutineEditorError = document.getElementById("dailyRoutineEditorError");
 const dailyRoutineEditorDots = document.getElementById("dailyRoutineEditorDots");
+const dailyRoutineEditorPreviousBtn = document.getElementById("dailyRoutineEditorPreviousBtn");
 const dailyRoutineEditorNextBtn = document.getElementById("dailyRoutineEditorNextBtn");
 const dailyRoutineCustomActivityModal = document.getElementById("dailyRoutineCustomActivityModal");
 const dailyRoutineCustomInput = document.getElementById("dailyRoutineCustomInput");
@@ -1359,6 +1370,14 @@ const wellnessReassuranceEl = document.getElementById("wellnessReassurance");
 const wellnessDoNowEl = document.getElementById("wellnessDoNow");
 const wellnessActionsEl = document.getElementById("wellnessActions");
 const wellnessFriendInsight = document.getElementById("wellnessFriendInsight");
+const todayFocusStateEl = document.getElementById("todayFocusState");
+const todayFocusPromptEl = document.getElementById("todayFocusPrompt");
+const todayFocusActionEl = document.getElementById("todayFocusAction");
+const todayFocusMoodEl = document.getElementById("todayFocusMood");
+const todayFocusSleepEl = document.getElementById("todayFocusSleep");
+const todayFocusWaterEl = document.getElementById("todayFocusWater");
+const todayFocusTasksEl = document.getElementById("todayFocusTasks");
+const todayFocusPrioritiesEl = document.getElementById("todayFocusPriorities");
 const insightsCard = document.getElementById("insightsCard");
 const insightTaskTopLabel = document.getElementById("insightTaskTopLabel");
 const insightTaskTopBar = document.getElementById("insightTaskTopBar");
@@ -1389,6 +1408,7 @@ const dailyRoutineDeleteSelect = document.getElementById("dailyRoutineDeleteSele
 const dailyRoutineDeleteError = document.getElementById("dailyRoutineDeleteError");
 const startupWeeklyReportText = document.getElementById("startupWeeklyReportText");
 const startupGenerateReportBtn = document.getElementById("startupGenerateReportBtn");
+const startupClearReportBtn = document.getElementById("startupClearReportBtn");
 const startupBehaviorMemory = document.getElementById("startupBehaviorMemory");
 const startupReportResetCountdown = document.getElementById("startupReportResetCountdown");
 
@@ -1768,16 +1788,25 @@ function updateAccountPanel(user) {
     ? user.providerData.map((entry) => String(entry?.providerId || "").trim().toLowerCase())
     : [];
   const isGoogleAccount = providerIds.includes("google.com");
+  const hasPasswordAccount = providerIds.includes("password");
   const uid = String(user.uid || "");
   const cachedIdentity = accountIdentityCache.get(uid);
   const storedUsername = readCachedAccountUsername(uid);
-  const fallbackName = (isGoogleAccount
+  const fallbackName = (isGoogleAccount && !hasPasswordAccount
     ? (buildUsernameSeedFromDisplayName(user.displayName) || "user")
     : ((user.email || "").split("@")[0] || "User"));
-  const rawDisplayName = String(user.displayName || "").trim();
+  const rawDisplayName = String(
+    hasPasswordAccount
+      ? (cachedIdentity?.displayName || accountDisplayName?.innerText || fallbackName)
+      : (user.displayName || "")
+  ).trim();
   const rawDisplayValidation = validateSignupDisplayName(rawDisplayName);
   if (accountName) accountName.innerText = cachedIdentity?.username || storedUsername || fallbackName;
-  if (accountDisplayName) accountDisplayName.innerText = normalizeDisplayNameValue(rawDisplayName) || fallbackName;
+  if (accountDisplayName) {
+    accountDisplayName.innerText = cachedIdentity?.displayName
+      || (hasPasswordAccount ? fallbackName : normalizeDisplayNameValue(rawDisplayName))
+      || fallbackName;
+  }
   if (accountEmail) accountEmail.innerText = user.email || "Not available";
   const isVerifiedForDisplay = !!user.emailVerified || isGoogleAccount;
   if (accountVerifyStatus) accountVerifyStatus.innerText = isVerifiedForDisplay ? "Verified ✅" : "Not verified ⚠️";
@@ -2025,6 +2054,16 @@ if (futureTask) {
     if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
     event.preventDefault();
     void timeTraveller();
+  });
+}
+
+if (reminderText || reminderMinutes) {
+  [reminderText, reminderMinutes].forEach((input) => {
+    input?.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" || event.isComposing) return;
+      event.preventDefault();
+      void addReminder();
+    });
   });
 }
 
@@ -2304,6 +2343,7 @@ async function clearAllAccountData() {
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "habitQuest")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/habitQuest` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "startupPack")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/startupPack` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "dailyRoutine")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/dailyRoutine` }));
+    await fsDeleteDoc(doc(db, "users", user.uid, "settings", "aiMemory")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/aiMemory` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "settings", "startupUsage")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/settings/startupUsage` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "insights", "barGraphs")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/insights/barGraphs` }));
     await fsDeleteDoc(doc(db, "users", user.uid, "social", "profile")).catch((err) => structuredLog('warn', 'fs.delete.silent', err?.message || String(err), { path: `users/${user?.uid}/social/profile` }));
@@ -2363,6 +2403,8 @@ async function clearAllAccountData() {
 
     moodLogs.innerHTML = "";
     chat.innerHTML = "";
+    resetAiUserProfile();
+    aiSessionState.memoryPairs.length = 0;
     taskList.innerHTML = "";
     reminders.innerHTML = "";
     gratitudeLogs.innerHTML = "";
@@ -2400,6 +2442,7 @@ async function clearAllAccountData() {
     gratitudeInput.value = "";
 
     moodHistory.length = 0;
+    moodEntryIds.length = 0;
     waterHistory.length = 0;
     sleepHistory.length = 0;
     moodDates.length = 0;
@@ -2428,6 +2471,7 @@ async function clearAllAccountData() {
     burnoutRadarDataReady = false;
     burnoutRadarCalculatedDateKey = "";
     questShieldAvailable = false;
+    questShieldLastUsedDateKey = "";
     waterGoal = 0;
 
     await Promise.all([
@@ -2505,6 +2549,23 @@ try {
           return;
         }
 
+        if (user.emailVerified && !isGoogleProviderUser(user) && readPendingEmailSignup(user.email)) {
+          try {
+            await finalizePendingEmailSignupProfile(user);
+          } catch (err) {
+            structuredLog("error", "auth.pending_signup.finalize", err?.message || String(err), { userId: user.uid });
+            const profileError = document.getElementById("signInError");
+            if (profileError) {
+              profileError.style.display = "block";
+              profileError.style.color = "#ff6b6b";
+              profileError.innerText = err?.message || "Your verified profile could not be activated.";
+            }
+            await signOut(auth);
+            hideSplash();
+            return;
+          }
+        }
+
         const googleIdentityReady = await ensureGoogleIdentitySetupIfNeeded(user);
         if (!googleIdentityReady) {
           hideSplash();
@@ -2570,6 +2631,7 @@ try {
         closeAccountPanel();
         closeAddFriendModal(null, true);
         closeGoogleIdentitySetupModal();
+        googleIdentitySetupFinalizingUserId = "";
         friendRequestLoginAlertShown = false;
         clearPendingRequestLoginAlertFlag();
         updateAccountPanel(null);
@@ -2647,6 +2709,7 @@ try {
         if (burnoutScheduleEl) burnoutScheduleEl.innerHTML = "";
         challengeResultElement.innerText = "";
         moodHistory.length = 0;
+        moodEntryIds.length = 0;
         waterHistory.length = 0;
         sleepHistory.length = 0;
         musicSessionDates.length = 0;
@@ -2726,9 +2789,55 @@ let googleIdentitySetupInProgress = false;
 let googleIdentitySetupUserId = "";
 let googleIdentityPasswordOnlyMode = false;
 let googleIdentityRequirePassword = false;
+let googleIdentitySetupFinalizingUserId = "";
 const GOOGLE_IDENTITY_STRICT_ENFORCED = false;
+const GOOGLE_IDENTITY_LOCAL_COMPLETION_PREFIX = "lumevine_google_identity_complete_";
+const PENDING_EMAIL_SIGNUP_PREFIX = "lumevine_pending_email_signup_";
 let googleIdentityUsernameLiveCheckTimer = null;
 let googleIdentityUsernameLiveCheckSequence = 0;
+
+function getPendingEmailSignupStorageKey(email) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  return normalizedEmail ? `${PENDING_EMAIL_SIGNUP_PREFIX}${normalizedEmail}` : "";
+}
+
+function savePendingEmailSignup(email, data) {
+  const key = getPendingEmailSignupStorageKey(email);
+  if (!key) return;
+  try {
+    localStorage.setItem(key, JSON.stringify({
+      username: String(data?.username || "").trim(),
+      displayName: String(data?.displayName || "").trim(),
+      createdAtMs: Date.now()
+    }));
+  } catch (err) {
+    structuredLog("warn", "auth.pending_signup.write", err?.message || String(err));
+  }
+}
+
+function readPendingEmailSignup(email) {
+  const key = getPendingEmailSignupStorageKey(email);
+  if (!key) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (err) {
+    structuredLog("warn", "auth.pending_signup.read", err?.message || String(err));
+    return null;
+  }
+}
+
+function clearPendingEmailSignup(email) {
+  const key = getPendingEmailSignupStorageKey(email);
+  if (!key) return;
+  try {
+    localStorage.removeItem(key);
+  } catch (err) {
+    structuredLog("warn", "auth.pending_signup.clear", err?.message || String(err));
+  }
+}
 let authEmailProviderCheckTimer = null;
 let authEmailProviderCheckSequence = 0;
 let signInBackoffCooldownEmail = "";
@@ -2909,7 +3018,6 @@ async function usernameExistsLiveInFirestore(usernameKey) {
     });
     return !!resolved;
   } catch (err) {
-    if (isFirestorePermissionDeniedError(err)) return false;
     throw err;
   }
 }
@@ -3039,17 +3147,6 @@ function isGoogleProviderUser(user) {
   return providerIds.includes("google.com");
 }
 
-async function isGoogleRegisteredEmail(email) {
-  const safeEmail = String(email || "").trim().toLowerCase();
-  if (!safeEmail) return false;
-  try {
-    const methods = await fetchSignInMethodsForEmail(auth, safeEmail);
-    return methods.includes("google.com");
-  } catch (_) {
-    return false;
-  }
-}
-
 function hasPasswordProviderLinked(user) {
   const providerIds = Array.isArray(user?.providerData)
     ? user.providerData.map((entry) => String(entry?.providerId || "").trim().toLowerCase())
@@ -3114,10 +3211,12 @@ function closeGoogleIdentitySetupModal() {
     clearTimeout(googleIdentityUsernameLiveCheckTimer);
     googleIdentityUsernameLiveCheckTimer = null;
   }
+
   googleIdentityUsernameLiveCheckSequence += 1;
   if (googleIdentityUsernameInput) googleIdentityUsernameInput.value = "";
   if (googleIdentityDisplayNameInput) googleIdentityDisplayNameInput.value = "";
   if (googleIdentityPasswordInput) googleIdentityPasswordInput.value = "";
+  setPasswordVisibility(googleIdentityPasswordInput, googleIdentityPasswordVisibilityBtn, false);
   if (googleIdentityUsernameInput) googleIdentityUsernameInput.style.display = "block";
   if (googleIdentityDisplayNameInput) googleIdentityDisplayNameInput.style.display = "block";
   if (googleIdentityPasswordInput) googleIdentityPasswordInput.style.display = "block";
@@ -3129,6 +3228,48 @@ function closeGoogleIdentitySetupModal() {
   googleIdentityRequirePassword = false;
   googleIdentitySetupInProgress = false;
   googleIdentitySetupUserId = "";
+}
+
+function setPasswordVisibility(input, button, visible) {
+  if (!input || !button) return;
+  const isVisible = !!visible;
+  input.type = isVisible ? "text" : "password";
+  button.innerText = isVisible ? "Hide" : "Show";
+  button.setAttribute("aria-label", isVisible ? "Hide password" : "Show password");
+  button.setAttribute("aria-pressed", isVisible ? "true" : "false");
+}
+
+function bindPasswordVisibility(input, button) {
+  if (!input || !button) return;
+  button.addEventListener("click", () => {
+    setPasswordVisibility(input, button, input.type === "password");
+  });
+}
+
+bindPasswordVisibility(passwordInput, passwordVisibilityBtn);
+bindPasswordVisibility(googleIdentityPasswordInput, googleIdentityPasswordVisibilityBtn);
+
+function getGoogleIdentityLocalCompletionKey(userId) {
+  const safeUserId = String(userId || "").trim();
+  return safeUserId ? `${GOOGLE_IDENTITY_LOCAL_COMPLETION_PREFIX}${safeUserId}` : "";
+}
+
+function hasLocalGoogleIdentityCompletion(userId) {
+  const key = getGoogleIdentityLocalCompletionKey(userId);
+  if (!key) return false;
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function rememberLocalGoogleIdentityCompletion(userId) {
+  const key = getGoogleIdentityLocalCompletionKey(userId);
+  if (!key) return;
+  try {
+    localStorage.setItem(key, "1");
+  } catch (_) {}
 }
 
 function scheduleGoogleIdentityUsernameAvailabilityCheck() {
@@ -3194,6 +3335,7 @@ function openGoogleIdentitySetupModal(user, defaults = {}) {
   if (googleIdentityUsernameInput) googleIdentityUsernameInput.value = "";
   if (googleIdentityDisplayNameInput) googleIdentityDisplayNameInput.value = "";
   if (googleIdentityPasswordInput) googleIdentityPasswordInput.value = "";
+  setPasswordVisibility(googleIdentityPasswordInput, googleIdentityPasswordVisibilityBtn, false);
   if (googleIdentityUsernameInput) googleIdentityUsernameInput.style.display = passwordOnly ? "none" : "block";
   if (googleIdentityDisplayNameInput) googleIdentityDisplayNameInput.style.display = passwordOnly ? "none" : "block";
   if (googleIdentityPasswordInput) googleIdentityPasswordInput.style.display = "block";
@@ -3221,13 +3363,20 @@ async function ensureGoogleIdentitySetupIfNeeded(user) {
   if (!activeUserId) return true;
   if (!isGoogleProviderUser(user)) return true;
 
+  if (googleIdentitySetupFinalizingUserId === activeUserId) {
+    return false;
+  }
+
   if (googleIdentitySetupInProgress && googleIdentitySetupUserId === activeUserId) {
     return false;
   }
 
+  const localCompletion = hasLocalGoogleIdentityCompletion(activeUserId);
   let profileData = {};
+  let profileReadSucceeded = false;
   try {
     const profileRes = await fsGetDoc(doc(db, "users", activeUserId, "settings", "profile"), 'profile');
+    profileReadSucceeded = true;
     if (profileRes.exists) {
       profileData = profileRes.data || {};
     }
@@ -3235,14 +3384,30 @@ async function ensureGoogleIdentitySetupIfNeeded(user) {
     profileData = {};
   }
 
+  if (googleIdentitySetupFinalizingUserId === activeUserId) {
+    return false;
+  }
+
   const hasPasswordProvider = hasPasswordProviderLinked(user);
   const setupCompleted = profileData.googleIdentitySetupCompleted === true;
   const profileUsername = normalizeUsernameForLookup(profileData.username || profileData.name || "");
   const profileDisplayName = normalizeDisplayNameValue(profileData.displayName || "");
   const hasProfileIdentity = !!profileUsername && !!profileDisplayName;
+  const hasExistingEmailPasswordProfile = hasPasswordProvider && hasProfileIdentity;
   const isIdentityFullyConfigured = setupCompleted && hasPasswordProvider && hasProfileIdentity;
+  const cachedUsername = readCachedAccountUsername(activeUserId);
+  const hasOfflineCompletionEvidence = hasPasswordProvider
+    && !!normalizeDisplayNameValue(user?.displayName || "")
+    && !!cachedUsername;
 
-  if (isIdentityFullyConfigured) {
+  if (isIdentityFullyConfigured || hasExistingEmailPasswordProfile) {
+    rememberLocalGoogleIdentityCompletion(activeUserId);
+    return true;
+  }
+
+  if ((!profileReadSucceeded || navigator.onLine === false)
+    && (localCompletion || hasOfflineCompletionEvidence)) {
+    rememberLocalGoogleIdentityCompletion(activeUserId);
     return true;
   }
 
@@ -3294,6 +3459,7 @@ function forceDashboardCardLoad(sessionUserId) {
   dashboard.classList.remove("preload-shell");
 
   forceCardContainerLoad(chat, ".chat-message", getRandomEmptyMessage("chat", "Your conversation space is here whenever you would like to talk."));
+  if (chat?.querySelector(".chat-message")) scrollChatToLatest();
   forceCardContainerLoad(reminders, ".item-row", getRandomEmptyMessage("reminders", "No reminders here yet. Add one if something would be useful to remember."));
   forceCardContainerLoad(taskList, ".item-row", getRandomEmptyMessage("tasks", "Your list is clear for now. Add a task whenever you are ready."));
   forceCardContainerLoad(moodLogs, ".mood-item", getRandomEmptyMessage("mood", "No mood notes yet. Check in whenever you feel ready."));
@@ -3346,6 +3512,11 @@ window.addEventListener('error', (event) => {
 async function initializeAuthenticatedSession(user) {
   const sessionUserId = String(user?.uid || "").trim();
   if (!sessionUserId) return;
+  if (!isGoogleProviderUser(user) && !user.emailVerified) {
+    structuredLog("warn", "auth.session_unverified", "Blocked unverified email session", { userId: sessionUserId });
+    await signOut(auth);
+    return;
+  }
   lastAuthenticatedUserId = sessionUserId;
   burnoutRadarDataReady = false;
   burnoutRadarCalculatedDateKey = "";
@@ -3482,6 +3653,7 @@ async function initializeAuthenticatedSession(user) {
     const activeUser = auth.currentUser;
     if (!activeUser?.uid || activeUser.uid !== user.uid) return;
     dashboard.classList.remove("preload-shell");
+    scrollChatToLatest();
     updateCrashPreventionUI();
     await forceSyncFriendProfileFromLocalSnapshot(activeUser);
     await loadFriendsInsights(activeUser.uid);
@@ -3538,6 +3710,10 @@ async function submitGoogleIdentitySetup() {
 
   if (googleIdentitySaveBtn) googleIdentitySaveBtn.disabled = true;
   hideGoogleIdentityError();
+  googleIdentitySetupFinalizingUserId = user.uid;
+  const resetFinalizationLock = () => {
+    googleIdentitySetupFinalizingUserId = "";
+  };
 
   try {
     if (requireFullProfileFields) {
@@ -3549,21 +3725,25 @@ async function submitGoogleIdentitySetup() {
             preferServer: true
           }).catch(() => null);
           if (resolvedUsername?.uid && resolvedUsername.uid !== user.uid) {
+            resetFinalizationLock();
             showGoogleIdentityError("This username already exists. Choose a different username.");
             return;
           }
         }
       } catch (lookupErr) {
-        if (!isFirestorePermissionDeniedError(lookupErr)) {
-          showGoogleIdentityError(lookupErr?.message || "Could not verify username right now.");
-          return;
-        }
-        // If pre-check is blocked by rules, transactional claim below is still the source of truth.
+        showGoogleIdentityError(
+          isFirestorePermissionDeniedError(lookupErr)
+            ? "We could not verify username availability because the username registry is unavailable. Nothing was saved; try again shortly."
+            : (lookupErr?.message || "Could not verify username right now.")
+        );
+        resetFinalizationLock();
+        return;
       }
     }
 
     const safeEmail = String(user.email || "").trim().toLowerCase();
     if (!safeEmail) {
+      resetFinalizationLock();
       showGoogleIdentityError("Could not read your Google account email. Sign out and try again.");
       return;
     }
@@ -3586,6 +3766,7 @@ async function submitGoogleIdentitySetup() {
       await user.reload().catch((err) => structuredLog('warn', 'auth.reload.2', err?.message || String(err)));
       passwordLinkedNow = hasPasswordProviderLinked(auth.currentUser || user) || passwordLinkedNow;
       if (!passwordLinkedNow) {
+        resetFinalizationLock();
         showGoogleIdentityError("Password setup could not be confirmed. Please try again.");
         return;
       }
@@ -3604,6 +3785,7 @@ async function submitGoogleIdentitySetup() {
     const hasPasswordAfterSetup = hasPasswordProviderLinked(auth.currentUser || user) || passwordLinkedNow;
 
     if (googleIdentityRequirePassword && !hasPasswordAfterSetup) {
+      resetFinalizationLock();
       showGoogleIdentityError("Password is required. Please set it to continue.");
       return;
     }
@@ -3642,13 +3824,19 @@ async function submitGoogleIdentitySetup() {
     }
 
     if (!profileSaveVerified) {
+      resetFinalizationLock();
       showGoogleIdentityError("Profile save could not be verified. Please try again.");
       return;
     }
 
+    if (requireFullProfileFields) {
+      cacheAccountUsername(user.uid, usernameKey);
+    }
+    rememberLocalGoogleIdentityCompletion(user.uid);
     await user.reload().catch((err) => structuredLog('warn', 'auth.reload.3', err?.message || String(err)));
     await initializeAuthenticatedSession(user);
   } catch (err) {
+    googleIdentitySetupFinalizingUserId = "";
     const claimCode = String(err?.message || "");
     if (claimCode === "USERNAME_TAKEN") {
       showGoogleIdentityError("This username already exists. Choose a different username.");
@@ -3711,31 +3899,34 @@ const IS_MOBILE_DEVICE = (() => {
 document.documentElement.classList.toggle("mobile-device", IS_MOBILE_DEVICE);
 const SHORTCUT_MOD_LABEL = IS_MAC_OS ? "Option" : "Alt";
 const CARD_SHORTCUTS = [
-  { cardIndex: 0, keys: ["a", "i"], label: "AI Companion" },
-  { cardIndex: 1, keys: ["r", "e"], label: "Gentle Reminders" },
-  { cardIndex: 2, keys: ["p", "r"], label: "Tasks & Focus" },
-  { cardIndex: 6, keys: ["g", "f"], label: "Grocery Planning" },
-  { cardIndex: 4, keys: ["m", "t"], label: "Mood Check-in" },
-  { cardIndex: 5, keys: ["w", "t"], label: "Hydration" },
-  { cardIndex: 3, keys: ["s", "l"], label: "Sleep & Rest" },
-  { cardIndex: 7, keys: ["m", "u"], label: "Music for a Moment" },
-  { cardIndex: 8, keys: ["t", "m"], label: "Future Self Reflection" },
-  { cardIndex: 9, keys: ["q", "t"], label: "Words to Carry With You" },
-  { cardIndex: 10, keys: ["g", "j"], label: "Gratitude Journal" },
-  { cardIndex: 11, keys: ["d", "c"], label: "A Small Daily Invitation" },
-  { cardIndex: 12, keys: ["w", "s"], label: "Today’s Wellness Reflection" },
-  { cardIndex: 13, keys: ["m", "c"], label: "Mood & Recovery" },
-  { cardIndex: 14, keys: ["w", "r"], label: "Weekly Reflection + AI Coach" },
-  { cardIndex: 15, keys: ["h", "q"], label: "Habit Journey" },
-  { cardIndex: 16, keys: ["b", "r"], label: "Recovery Outlook" },
-  { cardIndex: 17, keys: ["i", "s"], label: "Patterns & Progress" },
-  { cardIndex: 18, keys: ["d", "r"], label: "A Gentle Daily Rhythm" },
-  { cardIndex: 19, keys: ["s", "r"], label: "Weekly Snapshot" },
-  { cardIndex: 20, keys: ["b", "g"], label: "Your Patterns" }
+  { cardIndex: 0, keys: ["t", "d"], label: "Today’s Focus" },
+  { cardIndex: 1, keys: ["a", "i"], label: "AI Companion" },
+  { cardIndex: 2, keys: ["g", "r"], label: "Gentle Reminders" },
+  { cardIndex: 3, keys: ["t", "f"], label: "Tasks & Focus" },
+  { cardIndex: 4, keys: ["s", "r"], label: "Sleep & Rest" },
+  { cardIndex: 5, keys: ["m", "c"], label: "Mood Check-in" },
+  { cardIndex: 6, keys: ["h", "y"], label: "Hydration" },
+  { cardIndex: 7, keys: ["g", "p"], label: "Grocery Planning" },
+  { cardIndex: 8, keys: ["m", "m"], label: "Music for a Moment" },
+  { cardIndex: 9, keys: ["f", "r"], label: "Future Self Reflection" },
+  { cardIndex: 10, keys: ["w", "c"], label: "Words to Carry With You" },
+  { cardIndex: 11, keys: ["g", "j"], label: "Gratitude Journal" },
+  { cardIndex: 12, keys: ["s", "d"], label: "A Small Daily Invitation" },
+  { cardIndex: 13, keys: ["t", "w"], label: "Today’s Wellness Reflection" },
+  { cardIndex: 14, keys: ["m", "r"], label: "Mood & Recovery" },
+  { cardIndex: 15, keys: ["w", "a"], label: "Weekly Reflection + AI Coach" },
+  { cardIndex: 16, keys: ["h", "j"], label: "Habit Journey" },
+  { cardIndex: 17, keys: ["r", "o"], label: "Recovery Outlook" },
+  { cardIndex: 18, keys: ["p", "p"], label: "Patterns & Progress" },
+  { cardIndex: 19, keys: ["d", "r"], label: "Daily Routine" },
+  { cardIndex: 20, keys: ["w", "s"], label: "Weekly Snapshot" },
+  { cardIndex: 21, keys: ["y", "p"], label: "Your Patterns" }
 ];
 let welcomeGuideStepIndex = 0;
 let welcomeGuideUserId = "";
 let welcomeGuideCheckedThisSession = false;
+let welcomeGuideCompleting = false;
+const friendRequestActionsInFlight = new Set();
 const WELCOME_GUIDE_VERSION = 1;
 const TOS_VERSION = "2026-05-14";
 
@@ -3912,14 +4103,14 @@ const WELCOME_GUIDE_STEPS = [
   },
   {
     title: "Keyboard Shortcuts",
-    text: "All dashboard cards have shortcuts. Hold {shortcut_mod}, then press two letters quickly to jump to a card, including A Gentle Daily Rhythm, Weekly Snapshot, and Your Patterns.",
+    text: "All dashboard cards have shortcuts. Hold {shortcut_mod}, then press two letters quickly to jump to a card, including Today’s Focus, Daily Routine, Weekly Snapshot, and Your Patterns.",
     tip: "Shortcut list is shown below.",
     showShortcutList: true
   },
   {
-    title: "Bug Reporting",
-    text: "Found a bug or glitch? Report it any time at <span class=\"support-email-highlight\">support.lumevine@gmail.com</span>.",
-    tip: "Tip: Include what happened and what you expected so we can fix it faster."
+    title: "Contact Support",
+    text: "Need help or noticed something unusual? Contact <span class=\"support-email-highlight\">support.lumevine@gmail.com</span>.",
+    tip: "Tip: Include what happened and what you expected so we can help faster."
   }
 ];
 
@@ -3982,7 +4173,7 @@ function renderKeyboardShortcutsBox() {
   if (IS_MOBILE_DEVICE) return;
 
   if (keyboardShortcutsSubtitle) {
-    keyboardShortcutsSubtitle.innerText = `Showing ${IS_MAC_OS ? "macOS" : "Windows/Linux"} shortcuts for this device. Hold ${SHORTCUT_MOD_LABEL}, then press the two letters. Includes A Gentle Daily Rhythm, Weekly Snapshot, and Your Patterns.`;
+    keyboardShortcutsSubtitle.innerText = `Showing ${IS_MAC_OS ? "macOS" : "Windows/Linux"} shortcuts for this device. Hold ${SHORTCUT_MOD_LABEL}, then press the two letters.`;
   }
   if (!keyboardShortcutsList) return;
   const visibleShortcuts = keyboardShortcutsExpanded ? CARD_SHORTCUTS : CARD_SHORTCUTS.slice(0, 3);
@@ -4499,7 +4690,10 @@ window.addEventListener("blur", () => {
 renderKeyboardShortcutsBox();
 
 async function completeWelcomeGuide() {
+  if (welcomeGuideCompleting) return;
+  welcomeGuideCompleting = true;
   const activeUserId = String(welcomeGuideUserId || auth.currentUser?.uid || "");
+  closeWelcomeGuide();
   if (activeUserId) {
     try {
       await safeSetDoc(doc(db, "users", activeUserId, "settings", "onboarding"), {
@@ -4510,7 +4704,7 @@ async function completeWelcomeGuide() {
       }, 'onboarding', { merge: true });
     } catch (_) {}
   }
-  closeWelcomeGuide();
+  welcomeGuideCompleting = false;
 }
 
 async function nextWelcomeGuideStep() {
@@ -4548,6 +4742,10 @@ function openTosModal(userId = "") {
   if (!tosModal) return;
   tosPendingUserId = String(userId || "").trim();
   showTosError("");
+  if (tosReadCheckbox) {
+    tosReadCheckbox.checked = false;
+    tosReadCheckbox.closest(".tos-consent")?.classList.remove("needs-attention");
+  }
   if (tosAgreeBtn) tosAgreeBtn.disabled = false;
   // Keep auth modal hidden and reveal the dashboard shell beneath the TOS gate.
   if (signInModal) signInModal.style.display = "none";
@@ -4580,6 +4778,13 @@ async function acceptTosAgreement() {
   const userId = String(tosPendingUserId || auth.currentUser?.uid || "").trim();
   if (!userId) {
     showTosError("Your session expired. Please sign in again.");
+    return;
+  }
+
+  if (!tosReadCheckbox?.checked) {
+    showTosError("Please check the box to confirm that you have read the Terms of Service.");
+    tosReadCheckbox?.closest(".tos-consent")?.classList.add("needs-attention");
+    tosReadCheckbox?.focus();
     return;
   }
 
@@ -4841,6 +5046,51 @@ async function resendVerificationEmailFromModal() {
   }
 }
 
+async function finalizePendingEmailSignupProfile(user) {
+  const activeUser = user || auth.currentUser;
+  const email = String(activeUser?.email || "").trim().toLowerCase();
+  if (!activeUser?.uid || !email || !activeUser.emailVerified) return false;
+
+  const pending = readPendingEmailSignup(email);
+  if (!pending) return false;
+
+  const usernameValidation = validateSignupUsername(pending.username || "");
+  const displayValidation = validateSignupDisplayName(pending.displayName || "");
+  if (!usernameValidation.ok || !displayValidation.ok) {
+    throw new Error("Your saved signup details are no longer valid. Please contact support before continuing.");
+  }
+
+  const usernameKey = usernameValidation.normalized;
+  const displayName = normalizeDisplayNameValue(displayValidation.normalized);
+  const existing = await resolveUserDirectoryByUsername(usernameKey, {
+    forceRefresh: true,
+    preferServer: true
+  });
+  if (existing?.uid && existing.uid !== activeUser.uid) {
+    throw new Error("That username was claimed while your email was being verified. Please contact support to choose another username.");
+  }
+
+  await claimUsernameDirectoryEntry(activeUser.uid, usernameKey, email, displayName);
+  await updateProfile(activeUser, { displayName });
+  const displayNameChangeAppliedAtMs = getServerNowDate().getTime();
+  await safeSetDoc(doc(db, "users", activeUser.uid, "settings", "profile"), {
+    googleIdentitySetupCompleted: false,
+    username: usernameKey,
+    displayName,
+    displayNameDashboardChangedAt: new Date(),
+    displayNameDashboardChangedAtMs: displayNameChangeAppliedAtMs,
+    displayNameDashboardCooldownUntilMs: displayNameChangeAppliedAtMs + DISPLAY_NAME_EDIT_COOLDOWN_MS,
+    updatedAt: serverTimestamp()
+  }, "profile", { merge: true });
+  await upsertUserDirectoryProfile(activeUser, {
+    username: usernameKey,
+    displayName
+  });
+  cacheAccountUsername(activeUser.uid, usernameKey);
+  clearPendingEmailSignup(email);
+  return true;
+}
+
 async function handleAuth() {
   const username = usernameInput.value.trim();
   const displayNameRaw = String(displayNameInput?.value || "").trim();
@@ -4899,52 +5149,23 @@ async function handleAuth() {
           return;
         }
       } catch (lookupErr) {
-        if (!isFirestorePermissionDeniedError(lookupErr)) {
-          showAuthModalError(lookupErr?.message || "Could not verify username right now.");
-          return;
-        }
-        // If pre-check is blocked for unauthenticated signup, continue.
-        // The transactional claim below is the source of truth for uniqueness.
+        showAuthModalError(
+          isFirestorePermissionDeniedError(lookupErr)
+            ? "We could not verify username availability because the username registry is unavailable. No account was created; try again shortly."
+            : (lookupErr?.message || "Could not verify username right now.")
+        );
+        return;
       }
 
       signupFlowInProgress = true;
       suppressUnverifiedSigninPromptUntilMs = Date.now() + (2 * 60 * 1000);
       startedSignupAuthFlow = true;
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      try {
-        await claimUsernameDirectoryEntry(userCredential.user.uid, usernameKey, email, signupDisplayName);
-      } catch (claimErr) {
-        const claimCode = String(claimErr?.message || "");
-        if (claimCode === "USERNAME_TAKEN") {
-          try { await deleteUser(userCredential.user); } catch (_) {}
-          await signOut(auth).catch((err) => structuredLog('warn', 'auth.signout.2', err?.message || String(err)));
-          showAuthModalError("This username already exists. Choose a different username.", "username_exists");
-          return;
-        }
-        if (isFirestorePermissionDeniedError(claimErr)) {
-          try { await deleteUser(userCredential.user); } catch (_) {}
-          await signOut(auth).catch((err) => structuredLog('warn', 'auth.signout.3', err?.message || String(err)));
-          showAuthModalError("Username setup is blocked by Firestore rules. Allow users to write usernameDirectory, then try again.");
-          return;
-        }
-        throw claimErr;
-      }
-
-      await updateProfile(userCredential.user, { displayName: signupDisplayName });
-      const displayNameChangeAppliedAtMs = getServerNowDate().getTime();
-      await safeSetDoc(doc(db, "users", userCredential.user.uid, "settings", "profile"), {
-        // For email/password signup, Google identity setup is not yet completed.
-        googleIdentitySetupCompleted: false,
-        displayNameDashboardChangedAt: new Date(),
-        displayNameDashboardChangedAtMs: displayNameChangeAppliedAtMs,
-        displayNameDashboardCooldownUntilMs: displayNameChangeAppliedAtMs + DISPLAY_NAME_EDIT_COOLDOWN_MS,
-        updatedAt: new Date()
-      }, 'profile', { merge: true });
-      await upsertUserDirectoryProfile(userCredential.user, {
+      const verifyResult = await sendVerificationEmailReliable(userCredential.user);
+      savePendingEmailSignup(email, {
         username: usernameKey,
         displayName: signupDisplayName
       });
-      const verifyResult = await sendVerificationEmailReliable(userCredential.user);
 
       await signOut(auth);
       authMode = "signin";
@@ -4968,8 +5189,8 @@ async function handleAuth() {
       error.style.display = "block";
       error.style.color = verifyResult.ok ? "#7CFFB2" : "#ff6b6b";
       error.innerText = verifyResult.ok
-        ? "Account created. Verification email sent. Check Inbox/Spam/Promotions, then sign in."
-        : `Account created, but verification email failed: ${verifyResult.error?.message || "Please use Forgot Password flow or try again later."}`;
+        ? "Account created, but your profile will not be activated until you verify your email. Check Inbox/Spam/Promotions, then sign in."
+        : `Account created but not activated: verification email failed: ${verifyResult.error?.message || "Use Resend Verification Email and try again."}`;
       if (verifyResult.ok) {
         markVerificationSentNow(email);
         startVerificationCooldown(110);
@@ -4988,10 +5209,7 @@ async function handleAuth() {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       await credential.user.reload();
       clearAuthBackoffState("signin", email);
-      let skipEmailVerificationGate = isGoogleProviderUser(credential.user);
-      if (!skipEmailVerificationGate && !credential.user.emailVerified) {
-        skipEmailVerificationGate = await isGoogleRegisteredEmail(email);
-      }
+      const skipEmailVerificationGate = isGoogleProviderUser(credential.user);
 
       if (!credential.user.emailVerified && !skipEmailVerificationGate) {
         let verifyResult = { ok: true, skipped: true };
@@ -5010,6 +5228,16 @@ async function handleAuth() {
           : `Please verify your email before signing in. Could not send verification email: ${verifyResult.error?.message || "try again later."}`;
         if (verifyResult.ok) startVerificationCooldown(110);
         return;
+      }
+      if (credential.user.emailVerified && !skipEmailVerificationGate) {
+        try {
+          await finalizePendingEmailSignupProfile(credential.user);
+        } catch (profileErr) {
+          await signOut(auth);
+          clearPendingRequestLoginAlertFlag();
+          showAuthModalError(profileErr?.message || "Your verified profile could not be activated. Please try again.");
+          return;
+        }
       }
     }
   } catch (err) {
@@ -5195,17 +5423,29 @@ async function sendAccountResetPasswordEmail() {
 
   const email = (user.email || accountEmail?.innerText || "").trim().toLowerCase();
   if (!email || email === "-") {
+    if (accountResetPasswordStatus) {
+      accountResetPasswordStatus.innerText = "No email was found for this account.";
+      accountResetPasswordStatus.style.color = "#ff6b6b";
+    }
     showToast("No email found for this account.");
     return;
   }
 
   let pendingToastId = 0;
   try {
+    if (accountResetPasswordStatus) {
+      accountResetPasswordStatus.innerText = "Sending a password reset email...";
+      accountResetPasswordStatus.style.color = "#9fd0ff";
+    }
     pendingToastId = showPendingToast("Hang on, sending reset password email...");
     const methods = await fetchSignInMethodsForEmail(auth, email);
     if (methods.includes("google.com") && !methods.includes("password")) {
       clearPendingToast(pendingToastId);
       pendingToastId = 0;
+      if (accountResetPasswordStatus) {
+        accountResetPasswordStatus.innerText = "This account uses Google sign-in; no password reset email is needed.";
+        accountResetPasswordStatus.style.color = "#ffcc80";
+      }
       showToast("This account uses Google sign-in, so no password reset is needed.");
       return;
     }
@@ -5217,19 +5457,22 @@ async function sendAccountResetPasswordEmail() {
     startAccountPasswordResetCooldown(PASSWORD_RESET_COOLDOWN_MS);
     clearPendingToast(pendingToastId);
     pendingToastId = 0;
+    if (accountResetPasswordStatus) {
+      accountResetPasswordStatus.innerText = `Sent to ${email}. Check your inbox, spam, or promotions folder.`;
+      accountResetPasswordStatus.style.color = "#7CFFB2";
+    }
     showToast(`Password reset email sent to ${email}.`);
   } catch (err) {
     console.error("Account reset password error:", err?.code || err);
     clearPendingToast(pendingToastId);
     pendingToastId = 0;
+    if (accountResetPasswordStatus) {
+      accountResetPasswordStatus.innerText = err?.message || "Could not send the password reset email.";
+      accountResetPasswordStatus.style.color = "#ff6b6b";
+    }
     showToast(err?.message || "Could not send reset email.");
   } finally {
     clearPendingToast(pendingToastId);
-    if (!pendingToastId) {
-      setTimeout(() => {
-        if (activePendingToastId === 0) hideToast();
-      }, 0);
-    }
   }
 }
 
@@ -5897,7 +6140,7 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
               }
             }
           } catch (err) {
-            if (isFirestorePermissionDeniedError(err)) permissionDeniedSeen = true;
+            if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
           }
         }
       }
@@ -5914,7 +6157,7 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
           resolved = buildResolved(legacySnap.data() || {}, usernameKey);
         }
       } catch (err) {
-        if (isFirestorePermissionDeniedError(err)) permissionDeniedSeen = true;
+        if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
       }
     }
 
@@ -5935,7 +6178,7 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
           }
         }
       } catch (err) {
-        if (isFirestorePermissionDeniedError(err)) permissionDeniedSeen = true;
+        if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
       }
     }
 
@@ -5966,7 +6209,7 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
           break;
         }
       } catch (err) {
-        if (isFirestorePermissionDeniedError(err)) permissionDeniedSeen = true;
+        if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
       }
     }
 
@@ -5998,7 +6241,7 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
           break;
         }
       } catch (err) {
-        if (isFirestorePermissionDeniedError(err)) permissionDeniedSeen = true;
+        if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
       }
     }
 
@@ -6031,7 +6274,29 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
           break;
         }
       } catch (err) {
-        if (isFirestorePermissionDeniedError(err)) permissionDeniedSeen = true;
+        if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
+      }
+    }
+
+    if (!resolved && forceRefresh) {
+      try {
+        const allUsernameSnap = preferServer
+          ? await getDocsWithFreshFallback(collection(db, "usernameDirectory"))
+          : await getDocs(collection(db, "usernameDirectory"));
+        for (const docSnap of allUsernameSnap.docs) {
+          const data = docSnap.data() || {};
+          const candidateKey = normalizeUsernameForLookup(
+            data.username || data.name || docSnap.id
+          );
+          if (candidateKey !== usernameKey) continue;
+          const candidate = buildResolved(data, usernameKey);
+          if (candidate) {
+            resolved = candidate;
+            break;
+          }
+        }
+      } catch (err) {
+        if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
       }
     }
   } catch (err) {
@@ -6262,7 +6527,15 @@ function buildUserSocialProfileSnapshot(user = auth.currentUser) {
   const activeUser = user || auth.currentUser;
   const email = String(activeUser?.email || "").trim().toLowerCase();
   const username = getSafeUsernameForAuthenticatedUser(activeUser, accountName?.innerText || "", email);
-  const displayName = normalizeDisplayNameValue(activeUser?.displayName)
+  const providerIds = Array.isArray(activeUser?.providerData)
+    ? activeUser.providerData.map((entry) => String(entry?.providerId || "").trim().toLowerCase())
+    : [];
+  const hasPasswordAccount = providerIds.includes("password");
+  const cachedIdentity = accountIdentityCache.get(String(activeUser?.uid || "").trim());
+  const displayName = (hasPasswordAccount
+    ? normalizeDisplayNameValue(cachedIdentity?.displayName)
+      || normalizeDisplayNameValue(accountDisplayName?.innerText || "")
+    : normalizeDisplayNameValue(activeUser?.displayName))
     || normalizeDisplayNameValue(accountDisplayName?.innerText || "")
     || username;
   const uid = String(activeUser?.uid || "").trim();
@@ -6284,13 +6557,7 @@ function buildUserSocialProfileSnapshot(user = auth.currentUser) {
   const tasksToday = Number(maps.tasksDoneByDay.get(todayKey)) || 0;
   const sleepToday = Number(getTodaySleep()) || Number(maps.sleepByDay.get(todayKey)) || 0;
   const avgMoodToday = Number((Number(maps.moodByDay.get(todayKey)) || getTodayMoodAverageScore() || 0).toFixed(2));
-  let waterToday = 0;
-  for (let index = waterHistory.length - 1; index >= 0; index -= 1) {
-    if (dateToKey(waterDates[index]) !== todayKey) continue;
-    waterToday = Number(waterHistory[index]) || 0;
-    break;
-  }
-  waterToday = Number(waterToday.toFixed(1));
+  const waterToday = getTodayWater();
   const gratitudeToday = getTodayGratitudeCount();
   const dailyChallengeCompletedToday = dailyChallengeCompleted ? 1 : 0;
   const moodToday = getTodayMood();
@@ -6433,13 +6700,13 @@ function renderFriendMetricCardInsights() {
   }
 
   if (!Array.isArray(friendInsightProfiles) || !friendInsightProfiles.length) {
-    if (taskFriendInsight) taskFriendInsight.innerText = "Optional shared task reflections can appear here if you choose to connect with a friend.";
-    if (waterFriendInsight) waterFriendInsight.innerText = "Optional shared hydration reflections can appear here if you choose to connect with a friend.";
-    if (sleepFriendInsight) sleepFriendInsight.innerText = "Optional shared sleep reflections can appear here if you choose to connect with a friend.";
-    if (moodFriendInsight) moodFriendInsight.innerText = "Optional shared mood reflections can appear here if you choose to connect with a friend.";
-    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Optional shared gratitude reflections can appear here if you choose to connect with a friend.";
-    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Optional shared moments can appear here if you choose to connect with a friend.";
-    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Optional shared wellness reflections can appear here if you choose to connect with a friend.";
+    if (taskFriendInsight) taskFriendInsight.innerText = "Shared task reflections can appear here if you choose to connect with a friend.";
+    if (waterFriendInsight) waterFriendInsight.innerText = "Shared hydration reflections can appear here if you choose to connect with a friend.";
+    if (sleepFriendInsight) sleepFriendInsight.innerText = "Shared sleep reflections can appear here if you choose to connect with a friend.";
+    if (moodFriendInsight) moodFriendInsight.innerText = "Shared mood reflections can appear here if you choose to connect with a friend.";
+    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Shared gratitude reflections can appear here if you choose to connect with a friend.";
+    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Shared moments can appear here if you choose to connect with a friend.";
+    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Shared wellness reflections can appear here if you choose to connect with a friend.";
     return;
   }
 
@@ -6448,13 +6715,13 @@ function renderFriendMetricCardInsights() {
 
   const compareProfiles = getComparisonFriendProfiles(friendInsightProfiles, MAX_FRIENDS);
   if (!compareProfiles.length) {
-    if (taskFriendInsight) taskFriendInsight.innerText = "Optional shared task reflections can appear here if you choose to connect with a friend.";
-    if (waterFriendInsight) waterFriendInsight.innerText = "Optional shared hydration reflections can appear here if you choose to connect with a friend.";
-    if (sleepFriendInsight) sleepFriendInsight.innerText = "Optional shared sleep reflections can appear here if you choose to connect with a friend.";
-    if (moodFriendInsight) moodFriendInsight.innerText = "Optional shared mood reflections can appear here if you choose to connect with a friend.";
-    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Optional shared gratitude reflections can appear here if you choose to connect with a friend.";
-    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Optional shared moments can appear here if you choose to connect with a friend.";
-    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Optional shared wellness reflections can appear here if you choose to connect with a friend.";
+    if (taskFriendInsight) taskFriendInsight.innerText = "Shared task reflections can appear here if you choose to connect with a friend.";
+    if (waterFriendInsight) waterFriendInsight.innerText = "Shared hydration reflections can appear here if you choose to connect with a friend.";
+    if (sleepFriendInsight) sleepFriendInsight.innerText = "Shared sleep reflections can appear here if you choose to connect with a friend.";
+    if (moodFriendInsight) moodFriendInsight.innerText = "Shared mood reflections can appear here if you choose to connect with a friend.";
+    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Shared gratitude reflections can appear here if you choose to connect with a friend.";
+    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Shared moments can appear here if you choose to connect with a friend.";
+    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Shared wellness reflections can appear here if you choose to connect with a friend.";
     return;
   }
 
@@ -6659,6 +6926,7 @@ function renderFriendRequests(rows) {
   safeRows.forEach((entry) => {
     const row = document.createElement("div");
     row.className = "friend-row";
+    row.dataset.requestKey = `${String(entry?.source || "legacy")}:${String(entry?.requestId || entry?.id || entry?.fromUid || "")}`;
     const senderDisplayName = escapeHtml(getFriendDisplayName({
       displayName: entry.fromDisplayName,
       name: entry.fromName,
@@ -6738,6 +7006,7 @@ function renderCurrentFriends(rows) {
   rows.forEach((entry) => {
     const row = document.createElement("div");
     row.className = "friend-row";
+    row.dataset.requestKey = `sent:${String(entry?.id || "")}`;
     const friendDisplayName = escapeHtml(getFriendDisplayName({
       displayName: entry.friendDisplayName,
       uid: entry.friendUid,
@@ -7096,6 +7365,12 @@ async function cancelSentFriendRequest(entry) {
   const toUid = cleanTextValue(entry?.toUid);
   const toEmail = cleanLowerTextValue(entry?.toEmail);
   if (!entryId) return;
+  const actionKey = `sent:${entryId}:cancel`;
+  if (friendRequestActionsInFlight.has(actionKey)) return;
+  friendRequestActionsInFlight.add(actionKey);
+  const requestRow = Array.from(sentRequestsList?.querySelectorAll(".friend-row[data-request-key]") || [])
+    .find((row) => row.dataset.requestKey === `sent:${entryId}`);
+  requestRow?.remove();
 
   try {
     const requestNonce = cleanTextValue(entry?.requestNonce);
@@ -7139,6 +7414,9 @@ async function cancelSentFriendRequest(entry) {
     await loadFriendRequests(user.uid);
   } catch (err) {
     notifyFirestoreError(err);
+    await loadSentFriendRequests(user.uid).catch(() => {});
+  } finally {
+    friendRequestActionsInFlight.delete(actionKey);
   }
 }
 
@@ -8336,16 +8614,30 @@ async function submitAddFriendRequest() {
   }
 
   const targetUsernameInput = String(addFriendEmailInput?.value || "").trim();
-  const targetUsernameExactInput = getCaseSensitiveUsernameInputValue(targetUsernameInput);
   const targetUsernameValidation = validateSignupUsername(targetUsernameInput);
-  const targetUsernameKey = targetUsernameValidation.normalized;
+  const legacyLookupValidation = /^[A-Za-z0-9._-]{1,20}$/.test(
+    targetUsernameInput.startsWith("@") ? targetUsernameInput.slice(1).trim() : targetUsernameInput
+  )
+    ? { ok: true, normalized: normalizeUsernameForLookup(targetUsernameInput) }
+    : targetUsernameValidation;
+  const targetUsernameKey = legacyLookupValidation.normalized;
   const senderEmail = String(user.email || "").trim().toLowerCase();
   if (!targetUsernameInput) {
     setAddFriendError("Friend username is required.");
     return;
   }
-  if (!targetUsernameValidation.ok || !targetUsernameKey) {
+  if (!legacyLookupValidation.ok || !targetUsernameKey) {
     setAddFriendError("Enter a valid username (letters, numbers, underscores, dashes; 1-20 chars).");
+    return;
+  }
+
+  const knownOwnUsernames = [
+    readCachedAccountUsername(user.uid),
+    normalizeUsernameForLookup(accountName?.innerText || ""),
+    normalizeUsernameForLookup(user.displayName || "")
+  ].filter(Boolean);
+  if (knownOwnUsernames.includes(targetUsernameKey)) {
+    setAddFriendError("You cannot send a friend request to yourself.");
     return;
   }
 
@@ -8368,14 +8660,6 @@ async function submitAddFriendRequest() {
       preferServer: true
     });
     if (targetDirectory) {
-      const directoryCaseSensitiveUsername = getCaseSensitiveUsernameInputValue(
-        targetDirectory.usernameExact || targetDirectory.username || targetDirectory.name || ""
-      );
-      if (targetUsernameExactInput && directoryCaseSensitiveUsername && targetUsernameExactInput !== directoryCaseSensitiveUsername) {
-        setAddFriendError(`No account found with exact case \"${targetUsernameExactInput}\". Try \"${directoryCaseSensitiveUsername}\".`);
-        return;
-      }
-
       targetUid = String(targetDirectory.uid || "").trim();
       targetEmail = String(targetDirectory.email || "").trim().toLowerCase();
       targetUsername = getNormalizedUsernameIdentity(targetDirectory.username || targetDirectory.name || targetUsernameKey, targetEmail)
@@ -8402,7 +8686,7 @@ async function submitAddFriendRequest() {
     }
 
     if (targetUid === user.uid) {
-      setAddFriendError("You cannot add your own account.");
+      setAddFriendError("You cannot send a friend request to yourself.");
       return;
     }
 
@@ -8730,6 +9014,12 @@ async function respondToFriendRequest(requestEntry, action) {
     : String(entry?.requestId || entry?.id || fromUid);
 
   if (!user?.uid || !fromUid) return;
+  const actionKey = `${source}:${requestId}`;
+  if (friendRequestActionsInFlight.has(actionKey)) return;
+  friendRequestActionsInFlight.add(actionKey);
+  const requestRow = Array.from(friendRequestsList?.querySelectorAll(".friend-row[data-request-key]") || [])
+    .find((row) => row.dataset.requestKey === `${source}:${requestId}`);
+  requestRow?.remove();
 
   const accepted = action === "accept";
   try {
@@ -8990,12 +9280,16 @@ async function respondToFriendRequest(requestEntry, action) {
     await loadFriendsInsights(user.uid);
     showToast(accepted ? "Friend request accepted." : "Friend request declined.");
   } catch (err) {
+    await loadFriendRequests(user.uid).catch(() => {});
     notifyFirestoreError(err);
+  } finally {
+    friendRequestActionsInFlight.delete(actionKey);
   }
 }
 
 // ---------- DASHBOARD JS ----------
 const moodHistory=[],waterHistory=[],sleepHistory=[];
+const moodEntryIds=[];
 const moodDates=[];
 const waterDates=[];
 const sleepDates=[];
@@ -9237,6 +9531,116 @@ const aiSessionState = {
   topicHistory: [],
   memoryPairs: []
 };
+const aiUserProfile = {
+  goals: [],
+  recurringStruggles: [],
+  preferences: [],
+  progressNotes: [],
+  lastTopics: [],
+  updatedAt: ""
+};
+
+function addAiProfileItem(list, value, limit = 12) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (!normalized || normalized.length < 3) return;
+  const existingIndex = list.findIndex((entry) => entry.toLowerCase() === normalized.toLowerCase());
+  if (existingIndex >= 0) list.splice(existingIndex, 1);
+  list.push(normalized.slice(0, 180));
+  while (list.length > limit) list.shift();
+}
+
+function updateAiUserProfile(inputText) {
+  const text = String(inputText || "").replace(/\s+/g, " ").trim();
+  const lower = text.toLowerCase();
+  if (!text) return;
+
+  const goalMatch = text.match(/(?:my goal is|i want to|i'm trying to|i am trying to|i plan to|i'd like to)\s+(.+)/i);
+  if (goalMatch?.[1] && goalMatch[1].length < 180) addAiProfileItem(aiUserProfile.goals, goalMatch[1]);
+
+  const struggleMatch = text.match(/(?:i keep|i often|i always|i struggle to|i'm struggling to|i am struggling to|i can't|i cannot|i missed|i keep missing)\s+(.+)/i);
+  if (struggleMatch?.[1] && struggleMatch[1].length < 180) addAiProfileItem(aiUserProfile.recurringStruggles, struggleMatch[1]);
+  if (/\b(?:missed|failed|failing|struggle|hard|difficult|can't stick|cannot stick)\b/.test(lower)) {
+    addAiProfileItem(aiUserProfile.recurringStruggles, text);
+  }
+
+  const preferenceMatch = text.match(/(?:i like|i love|i prefer|i don't like|i hate|please remember that)\s+(.+)/i);
+  if (preferenceMatch?.[1] && preferenceMatch[1].length < 160) addAiProfileItem(aiUserProfile.preferences, preferenceMatch[1]);
+
+  if (/\b(?:managed|improved|better|progress|succeeded|completed|stuck with|did it)\b/.test(lower)) {
+    addAiProfileItem(aiUserProfile.progressNotes, text);
+  }
+
+  const topic = classifyIntent(text)?.key;
+  if (topic && topic !== "fallback") addAiProfileItem(aiUserProfile.lastTopics, topic, 10);
+  aiUserProfile.updatedAt = getServerNowDate().toISOString();
+}
+
+function resetAiUserProfile() {
+  aiUserProfile.goals.length = 0;
+  aiUserProfile.recurringStruggles.length = 0;
+  aiUserProfile.preferences.length = 0;
+  aiUserProfile.progressNotes.length = 0;
+  aiUserProfile.lastTopics.length = 0;
+  aiUserProfile.updatedAt = "";
+}
+
+async function saveAiUserProfile(userId) {
+  if (!userId) return;
+  try {
+    await setDoc(doc(db, "users", userId, "settings", "aiMemory"), {
+      goals: aiUserProfile.goals,
+      recurringStruggles: aiUserProfile.recurringStruggles,
+      preferences: aiUserProfile.preferences,
+      progressNotes: aiUserProfile.progressNotes,
+      lastTopics: aiUserProfile.lastTopics,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (err) {
+    structuredLog("warn", "ai.memory.save", err?.message || String(err), { userId });
+  }
+}
+
+function loadAiUserProfile(data = {}) {
+  resetAiUserProfile();
+  ["goals", "recurringStruggles", "preferences", "progressNotes", "lastTopics"].forEach((key) => {
+    const values = Array.isArray(data?.[key]) ? data[key] : [];
+    values.forEach((value) => addAiProfileItem(aiUserProfile[key], value, key === "lastTopics" ? 10 : 12));
+  });
+  aiUserProfile.updatedAt = String(data?.updatedAt || "");
+}
+
+function getAiProfileContext() {
+  const parts = [];
+  if (aiUserProfile.goals.length) parts.push(`goals: ${aiUserProfile.goals.slice(-3).join("; ")}`);
+  if (aiUserProfile.recurringStruggles.length) parts.push(`recurring difficulties: ${aiUserProfile.recurringStruggles.slice(-3).join("; ")}`);
+  if (aiUserProfile.preferences.length) parts.push(`preferences: ${aiUserProfile.preferences.slice(-3).join("; ")}`);
+  if (aiUserProfile.progressNotes.length) parts.push(`recent progress: ${aiUserProfile.progressNotes.slice(-3).join("; ")}`);
+  return parts.join(" | ");
+}
+
+function addLongTermMemoryToResponse(inputText, response, isHtml) {
+  const text = String(inputText || "").toLowerCase();
+  const struggles = aiUserProfile.recurringStruggles;
+  const hasProgress = /\b(?:managed|improved|better|progress|succeeded|completed|stuck with|did it)\b/.test(text);
+  const hasDifficulty = /\b(?:missed|failed|failing|struggle|hard|difficult|can't stick|cannot stick)\b/.test(text);
+  if ((!struggles.length && !aiUserProfile.goals.length) || (!hasProgress && !hasDifficulty && !/\b(?:advice|plan|routine|help|should|how)\b/.test(text))) {
+    return { response, isHtml };
+  }
+
+  let memoryLine = "";
+  if (hasProgress && aiUserProfile.progressNotes.length) {
+    memoryLine = "I remember this has been a recurring challenge, so this improvement matters. Let’s build on what worked instead of making the routine bigger.";
+  } else if (hasDifficulty) {
+    memoryLine = "I remember this has come up before. Let’s make the next step smaller and more realistic rather than treating it as a failure.";
+  } else if (aiUserProfile.goals.length && /\b(?:advice|plan|routine|help|should|how)\b/.test(text)) {
+    memoryLine = `I’ll keep your goal of “${aiUserProfile.goals[aiUserProfile.goals.length - 1]}” in mind as we work through this.`;
+  }
+  if (!memoryLine || String(response || "").includes(memoryLine)) return { response, isHtml };
+  return {
+    response: isHtml ? `${memoryLine}<br><br>${response}` : `${memoryLine}\n\n${response}`,
+    isHtml
+  };
+}
 const AI_MODE_PRESETS = {
   balanced: { depth: 2, style: "balanced" },
   coach: { depth: 3, style: "coach" },
@@ -9282,6 +9686,7 @@ let questXp = 0;
 let questRecoveryBonusDateKey = "";
 let questRecoveryBonusClaimed = false;
 let questRecoveryBonusAwardInFlight = false;
+let questShieldLastUsedDateKey = "";
 let burnoutRadarWarningActive = false;
 let burnoutRadarDataReady = false;
 let burnoutRadarCalculatedDateKey = "";
@@ -9542,6 +9947,11 @@ const DAILY_ROUTINE_ACTIVITY_ACTIONS = {
   "hydration break": "Refill your water and take a brief screen break.",
   journaling: "Write a few lines about how the day is going.",
   "creative time": "Spend a little time making or practicing something you enjoy.",
+  breakfast: "Have breakfast and ease into the day.",
+  snacks: "Have a snack and check in with your energy.",
+  snack: "Have a snack and check in with your energy.",
+  lunch: "Have lunch and take a proper pause.",
+  dinner: "Have dinner and begin winding down.",
   "outdoor break": "Step outside for fresh air and a change of scene.",
   "tidy up": "Tidy one small area to make your space feel calmer.",
   "family time": "Spend a little focused time with someone you care about.",
@@ -9562,7 +9972,8 @@ function getStartupWeekKey(dateValue = getServerNowDate()) {
 function getDefaultStartupUsageState() {
   return {
     reportWeekKey: getStartupWeekKey(),
-    reportCount: 0
+    reportCount: 0,
+    reportLines: []
   };
 }
 
@@ -9570,12 +9981,16 @@ function normalizeStartupUsageState(input) {
   const source = input && typeof input === "object" ? input : {};
   const normalized = {
     reportWeekKey: String(source.reportWeekKey || getStartupWeekKey()),
-    reportCount: Math.max(0, Number(source.reportCount) || 0)
+    reportCount: Math.max(0, Number(source.reportCount) || 0),
+    reportLines: Array.isArray(source.reportLines)
+      ? source.reportLines.map((line) => String(line || "")).filter(Boolean).slice(0, 20)
+      : []
   };
 
   if (normalized.reportWeekKey !== getStartupWeekKey()) {
     normalized.reportWeekKey = getStartupWeekKey();
     normalized.reportCount = 0;
+    normalized.reportLines = [];
   }
 
   return normalized;
@@ -9603,8 +10018,11 @@ async function loadStartupUsageState(userId) {
     if (snapshot.exists) {
       const raw = snapshot.data || {};
       startupUsageState = normalizeStartupUsageState(raw);
+      startupWeeklyReportCache = startupUsageState.reportLines;
+      startupReportGeneratedOnce = startupWeeklyReportCache.length > 0;
       changed = String(raw?.reportWeekKey || "") !== startupUsageState.reportWeekKey
-        || Number(raw?.reportCount) !== startupUsageState.reportCount;
+        || Number(raw?.reportCount) !== startupUsageState.reportCount
+        || JSON.stringify(raw?.reportLines || []) !== JSON.stringify(startupUsageState.reportLines);
     } else {
       changed = true;
     }
@@ -9626,6 +10044,9 @@ async function ensureStartupUsageCurrent(userId) {
   if (startupUsageState.reportWeekKey !== weekKey) {
     startupUsageState.reportWeekKey = weekKey;
     startupUsageState.reportCount = 0;
+    startupUsageState.reportLines = [];
+    startupWeeklyReportCache = "";
+    startupReportGeneratedOnce = false;
     changed = true;
   }
 
@@ -10354,13 +10775,7 @@ function getInsightSeries(metricType) {
 
   const values = days.map((day) => {
     const dayKey = dateToKey(day);
-    let latestValue = 0;
-    for (let index = waterHistory.length - 1; index >= 0; index -= 1) {
-      if (dateToKey(waterDates[index]) !== dayKey) continue;
-      latestValue = Number(waterHistory[index]) || 0;
-      break;
-    }
-    return Number(latestValue.toFixed(1));
+    return getWaterTotalForDate(dayKey);
   });
   const waterScaleMax = Math.max(8, ...values.map((value) => Number(value) || 0));
   return { labels, values, maxValue: waterScaleMax };
@@ -10610,7 +11025,7 @@ function computeWeekMetrics(startDate, endDate) {
     if (!isInRange(waterDate, startDate, endDate)) return;
     const dayKey = dateToKey(waterDate);
     if (!dayKey) return;
-    waterByDay.set(dayKey, (waterByDay.get(dayKey) || 0) + (Number(entry) || 0));
+    waterByDay.set(dayKey, Number(entry) || 0);
   });
 
   const tasksInPeriod = taskEntries.filter((entry) => {
@@ -10682,7 +11097,7 @@ function renderWeeklyGoalScorecard(currentStart, currentEnd) {
     if (!isInRange(waterDate, currentStart, currentEnd)) return;
     const dayKey = dateToKey(waterDate);
     if (!dayKey) return;
-    waterByDay.set(dayKey, (waterByDay.get(dayKey) || 0) + (Number(entry) || 0));
+    waterByDay.set(dayKey, Number(entry) || 0);
   });
 
   const sleepByDay = new Map();
@@ -10704,19 +11119,25 @@ function renderWeeklyGoalScorecard(currentStart, currentEnd) {
     tasksDoneByDay.set(dayKey, (tasksDoneByDay.get(dayKey) || 0) + 1);
   });
 
-  const waterTarget = Math.max(1, Number(weeklyTargets.waterGoal) || 8);
+  const waterTarget = Number(weeklyTargets.waterGoal) > 0
+    ? Number(weeklyTargets.waterGoal)
+    : 0;
   const sleepTarget = Math.max(1, Number(weeklyTargets.sleepTarget) || 8);
   const taskTarget = Math.max(1, Number(weeklyTargets.taskTarget) || 5);
 
-  const hydrationHits = dayKeys.filter((key) => (Number(waterByDay.get(key)) || 0) >= waterTarget).length;
+  const hydrationHits = waterTarget > 0
+    ? dayKeys.filter((key) => (Number(waterByDay.get(key)) || 0) >= waterTarget).length
+    : null;
   const sleepHits = dayKeys.filter((key) => (Number(sleepByDay.get(key)) || 0) >= sleepTarget).length;
   const taskHits = dayKeys.filter((key) => (Number(tasksDoneByDay.get(key)) || 0) >= taskTarget).length;
 
   const totalDays = dayKeys.length;
   const scoreItems = [
-    `Hydration check-ins: ${hydrationHits}/${totalDays} days (${Math.round((hydrationHits / totalDays) * 100)}%) • intention ${waterTarget} glasses/day`,
-    `Sleep check-ins: ${sleepHits}/${totalDays} days (${Math.round((sleepHits / totalDays) * 100)}%) • intention ${sleepTarget}h/day`,
-    `Task check-ins: ${taskHits}/${totalDays} days (${Math.round((taskHits / totalDays) * 100)}%) • intention ${taskTarget} done/day`
+    hydrationHits === null
+      ? "Hydration: no personal goal set yet; your check-ins can stay flexible."
+      : `Hydration goal: met on ${hydrationHits} of ${totalDays} days (${Math.round((hydrationHits / totalDays) * 100)}%) · ${waterTarget} glasses per day.`,
+    `Sleep goal: met on ${sleepHits} of ${totalDays} days (${Math.round((sleepHits / totalDays) * 100)}%) · ${sleepTarget} hours per night.`,
+    `Task goal: met on ${taskHits} of ${totalDays} days (${Math.round((taskHits / totalDays) * 100)}%) · ${taskTarget} tasks per day.`
   ];
 
   setListItems(weeklyGoalScorecard, scoreItems, "Your weekly check-in snapshot will appear here as entries come in.");
@@ -10753,7 +11174,7 @@ function updateWeeklyReview() {
 
   const actions = [];
   if (current.sleepAvg < 7) actions.push("If it feels useful, try a gentle wind-down reminder before bed.");
-  if (current.waterDailyAvg < Math.max(8, weeklyTargets.waterGoal || 8)) actions.push("Keep water nearby and check in when you feel thirsty.");
+  if (weeklyTargets.waterGoal > 0 && current.waterDailyAvg < weeklyTargets.waterGoal) actions.push("Keep water nearby and check in when you feel thirsty, if that feels useful.");
   if (current.taskCompletion < 0.7) actions.push("Try choosing one small priority at a time, if that feels manageable.");
   if (current.moodScore < 2) actions.push("Make space for a mood check-in or a brief pause when it suits you.");
   if (current.rescues >= 3) actions.push("Consider adding a gentle pause to your day before you usually feel stretched.");
@@ -10782,6 +11203,36 @@ function updateWeeklyReview() {
     );
   } else {
     patternInsights.push("A few more days of mood and sleep notes may help this pattern take shape.");
+  }
+
+  {
+    const moodByDay = buildMoodAverageByDayMap(new Set(getRecentDayKeys(30)));
+    const completedTasksByDay = new Map();
+    taskEntries.forEach((entry) => {
+      if (!entry?.completed) return;
+      const key = dateToKey(entry.completedAt || entry.time);
+      if (!key) return;
+      completedTasksByDay.set(key, (completedTasksByDay.get(key) || 0) + 1);
+    });
+    const moodOnTaskDays = [];
+    const moodOnOtherDays = [];
+    moodByDay.forEach((moodAvg, dayKey) => {
+      const value = Number(moodAvg) || 0;
+      if (value <= 0) return;
+      if ((completedTasksByDay.get(dayKey) || 0) > 0) moodOnTaskDays.push(value);
+      else moodOnOtherDays.push(value);
+    });
+    if (moodOnTaskDays.length >= 2 && moodOnOtherDays.length >= 2) {
+      const taskDayMood = safeAvg(moodOnTaskDays);
+      const otherDayMood = safeAvg(moodOnOtherDays);
+      patternInsights.push(
+        taskDayMood >= otherDayMood
+          ? "Mood check-ins tended to be a little higher on days when you completed a task; this is an observation, not a cause."
+          : "Mood check-ins tended to be a little lower on days when you completed a task; this is an observation, not a cause."
+      );
+    } else {
+      patternInsights.push("A few more mood and routine notes may help show whether your daily rhythm feels different on task days.");
+    }
   }
 
   {
@@ -10814,7 +11265,10 @@ function updateWeeklyReview() {
   setListItems(weeklyImproved, improved, "Your week is still taking shape. Check back when a few more moments are logged.");
   setListItems(weeklyDropped, dropped, "Nothing stands out as a dip this week. Your pace can vary from day to day.");
   setListItems(weeklyActions, actions.slice(0, 3), "Choose one small intention for next week, or wait until you feel ready.");
-  setListItems(weeklyPatternInsights, patternInsights.slice(0, 3), "Mood patterns will appear as more check-ins are logged.");
+  const patternSummary = patternInsights.length
+    ? [...patternInsights.slice(0, 3), "These are gentle patterns in your notes, not proof that one habit caused another."]
+    : [];
+  setListItems(weeklyPatternInsights, patternSummary, "Mood patterns will appear as more check-ins are logged.");
   renderWeeklyGoalScorecard(currentStart, currentEnd);
   renderWeeklyTargets();
 }
@@ -11237,17 +11691,22 @@ function renderQuestWeekStreak(animatedDateKey = "") {
 function renderHabitQuestUI(animatedDateKey = "") {
   if (questXpEl) questXpEl.innerText = `Progress ${questXp}/100`;
   updateQuestRecoveryBonusUI();
-  const allDoneToday = habitQuests.length > 0 && habitQuests.every((entry) => !!entry.completed);
-  if (questStreakEl) questStreakEl.innerText = allDoneToday
-    ? `A ${questStreakCount}-day journey`
+  const progressPercent = Math.max(0, Math.min(100, questXp));
+  if (questStreakEl) questStreakEl.innerText = progressPercent >= 100
+    ? `🔥 ${questStreakCount}-day journey`
     : `${habitQuests.filter((entry) => entry.completed).length} of ${habitQuests.length || 4} steps today`;
-  const progressPercent = allDoneToday ? 100 : Math.max(0, Math.min(100, questXp));
   if (questProgressFill) questProgressFill.style.width = `${progressPercent}%`;
-  if (questShieldEl) questShieldEl.innerText = `Streak support: ${questShieldAvailable ? "Available" : "Resting"}`;
+  if (questShieldEl) {
+    questShieldEl.innerText = questShieldAvailable
+      ? "Streak support: Available — protects one missed day"
+      : questShieldLastUsedDateKey === getTodayKey()
+        ? "Streak support: Used today — your streak was protected"
+        : "Streak support: Earned at 100 progress";
+  }
   if (questProgressHintEl) {
-    questProgressHintEl.innerText = allDoneToday
-      ? "You have made it through today’s journey. Take a moment to notice that."
-      : `${progressPercent}% along the way • Today’s streak reflects all four steps; take them one at a time.`;
+    questProgressHintEl.innerText = progressPercent >= 100
+      ? "You reached 100 progress today. Enjoy the momentum you created."
+      : `${progressPercent}% today • Add another step only if it feels helpful.`;
   }
   renderQuestWeekStreak(animatedDateKey);
 
@@ -11307,6 +11766,7 @@ async function saveHabitQuestState(userId) {
       recoveryBonusDateKey: questRecoveryBonusDateKey,
       recoveryBonusClaimed: questRecoveryBonusClaimed,
       shield: questShieldAvailable,
+      shieldLastUsedDateKey: questShieldLastUsedDateKey,
       streakCount: questStreakCount,
       lastStreakDateKey: questLastStreakDateKey,
       weeklyQuestUsedIds,
@@ -11327,15 +11787,30 @@ async function awardBurnoutRecoveryBonus(userId, warningWasActive) {
   questRecoveryBonusAwardInFlight = true;
   questRecoveryBonusDateKey = todayKey;
   questRecoveryBonusClaimed = true;
-  questXp += 10;
-  while (questXp >= 100) questXp -= 100;
-  renderHabitQuestUI();
+  const wasComplete = questXp >= 100;
+  questXp += 25;
+  questXp = Math.min(100, questXp);
+  const reachedMilestone = !wasComplete && questXp >= 100;
+  if (reachedMilestone) {
+    markQuestProgressMilestone(todayKey);
+  }
+  renderHabitQuestUI(reachedMilestone ? todayKey : "");
   try {
     await saveHabitQuestState(userId);
     showToast("A little extra progress has been added to your Habit Journey.");
   } finally {
     questRecoveryBonusAwardInFlight = false;
   }
+}
+
+function markQuestProgressMilestone(todayKey = getTodayKey()) {
+  if (questCompletedDateKeys.includes(todayKey)) return false;
+  questCompletedDateKeys.push(todayKey);
+  questShieldAvailable = true;
+  const streakAdvanced = awardQuestStreakForToday(todayKey);
+  if (streakAdvanced) triggerQuestStreakCelebration();
+  while (questCompletedDateKeys.length > 7) questCompletedDateKeys.shift();
+  return true;
 }
 
 function dayDiffFromKeys(fromKey, toKey) {
@@ -11354,15 +11829,22 @@ function normalizeQuestStreakForToday(todayKey = getTodayKey()) {
     questLastStreakDateKey = "";
     weeklyQuestUsedIds = [];
     questCompletedDateKeys = [];
-    return;
+    return false;
   }
 
   if (!questLastStreakDateKey) {
     questStreakCount = 0;
-    return;
+    return false;
   }
   const diff = dayDiffFromKeys(questLastStreakDateKey, todayKey);
+  if (diff === 2 && questShieldAvailable) {
+    questShieldAvailable = false;
+    questShieldLastUsedDateKey = todayKey;
+    questLastStreakDateKey = todayKey;
+    return true;
+  }
   if (diff > 1 || diff < 0) questStreakCount = 0;
+  return false;
 }
 
 function awardQuestStreakForToday(todayKey = getTodayKey()) {
@@ -11398,6 +11880,7 @@ async function loadHabitQuest(userId) {
       questRecoveryBonusDateKey = String(data.recoveryBonusDateKey || "");
       questRecoveryBonusClaimed = questRecoveryBonusDateKey === questDateKey && !!data.recoveryBonusClaimed;
       questShieldAvailable = !!data.shield;
+      questShieldLastUsedDateKey = String(data.shieldLastUsedDateKey || "");
       questStreakCount = Math.max(0, Number(data.streakCount) || 0);
       questLastStreakDateKey = String(data.lastStreakDateKey || "");
       questWeekStartKey = String(data.weekStartKey || "");
@@ -11412,7 +11895,8 @@ async function loadHabitQuest(userId) {
         questLastStreakDateKey = "";
       }
 
-      normalizeQuestStreakForToday(questDateKey);
+      const shieldStateChanged = normalizeQuestStreakForToday(questDateKey);
+      if (shieldStateChanged) await saveHabitQuestState(userId);
 
       if (data.dateKey === questDateKey && Array.isArray(data.quests) && data.quests.length >= 4) {
         const loadedQuests = [];
@@ -11443,6 +11927,9 @@ async function loadHabitQuest(userId) {
         if (loadedQuests.length >= 4) {
           habitQuests.length = 0;
           loadedQuests.slice(0, 4).forEach((quest) => habitQuests.push(quest));
+          if (habitQuests.every((quest) => quest.completed)) {
+            questXp = 100;
+          }
           if (loadedQuests.length !== data.quests.length || data.quests.some((quest, index) => {
             return getHabitQuestSemanticKey(quest) !== getHabitQuestSemanticKey(loadedQuests[index]);
           })) {
@@ -11452,7 +11939,10 @@ async function loadHabitQuest(userId) {
           questXp = 0;
           questRecoveryBonusDateKey = "";
           questRecoveryBonusClaimed = false;
-          questShieldAvailable = false;
+          if (data.dateKey === questDateKey) {
+            questShieldAvailable = false;
+            questShieldLastUsedDateKey = "";
+          }
           generateAdaptiveQuests(questDateKey);
           await saveHabitQuestState(userId);
         }
@@ -11461,6 +11951,7 @@ async function loadHabitQuest(userId) {
         questRecoveryBonusDateKey = "";
         questRecoveryBonusClaimed = false;
         questShieldAvailable = false;
+        questShieldLastUsedDateKey = "";
         generateAdaptiveQuests(questDateKey);
         await saveHabitQuestState(userId);
       }
@@ -11469,6 +11960,7 @@ async function loadHabitQuest(userId) {
       questRecoveryBonusDateKey = "";
       questRecoveryBonusClaimed = false;
       questShieldAvailable = false;
+      questShieldLastUsedDateKey = "";
       questStreakCount = 0;
       questLastStreakDateKey = "";
       questWeekStartKey = currentWeekStart;
@@ -11619,25 +12111,14 @@ async function completeHabitQuest(index) {
   }
 
   quest.completed = true;
-  questXp += 20;
-
-  const allDone = habitQuests.length > 0 && habitQuests.every((entry) => entry.completed);
-  if (allDone) {
-    const todayKey = getTodayKey();
-    if (!questCompletedDateKeys.includes(todayKey)) {
-      questCompletedDateKeys.push(todayKey);
-    }
-    questXp += 20;
-    questShieldAvailable = true;
-    const streakAdvanced = awardQuestStreakForToday(todayKey);
-    if (streakAdvanced) triggerQuestStreakCelebration();
-    while (questCompletedDateKeys.length > 7) questCompletedDateKeys.shift();
-    renderHabitQuestUI(todayKey);
-  } else {
-    renderHabitQuestUI();
+  const wasComplete = questXp >= 100;
+  questXp += 25;
+  questXp = Math.min(100, questXp);
+  const reachedMilestone = !wasComplete && questXp >= 100;
+  if (reachedMilestone) {
+    markQuestProgressMilestone(getTodayKey());
   }
-
-  while (questXp >= 100) questXp -= 100;
+  renderHabitQuestUI(reachedMilestone ? getTodayKey() : "");
 
   await saveHabitQuestState(user.uid);
   updateInsights();
@@ -11667,7 +12148,6 @@ function ensureHabitQuestCurrent() {
     questXp = 0;
     questRecoveryBonusDateKey = "";
     questRecoveryBonusClaimed = false;
-    questShieldAvailable = false;
     generateAdaptiveQuests(todayKey);
     const user = auth.currentUser;
     if (user) saveHabitQuestState(user.uid);
@@ -13169,11 +13649,11 @@ async function ensureTaskDayCurrent(userId) {
 
 function getWellnessScoreMeta(scoreValue = 0) {
   const score = Math.max(0, Math.min(100, Math.round(Number(scoreValue) || 0)));
-  if (score >= 80) return { score, category: "Well Supported", status: "Many supportive moments" };
-  if (score >= 60) return { score, category: "Steady", status: "A steady day" };
-  if (score >= 40) return { score, category: "Taking Shape", status: "Taking shape" };
-  if (score >= 20) return { score, category: "Getting Started", status: "A gentle place to begin" };
-  return { score, category: "Getting Started", status: "A gentle place to begin" };
+  if (score >= 80) return { score, category: "Well Supported", status: "Several supportive parts of today are in place" };
+  if (score >= 60) return { score, category: "Steady", status: "Some steady supports are in place today" };
+  if (score >= 40) return { score, category: "Taking Shape", status: "Today is beginning to take shape" };
+  if (score >= 20) return { score, category: "Getting Started", status: "A gentle starting point for today" };
+  return { score, category: "Getting Started", status: "A gentle starting point for today" };
 }
 
 function hasWellnessScoreInputToday(todayKey = getTodayKey()) {
@@ -13205,7 +13685,7 @@ function setWellnessScorePendingDisplay() {
     wellnessStatusEl.innerText = "Your reflection will take shape after a check-in.";
   }
   if (wellnessReassuranceEl) {
-    wellnessReassuranceEl.innerText = "A few moments of care can help today’s reflection take shape.";
+    wellnessReassuranceEl.innerText = "A check-in will give today’s reflection something to work with.";
   }
   if (wellnessDoNowEl) {
     wellnessDoNowEl.innerHTML = "<b>A GENTLE NEXT STEP:</b> Add a check-in whenever you feel ready.";
@@ -13268,13 +13748,224 @@ function getWellnessSuggestionKey(entryOrText = "") {
   return `text:${text.replace(/\s+/g, " ").trim()}`;
 }
 
-function updateWellnessScore() {
-  const todayKey = getTodayKey();
+function focusDashboardCard(cardType) {
+  const targets = { mood, tasks: task, water: waterInput, sleep: sleepInput };
+  const target = targets[cardType];
+  const card = target?.closest(".card");
+  if (!card) return;
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => target?.focus(), 350);
+}
 
-  const waterToday = waterHistory.reduce((sum, value, index) => {
-    const dateKey = dateToKey(waterDates[index]);
-    return dateKey === todayKey ? sum + value : sum;
-  }, 0);
+const TODAY_FOCUS_COPY_POOL = {
+  moodMissing: [
+    { action: "Check in with how you feel, whenever you are ready.", state: "A moment to check in", prompt: "There is no mood check-in from today yet, so this is the clearest place to begin.", type: "mood" },
+    { action: "Give today a quick mood check-in.", state: "Start with your experience", prompt: "A mood check-in can help the rest of today’s picture feel more personal.", type: "mood" }
+  ],
+  stressed: [
+    { action: "Take one quiet minute before your next task.", state: "Make room to soften", prompt: "You logged feeling stressed today. A brief pause may be more useful than adding another task.", type: "mood" },
+    { action: "Choose one gentle thing that could support you.", state: "Keep it gentle", prompt: "Your mood check-in suggests taking today one manageable step at a time.", type: "mood" }
+  ],
+  low: [
+    { action: "Choose one gentle thing that could support you.", state: "Keep it gentle", prompt: "You logged a low moment today. A small, supportive choice is enough for now.", type: "mood" },
+    { action: "Make space for something that feels comforting.", state: "Support, not pressure", prompt: "Your check-in points toward care and comfort rather than a longer list of demands.", type: "mood" }
+  ],
+  sleepMissing: [
+    { action: "Log sleep when you have a moment.", state: "Complete the picture", prompt: "Sleep is not logged for today yet, so adding it would make this reflection more personal.", type: "sleep" },
+    { action: "Notice how rested or tired you feel.", state: "Listen inward", prompt: "There is no sleep entry from today. You can add one later, or simply notice how your energy feels.", type: "sleep" }
+  ],
+  water: [
+    { action: "Have some water if it sounds good.", state: "A small reset", prompt: "Your saved water goal is not met yet. This is a gentle option, not a requirement.", type: "water" },
+    { action: "Check in with water when it feels useful.", state: "Keep it flexible", prompt: "Today’s water entry is below the goal you chose, so a small check-in may be useful.", type: "water" }
+  ],
+  tasks: [
+    { action: "Choose one manageable task to begin.", state: "One next step", prompt: "You have open tasks today. Picking one is enough; the whole list does not need to be finished now.", type: "tasks" },
+    { action: "Look at today’s tasks and choose what matters most.", state: "Choose your focus", prompt: "Your task list has an open item. Start with the one that would make today feel a little easier.", type: "tasks" }
+  ],
+  steady: [
+    { action: "Review what has helped your mood, energy, or focus today.", state: "Keep what is working", prompt: "Your available check-ins look steady, so use one thing that is already helping to shape the rest of the day.", type: "mood" },
+    { action: "Choose one activity that supports the rest of your day.", state: "Build from what is steady", prompt: "Your available check-ins do not show an urgent gap right now. A useful next step can come from what is already working.", type: "mood" }
+  ]
+};
+
+function chooseTodayFocusCopy(key, todayKey, signalSeed = "") {
+  const options = TODAY_FOCUS_COPY_POOL[key] || TODAY_FOCUS_COPY_POOL.steady;
+  const seed = `${todayKey}:${key}:${signalSeed}`;
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  return options[hash % options.length];
+}
+
+const TODAY_PRIORITY_POOL = {
+  moodMissing: [
+    "Check in with how you feel, whenever you are ready.",
+    "Notice your mood before deciding what you need next.",
+    "Give yourself a quick mood check-in; you can keep it simple."
+  ],
+  stressed: [
+    "Make room for a brief pause before the next task.",
+    "Choose one calming or supportive thing, if it helps.",
+    "Keep the next step small while your energy feels stretched."
+  ],
+  low: [
+    "Choose one gentle thing that could make today a little easier.",
+    "Make space for comfort or connection, if either feels available.",
+    "Let the next step be supportive rather than demanding."
+  ],
+  sleepMissing: [
+    "Notice how rested or tired you feel.",
+    "Log sleep later if you want a fuller reflection.",
+    "Protect a little room for rest tonight, if that feels useful."
+  ],
+  sleepLight: [
+    "Make a little room for rest tonight.",
+    "Keep tonight’s wind-down simple and flexible.",
+    "Notice what helps your energy feel supported."
+  ],
+  water: [
+    "Check in with water if it feels useful.",
+    "Keep water nearby without turning it into a requirement.",
+    "Take a small drink when your body asks for it."
+  ],
+  tasks: [
+    "Choose one open task that would make today feel easier.",
+    "Give your attention to one manageable task.",
+    "Leave some tasks for later if they are not important today."
+  ],
+  steady: [
+    "Review what has helped your mood, energy, or focus today and carry one useful thing forward.",
+    "Use today’s steady check-ins to choose one activity that supports the rest of your day.",
+    "Your current check-ins look steady; protect the routine or activity that is working best today."
+  ]
+};
+
+function chooseTodayPriorities(todayKey, signalSeed, details) {
+  const priorities = [];
+  const addPoolItem = (poolKey) => {
+    const options = TODAY_PRIORITY_POOL[poolKey] || [];
+    if (!options.length) return;
+    const seed = `${todayKey}:${poolKey}:${signalSeed}`;
+    let hash = 0;
+    for (let index = 0; index < seed.length; index += 1) {
+      hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+    }
+    const item = options[hash % options.length];
+    if (!priorities.includes(item)) priorities.push(item);
+  };
+  const addDataBasedSteadyPriority = () => {
+    const trackedSignals = [
+      details.moodLogged ? "mood" : "",
+      details.sleepLogged ? "sleep" : "",
+      details.hasWaterGoal ? "water" : "",
+      details.totalTasks > 0 ? "tasks" : ""
+    ].filter(Boolean);
+    if (trackedSignals.length >= 3) {
+      priorities.push(`Your ${trackedSignals.join(", ")} check-ins look steady; review which part of that rhythm helped most today.`);
+    } else if (trackedSignals.length) {
+      priorities.push(`Your ${trackedSignals.join(" and ")} check-in${trackedSignals.length > 1 ? "s are" : " is"} steady; carry one helpful part of it into the rest of today.`);
+    } else {
+      priorities.push("Start with a mood or energy check-in so today’s priorities can reflect what you actually need.");
+    }
+  };
+
+  if (!details.moodLogged) addPoolItem("moodMissing");
+  else if (details.moodLabel === "Stressed") addPoolItem("stressed");
+  else if (details.moodLabel === "Low") addPoolItem("low");
+  if (!details.sleepLogged) addPoolItem("sleepMissing");
+  else if (details.sleepHours > 0 && details.sleepHours < 7) addPoolItem("sleepLight");
+  if (details.hasWaterGoal && details.waterToday < details.waterGoal) addPoolItem("water");
+  if (details.pendingCount > 0) addPoolItem("tasks");
+  if (!priorities.length) addDataBasedSteadyPriority();
+  return priorities.slice(0, 3);
+}
+
+function updateDashboardFocus() {
+  if (!todayFocusActionEl) return;
+  const todayKey = getTodayKey();
+  const waterToday = getTodayWater();
+  const hasWaterGoal = waterGoal > 0;
+  const effectiveWaterGoal = hasWaterGoal ? waterGoal : 0;
+  const moodToday = moodHistory.reduce((lastMood, value, index) => (
+    dateToKey(moodDates[index]) === todayKey ? value : lastMood
+  ), "");
+  const moodMeta = getMoodStateMeta(moodToday);
+  const sleepToday = sleepHistory.reduce((lastValue, value, index) => (
+    dateToKey(sleepDates[index]) === todayKey ? value : lastValue
+  ), 0);
+  const todayTasks = getTodayTaskEntries();
+  const taskCounts = {
+    totalTasks: todayTasks.length,
+    doneTasks: todayTasks.filter((entry) => !!entry.completed).length
+  };
+  const pendingCount = todayTasks.filter((entry) => !entry.completed).length;
+
+  if (todayFocusMoodEl) todayFocusMoodEl.innerText = moodMeta.logged ? moodMeta.label : "Not logged";
+  if (todayFocusSleepEl) todayFocusSleepEl.innerText = sleepToday > 0 ? `${Number(sleepToday).toFixed(1)}h` : "Not logged";
+  if (todayFocusWaterEl) {
+    const waterAmount = Number(waterToday) || 0;
+    const formattedWater = Number.isInteger(waterAmount) ? String(waterAmount) : waterAmount.toFixed(1);
+    todayFocusWaterEl.innerText = waterAmount > 0
+      ? hasWaterGoal ? `${formattedWater}/${effectiveWaterGoal} glasses` : `${formattedWater} glasses`
+      : "Not logged";
+  }
+  if (todayFocusTasksEl) todayFocusTasksEl.innerText = `${taskCounts.doneTasks}/${taskCounts.totalTasks}`;
+
+  let copyKey = "steady";
+  if (moodMeta.logged && moodMeta.label === "Stressed") {
+    copyKey = "stressed";
+  } else if (moodMeta.logged && moodMeta.label === "Low") {
+    copyKey = "low";
+  } else if (!moodMeta.logged) {
+    copyKey = "moodMissing";
+  } else if (!sleepToday) {
+    copyKey = "sleepMissing";
+  } else if (hasWaterGoal && waterToday < effectiveWaterGoal) {
+    copyKey = "water";
+  } else if (pendingCount > 0) {
+    copyKey = "tasks";
+  }
+  const focusCopy = chooseTodayFocusCopy(
+    copyKey,
+    todayKey,
+    `${moodMeta.label}:${sleepToday}:${waterToday}:${pendingCount}:${taskCounts.doneTasks}`
+  );
+
+  todayFocusActionEl.innerText = focusCopy.action;
+  if (todayFocusStateEl) todayFocusStateEl.innerText = focusCopy.state;
+  if (todayFocusPromptEl) todayFocusPromptEl.innerText = focusCopy.prompt;
+  const button = todayFocusActionEl.closest(".dashboard-focus-checkin")?.querySelector(".dashboard-focus-button");
+  if (button) {
+    button.innerText = focusCopy.type === "mood" ? "Check in with mood"
+      : focusCopy.type === "water" ? "Log some water"
+        : focusCopy.type === "sleep" ? "Log sleep"
+          : "View today’s tasks";
+    button.setAttribute("onclick", `focusDashboardCard('${focusCopy.type}')`);
+  }
+
+  if (todayFocusPrioritiesEl) {
+    const priorities = chooseTodayPriorities(
+      todayKey,
+      `${moodMeta.label}:${sleepToday}:${waterToday}:${pendingCount}:${taskCounts.doneTasks}`,
+      {
+        moodLogged: moodMeta.logged,
+        moodLabel: moodMeta.label,
+        sleepLogged: sleepToday > 0,
+        sleepHours: Number(sleepToday) || 0,
+        hasWaterGoal,
+        waterToday,
+        waterGoal: effectiveWaterGoal,
+        pendingCount,
+        totalTasks: taskCounts.totalTasks
+      }
+    );
+    todayFocusPrioritiesEl.innerHTML = priorities.slice(0, 3).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  }
+}
+
+function updateWellnessScore() {
+  updateDashboardFocus();
+  const todayKey = getTodayKey();
+  const waterToday = getTodayWater();
   const effectiveWaterGoal = waterGoal > 0 ? waterGoal : 8;
   const hasCustomWaterGoal = waterGoal > 0;
   const waterRatio = Math.min(1, waterToday / effectiveWaterGoal);
@@ -13343,9 +14034,10 @@ function updateWellnessScore() {
   const wellnessMeta = setWellnessScoreDisplay(totalScore);
   if (wellnessReassuranceEl) {
     wellnessReassuranceEl.innerText =
-      wellnessMeta.score >= 80 ? "You have logged several supportive moments today; let that be enough." :
-      wellnessMeta.score >= 60 ? "You are building a picture of today, one check-in at a time." :
-      "There is no score to chase; a small moment of care is enough.";
+      wellnessMeta.score >= 80 ? "Your check-ins suggest that several supportive parts of today are in place." :
+      wellnessMeta.score >= 60 ? "Some supportive pieces are in place today, and the picture can keep unfolding." :
+      wellnessMeta.score >= 40 ? "Your picture of today is beginning to take shape, one check-in at a time." :
+      "You only need one small check-in at a time; there is nothing to chase.";
   }
 
   const rankedActions = [];
@@ -13491,10 +14183,7 @@ function updateWellnessScore() {
 function getCrashRiskSnapshot() {
   const todayKey = getTodayKey();
 
-  const waterToday = waterHistory.reduce((sum, value, index) => {
-    const dateKey = dateToKey(waterDates[index]);
-    return dateKey === todayKey ? sum + value : sum;
-  }, 0);
+  const waterToday = getTodayWater();
   const hasWaterLoggedToday = waterDates.some((entry) => dateToKey(entry) === todayKey);
   const hasCustomWaterGoal = Number(waterGoal) > 0;
   const effectiveWaterGoal = waterGoal > 0 ? waterGoal : 8;
@@ -13667,9 +14356,9 @@ function renderProgressMilestones() {
   }
 
   const upcoming = [
-    `Mood notes: ${Math.max(0, 3 - moodStreak)} more day(s) toward a 3-day check-in rhythm.`,
-    `Hydration notes: ${Math.max(0, 3 - waterStreak)} more day(s) toward a 3-day check-in rhythm.`,
-    `Task notes: ${Math.max(0, 25 - completedTasks)} more completed task(s) until the next milestone, whenever you get there.`,
+  `Mood notes: ${Math.max(0, 3 - moodStreak)} more day(s) can help you notice a rhythm, whenever you feel like checking in.`,
+  `Hydration notes: ${Math.max(0, 3 - waterStreak)} more day(s) can help a pattern take shape, with no need to log every day.`,
+  `Task notes: ${Math.max(0, 25 - completedTasks)} more completed task(s) until the next marker, whenever you get there.`,
     `Wellness reflection: ${Math.max(0, 80 - currentScore)} points to the next marker; there is no rush.`
   ];
 
@@ -13751,8 +14440,10 @@ function updateInsights() {
     : 0;
   const sleepPercent = Math.round(Math.min(100, (avgSleep / 8) * 100));
 
-  const waterSum = waterHistory.reduce((a, b) => a + b, 0);
-  const waterPercent = waterGoal > 0 ? Math.round((waterSum / waterGoal) * 100) : 0;
+  const todayWaterTotal = getWaterTotalForDate(getTodayKey());
+  const waterPercent = waterGoal > 0
+    ? Math.min(100, Math.round((todayWaterTotal / waterGoal) * 100))
+    : 0;
 
   if (insightTaskTopLabel) {
     insightTaskTopLabel.innerText = `Tasks completed ${doneTasks}/${totalTasks}`;
@@ -13808,7 +14499,7 @@ function updateInsights() {
   const moodChangeLabel = previousWeekMetrics.moodScore > 0
     ? `Mood ${roundedMoodChange >= 0 ? "improving" : "down"}: ${roundedMoodChange >= 0 ? "+" : ""}${roundedMoodChange}% vs last week`
     : (hasWeeklyMoodLogs
-      ? `Mood baseline this week: ${moodWeeklyLabel} (${weeklyMoodAvgScore.toFixed(2)})`
+      ? `Mood check-ins leaned ${moodWeeklyLabel.toLowerCase()} this week`
       : "Mood check-ins this week: no entries yet");
 
   const metricViews = [
@@ -13826,7 +14517,9 @@ function updateInsights() {
     },
     {
       title: "Water Intake Trend",
-      label: `Hydration trend • goal progress ${waterPercent}%`,
+      label: waterGoal > 0
+        ? `Today’s hydration: ${todayWaterTotal}/${waterGoal} glasses (${waterPercent}% of goal)`
+        : "Today’s hydration: no goal set yet",
       percent: waterPercent,
       series: waterSeries
     },
@@ -14361,6 +15054,95 @@ function setRoutineCustomError(message = "") {
   dailyRoutineCustomError.style.display = message ? "block" : "none";
 }
 
+const routinePickerInstances = new Map();
+
+function renderRoutinePicker(select) {
+  const instance = routinePickerInstances.get(select);
+  if (!instance) return;
+
+  instance.menu.replaceChildren();
+  Array.from(select.options).forEach((option) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "routine-picker-option";
+    item.textContent = option.textContent || option.value;
+    item.disabled = option.disabled;
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", option.value === select.value ? "true" : "false");
+    item.addEventListener("click", () => {
+      if (option.disabled) return;
+      select.value = option.value;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+      instance.close();
+    });
+    instance.menu.appendChild(item);
+  });
+
+  const selected = select.selectedOptions?.[0];
+  instance.button.textContent = selected?.textContent || "Choose an option";
+  instance.button.setAttribute("aria-expanded", instance.menu.hidden ? "false" : "true");
+}
+
+function enhanceRoutinePicker(select) {
+  if (!select || routinePickerInstances.has(select)) return;
+  const wrapper = document.createElement("div");
+  wrapper.className = "routine-picker";
+  select.parentNode?.insertBefore(wrapper, select);
+  wrapper.appendChild(select);
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "routine-picker-trigger";
+  button.setAttribute("aria-haspopup", "listbox");
+  button.setAttribute("aria-expanded", "false");
+  button.setAttribute("aria-label", select.getAttribute("aria-label") || "Choose an option");
+
+  const menu = document.createElement("div");
+  menu.className = "routine-picker-menu";
+  menu.setAttribute("role", "listbox");
+  menu.hidden = true;
+
+  const close = () => {
+    menu.hidden = true;
+    button.setAttribute("aria-expanded", "false");
+    wrapper.classList.remove("is-open");
+  };
+  const open = () => {
+    document.querySelectorAll(".routine-picker.is-open").forEach((other) => {
+      if (other !== wrapper) other.querySelector(".routine-picker-trigger")?.click();
+    });
+    menu.hidden = false;
+    button.setAttribute("aria-expanded", "true");
+    wrapper.classList.add("is-open");
+  };
+
+  button.addEventListener("click", () => (menu.hidden ? open() : close()));
+  select.addEventListener("change", () => renderRoutinePicker(select));
+  wrapper.append(button, menu);
+  routinePickerInstances.set(select, { button, menu, close });
+
+  const observer = new MutationObserver(() => renderRoutinePicker(select));
+  observer.observe(select, { childList: true, subtree: true, attributes: true });
+  renderRoutinePicker(select);
+}
+
+function initializeRoutinePickers() {
+  [
+    dailyRoutineActivitySelect,
+    dailyRoutineTimeSelect,
+    dailyRoutineStartTimeSelect,
+    dailyRoutineDeleteSelect
+  ].forEach(enhanceRoutinePicker);
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".routine-picker")) return;
+    document.querySelectorAll(".routine-picker.is-open").forEach((picker) => {
+      picker.querySelector(".routine-picker-trigger")?.click();
+    });
+  });
+}
+
+initializeRoutinePickers();
+
 function renderRoutineEditorStep() {
   const isActivityStep = routineEditorMode === "add"
     ? routineEditorStep === 0
@@ -14378,16 +15160,46 @@ function renderRoutineEditorStep() {
     dailyRoutineTimeHint.innerText = "Choose an available one-hour slot or enter a custom range like 13:00-14:00. Occupied times are unavailable.";
   }
   if (dailyRoutineStepCounter) dailyRoutineStepCounter.innerText = `Step ${routineEditorStep + 1}/${stepCount}`;
+  if (dailyRoutineEditorPreviousBtn) {
+    dailyRoutineEditorPreviousBtn.disabled = routineEditorStep === 0;
+  }
   if (dailyRoutineEditorNextBtn) {
     dailyRoutineEditorNextBtn.innerText = routineEditorMode === "replace" && routineEditorStep === 1
       ? "Next"
       : routineEditorStep === stepCount - 1 ? "Finish" : "Next";
   }
+
   if (dailyRoutineEditorDots) {
     dailyRoutineEditorDots.innerHTML = Array.from({ length: stepCount }, (_, step) =>
       `<span class="welcome-guide-dot${step === routineEditorStep ? " active" : ""}"></span>`
     ).join("");
   }
+}
+
+function goToPreviousDailyRoutineEditorStep() {
+  if (routineEditorStep <= 0) return;
+
+  if (routineEditorMode === "replace" && routineEditorStep === 1) {
+    dailyRoutineActivitySelect?.replaceChildren(new Option("Choose an activity", ""));
+    dailyRoutineState.entries.forEach((entry) => {
+      const time = `${formatRoutineHour(entry.startHour, "24")}–${formatRoutineHour(entry.endHour, "24")}`;
+      dailyRoutineActivitySelect?.add(new Option(`${time} · ${entry.label}`, entry.id));
+    });
+    if (dailyRoutineActivityHint) {
+      dailyRoutineActivityHint.innerText = "Choose the activity in your current routine that you want to replace.";
+    }
+    routinePendingActivity = null;
+    routineEditorStep = 0;
+    setRoutineEditorError("");
+    renderRoutineEditorStep();
+    dailyRoutineActivitySelect?.focus();
+    return;
+  }
+
+  routineEditorStep -= 1;
+  setRoutineEditorError("");
+  renderRoutineEditorStep();
+  (routineEditorStep === 0 ? dailyRoutineActivitySelect : dailyRoutineTimeSelect)?.focus();
 }
 
 function openDailyRoutineEditor(mode = "add") {
@@ -14841,7 +15653,7 @@ function renderStartupBehaviorMemory() {
   waterHistory.forEach((entry, index) => {
     const key = dateToKey(waterDates[index]);
     if (!key || !dayKeys.includes(key)) return;
-    waterByDay.set(key, (waterByDay.get(key) || 0) + (Number(entry) || 0));
+    waterByDay.set(key, Number(entry) || 0);
   });
 
   const sleepByDay = new Map();
@@ -14861,16 +15673,20 @@ function renderStartupBehaviorMemory() {
 
   const memories = [];
   const activeDays = dayKeys.filter((key) => moodByDay.has(key) || waterByDay.has(key) || sleepByDay.has(key) || tasksDoneByDay.has(key));
-  memories.push(`Your logs include ${activeDays.length} of the last 14 days.`);
+  memories.push(
+    activeDays.length
+      ? `You checked in on ${activeDays.length} of the last 14 days.`
+      : "You have not logged anything in the last 14 days yet."
+  );
 
   const sleepMoodPairCount = dayKeys.filter((key) => sleepByDay.has(key) && moodByDay.has(key)).length;
   if (sleepMoodPairCount > 0) {
-    memories.push(`Sleep and mood were both logged on ${sleepMoodPairCount} day${sleepMoodPairCount === 1 ? "" : "s"}. This is a simple snapshot, not proof of a connection.`);
+    memories.push(`You logged both sleep and mood on ${sleepMoodPairCount} day${sleepMoodPairCount === 1 ? "" : "s"}.`);
   }
 
   const waterTaskPairCount = dayKeys.filter((key) => waterByDay.has(key) && (Number(tasksDoneByDay.get(key)) || 0) > 0).length;
   if (waterTaskPairCount > 0) {
-    memories.push(`Water and completed-task logs overlap on ${waterTaskPairCount} day${waterTaskPairCount === 1 ? "" : "s"}.`);
+    memories.push(`You logged water and completed tasks on the same day${waterTaskPairCount === 1 ? "" : "s"} ${waterTaskPairCount === 1 ? "once" : `${waterTaskPairCount} times`}.`);
   }
 
   let mostCompleteKey = "";
@@ -14894,7 +15710,7 @@ function renderStartupBehaviorMemory() {
     if (waterByDay.has(mostCompleteKey)) loggedSignals.push(`${Number(waterByDay.get(mostCompleteKey))} glasses of water`);
     const tasksDone = Number(tasksDoneByDay.get(mostCompleteKey)) || 0;
     if (tasksDone > 0) loggedSignals.push(`${tasksDone} task${tasksDone === 1 ? "" : "s"} completed`);
-    memories.push(`Your most complete check-in day (${mostCompleteKey}) includes ${loggedSignals.join(", ")}.`);
+    memories.push(`Your fullest check-in was ${mostCompleteKey}: ${loggedSignals.join(", ")}.`);
   }
 
   if (!activeDays.length) {
@@ -14915,7 +15731,12 @@ function refreshStartupFeatures() {
   }
   if (startupWeeklyReportText && !startupWeeklyReportCache) {
     startupWeeklyReportText.innerHTML = "<li>Your weekly snapshot will be here whenever you are ready to create one.</li>";
+  } else if (startupWeeklyReportText && startupWeeklyReportCache.length) {
+    startupWeeklyReportText.innerHTML = startupWeeklyReportCache
+      .map((line) => `<li>${escapeHtml(line)}</li>`)
+      .join("");
   }
+  if (startupClearReportBtn) startupClearReportBtn.disabled = !startupWeeklyReportCache;
 }
 
 async function generateStartupWeeklyReport() {
@@ -14935,6 +15756,7 @@ async function generateStartupWeeklyReport() {
   startupReportGeneratedOnce = true;
   startupWeeklyReportCache = buildStartupWeeklyReport();
   startupUsageState.reportCount += 1;
+  startupUsageState.reportLines = [...startupWeeklyReportCache];
   await saveStartupUsageState(user.uid);
   if (startupWeeklyReportText) {
     startupWeeklyReportText.innerHTML = startupWeeklyReportCache
@@ -14951,6 +15773,7 @@ async function copyStartupWeeklyReport() {
     showToast("Generate weekly report first.");
     return;
   }
+
   try {
     const reportText = ["Lumevine Weekly Report", ...startupWeeklyReportCache].map((line) => `- ${line}`).join("\n");
     await navigator.clipboard.writeText(reportText);
@@ -14958,6 +15781,19 @@ async function copyStartupWeeklyReport() {
   } catch (_) {
     showToast("Could not copy report right now.");
   }
+}
+
+async function clearStartupWeeklyReport() {
+  startupWeeklyReportCache = "";
+  startupReportGeneratedOnce = false;
+  startupUsageState.reportLines = [];
+  const user = auth.currentUser;
+  if (user) await saveStartupUsageState(user.uid);
+  if (startupWeeklyReportText) {
+    startupWeeklyReportText.innerHTML = "<li>Your weekly snapshot will be here whenever you are ready to create one.</li>";
+  }
+  refreshStartupFeatures();
+  showToast("Weekly snapshot cleared.");
 }
 
 // AI Companion
@@ -15985,16 +16821,16 @@ const AI_TASK_ADDED_BASE = [
 ];
 
 const AI_REMINDER_ADDED_BASE = [
-  "⏰ Reminder set: {text} in {minutes} minute(s).",
-  "Reminder scheduled: {text} — I'll ping you in {minutes} minute(s).",
-  "Saved reminder: {text} (in {minutes} min).",
-  "All set: I'll remind you about {text} in {minutes} minutes.",
-  "Reminder queued: {text} — {minutes} minute(s) from now.",
-  "Your reminder for '{text}' is on the clock (in {minutes}m).",
-  "I've scheduled it: {text} — expect a reminder in {minutes} minutes.",
-  "Noted: {text}. I'll remind you in {minutes} minute(s).",
-  "Reminder added: {text} (in {minutes}m).",
-  "Set: {text} — reminder will fire in {minutes} minutes."
+  "⏰ Reminder set: {text} in {minutes}.",
+  "Reminder scheduled: {text} — I'll ping you in {minutes}.",
+  "Saved reminder: {text} (in {minutes}).",
+  "All set: I'll remind you about {text} in {minutes}.",
+  "Reminder queued: {text} — {minutes} from now.",
+  "Your reminder for '{text}' is on the clock (in {minutes}).",
+  "I've scheduled it: {text} — expect a reminder in {minutes}.",
+  "Noted: {text}. I'll remind you in {minutes}.",
+  "Reminder added: {text} (in {minutes}).",
+  "Set: {text} — reminder will fire in {minutes}."
 ];
 
 const AI_MOOD_LOGGED_BASE = [
@@ -16057,6 +16893,49 @@ const AI_GREETING_FULL_POOL = expandAiResponsePool(AI_GREETING_FULL_BASE, {
   max: AI_GREETING_FULL_BASE.length,
   frames: [(text) => text]
 });
+const AI_CASUAL_POSITIVE_POOL = [
+  "Nice 😄 Love to hear it. What are you up to?",
+  "That’s good news. What’s been going well?",
+  "Glad to hear it 🙂 What are you getting into today?",
+  "Nice. I’m here—what do you feel like talking about?",
+  "Good stuff 😄 Want to chat, brainstorm, or just hang out here?"
+];
+const AI_CASUAL_NEUTRAL_POOL = [
+  "Got it. Tell me more.",
+  "I’m listening. What happened next?",
+  "Okay, I’m with you. What’s on your mind?",
+  "Fair enough. Where do you want to take this?",
+  "I hear you. Want to talk it out or keep it light?"
+];
+const AI_CASUAL_BORED_POOL = [
+  "Bored? I can work with that. Want a weird fact, a game, a joke, or a random challenge?",
+  "Let’s fix the boredom without turning it into a wellness assignment. Pick one: joke, game, weird fact, or random idea.",
+  "Boredom detected 😄 I can entertain you, help you choose something fun, or make up a tiny challenge.",
+  "Okay, no motivational speech: want a joke, a mini game, a strange fact, or a creative prompt?"
+];
+const AI_JOKE_POOL = [
+  "I told my computer I needed a break. Now it won’t stop sending me vacation ads.",
+  "Why did the scarecrow win an award? Because he was outstanding in his field.",
+  "I only know 25 letters of the alphabet. I don’t know y.",
+  "Why don’t scientists trust atoms? Because they make up everything.",
+  "I tried to catch fog yesterday. Mist.",
+  "What do you call fake spaghetti? An impasta.",
+  "I used to be addicted to the hokey pokey, but I turned myself around.",
+  "Why did the bicycle fall over? It was two-tired.",
+  "I asked the librarian if the library had books on paranoia. She whispered, “They’re right behind you.”",
+  "I’m reading a book about anti-gravity. It’s impossible to put down."
+];
+const AI_ROUTINE_MISSED_POOL = [
+  "Missing a routine happens. You haven’t ruined anything—just restart with the next item, not the whole day.",
+  "No guilt trip. Pick the next routine activity you can still do and continue from there.",
+  "That’s okay. Routines are maps, not contracts. Want to resume from the next activity or adjust today’s routine?",
+  "You missed a step, not the entire day. Start with the next realistic activity and keep moving."
+];
+const AI_CASUAL_POSITIVE_REPLIES = expandAiResponsePool(AI_CASUAL_POSITIVE_POOL, { min: 12, max: 32, frames: [(text) => text] });
+const AI_CASUAL_NEUTRAL_REPLIES = expandAiResponsePool(AI_CASUAL_NEUTRAL_POOL, { min: 12, max: 32, frames: [(text) => text] });
+const AI_CASUAL_BORED_REPLIES = expandAiResponsePool(AI_CASUAL_BORED_POOL, { min: 12, max: 32, frames: [(text) => text] });
+const AI_JOKE_REPLIES = expandAiResponsePool(AI_JOKE_POOL, { min: AI_JOKE_POOL.length, max: AI_JOKE_POOL.length, frames: [(text) => text] });
+const AI_ROUTINE_MISSED_REPLIES = expandAiResponsePool(AI_ROUTINE_MISSED_POOL, { min: 12, max: 32, frames: [(text) => text] });
 const AI_BYE_BASE = [
   "See you later, {name}!",
   "Bye for now, {name}!",
@@ -16333,6 +17212,7 @@ function classifyIntent(input) {
     { key: "greeting", score: /\b(hi|hello|hey|yo|hola)\b/.test(msg) ? 0.95 : 0 },
     { key: "smalltalk-casual", score: /^(?:sup|wassup|wsg)$/.test(msg) ? 0.999 : (/\b(lol|lmao|rofl|ikr|fr|frfr|omg|sup|wassup|wsg|bro|bruh|brb|ttyl|rn|haha+|hehe+)\b/.test(msg) ? 0.965 : 0) },
     { key: "bored", score: /\b(i\s*am\s*)?bored\b|nothing\s+to\s+do|boring|i do not know\s+what\s+to\s+do/.test(msg) ? 0.97 : 0 },
+    { key: "routine-missed", score: /\b(?:missed|skipped|forgot|fell behind on|did(?: not|n't)\s+(?:do|follow))\b[\s\S]{0,30}\b(?:routine|schedule|plan|step|activity)\b|\b(?:routine|schedule|plan)\b[\s\S]{0,24}\b(?:missed|skipped|forgot)\b/.test(msg) ? 0.975 : 0 },
     { key: "celebrate", score: /\b(yay+|woo+|let'?s\s+go|nice+|awesome+)\b/.test(msg) ? 0.955 : 0 },
     { key: "smalltalk-health", score: /\b(how are you|how are u|how's it going|how you doing|how r you|hru)\b/.test(msg) ? 0.98 : 0 },
     { key: "smalltalk-activity", score: /\b(what are you doing|what are u doing|wyd|wyd rn|what you doing|what you up to)\b/.test(msg) ? 0.97 : 0 },
@@ -16356,7 +17236,7 @@ function classifyIntent(input) {
     { key: "gratitude", score: /gratitude|thankful|grateful/.test(msg) ? 0.87 : 0 },
     { key: "capabilities", score: /help|what can you do|features|assist|commands/.test(msg) ? 0.86 : 0 },
     { key: "followup", score: /\b(and then|then what|what next|next step|continue|go deeper|do it|that one|same one|next one|step\s*\d+|option\s*\d+|yes|sure|okay|ok)\b/.test(msg) ? 0.9 : 0 },
-    { key: "joke", score: /\b(joke|make me laugh|funny)\b/.test(msg) ? 0.84 : 0 },
+    { key: "joke", score: /\b(joke|make me laugh|funny|humou?r|something hilarious)\b/.test(msg) ? 0.96 : 0 },
     {
       key: "thanks",
       score: (() => {
@@ -16429,6 +17309,7 @@ function getIntentLabel(intentKey) {
     productivity: "productivity",
     gratitude: "gratitude",
     capabilities: "commands",
+    "routine-missed": "routine support",
     followup: "follow-up",
     joke: "joke",
     thanks: "reply",
@@ -17115,7 +17996,7 @@ function buildPatternMetricMaps(maxDays = 30) {
   waterHistory.forEach((entry, index) => {
     const key = dateToKey(waterDates[index]);
     if (!key || !daySet.has(key)) return;
-    waterByDay.set(key, (waterByDay.get(key) || 0) + (Number(entry) || 0));
+    waterByDay.set(key, Number(entry) || 0);
   });
 
   const tasksDoneByDay = new Map();
@@ -17285,7 +18166,7 @@ function buildTrendSignals() {
   waterHistory.forEach((entry, index) => {
     const key = dateToKey(waterDates[index]);
     if (!key || !last7Keys.includes(key)) return;
-    waterByDay.set(key, (waterByDay.get(key) || 0) + (Number(entry) || 0));
+    waterByDay.set(key, Number(entry) || 0);
   });
 
   const sleepByDay = new Map();
@@ -17394,11 +18275,19 @@ function buildWhySummary(snapshot, trends) {
 }
 
 function getTodayWater() {
-  const todayKey = getTodayKey();
-  return waterHistory.reduce((sum, value, index) => {
-    const dateKey = dateToKey(waterDates[index]);
-    return dateKey === todayKey ? sum + value : sum;
-  }, 0);
+  return getWaterTotalForDate(getTodayKey());
+}
+
+function getWaterTotalForDate(dayKey) {
+  const safeDayKey = String(dayKey || "");
+  if (!safeDayKey) return 0;
+  let latestValue = 0;
+  waterHistory.forEach((value, index) => {
+    if (dateToKey(waterDates[index]) === safeDayKey) {
+      latestValue = Number(value) || 0;
+    }
+  });
+  return latestValue;
 }
 
 function getTodayMood() {
@@ -17553,6 +18442,22 @@ function normalizeReminderUnitValue(unitRaw) {
   if (/^(w|wk|wks|week|weeks)$/.test(unit)) return "week";
   if (/^(mo|mon|mons|month|months)$/.test(unit)) return "month";
   return "minute";
+}
+
+function formatReminderAmountAndUnit(amountRaw, unitRaw) {
+  const amount = Number(amountRaw);
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
+  const unit = normalizeReminderUnitValue(unitRaw);
+  const labels = {
+    second: "second",
+    minute: "minute",
+    hour: "hour",
+    day: "day",
+    week: "week",
+    month: "month"
+  };
+  const label = labels[unit] || labels.minute;
+  return `${safeAmount} ${label}${safeAmount === 1 ? "" : "s"}`;
 }
 
 function parseDurationToMinutes(amountRaw, unitRaw) {
@@ -18553,7 +19458,7 @@ async function tryAiAction(input, user, options = {}) {
     if (reminderUnit) reminderUnit.value = unitValue;
     await addReminder();
     if (reminderUnit) reminderUnit.value = previousUnit;
-    return `✅ Reminder set: ${reminderLabel} in ${formatReminderDurationFromMinutes(minutes)}.`;
+    return `✅ Reminder set: ${reminderLabel} in ${formatReminderAmountAndUnit(amount, unitValue)}.`;
   }
 
   const reminderMatch = msg.match(/^remind\s+me\s+to\s+(.+?)\s+(?:in|after)\s+(\d+(?:\.\d+)?)\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|wk|wks|week|weeks|mo|mon|mons|month|months)$/i)
@@ -18577,7 +19482,7 @@ async function tryAiAction(input, user, options = {}) {
     if (reminderUnit) reminderUnit.value = unitValue;
     await addReminder();
     if (reminderUnit) reminderUnit.value = previousUnit;
-    return `✅ Reminder set: ${reminderLabel} in ${formatReminderDurationFromMinutes(minutes)}.`;
+    return `✅ Reminder set: ${reminderLabel} in ${formatReminderAmountAndUnit(amount, unitValue)}.`;
   }
   if (/^(?:remind\s+me\s+to|set\s+reminder|add\s+reminder|create\s+reminder|reminder\s*[:\-]?)/i.test(msg)) {
     return "ℹ️ Include time too, like: set reminder submit assignment in 45 sec or 45 min.";
@@ -18648,14 +19553,53 @@ async function buildSmartAiResponse(input, user) {
     ? rawInput
     : normalizeTyposForAi(rawInput).trim();
   const checkInAnswer = normalizeLocalIntentText(normalizedInput);
-  const isBriefCheckInAnswer = /^(?:(?:i am|im|i m)\s+)?(?:(?:doing|feeling)\s+)?(?:nice|good|great|fine|okay|ok|alright|not bad|pretty good|very good|well)(?:\s+thanks?)?$/.test(checkInAnswer);
-  if (aiSessionState.awaitingCheckIn) {
+  const checkInContainsAction = /\b(?:add|log|save|set|delete|clear|complete|completed|finish|finished|create|remind|water|task|routine|mood|sleep|gratitude|schedule)\b/.test(checkInAnswer);
+  const checkInWords = checkInAnswer
+    .replace(/\b(?:i am|i m|doing|feeling|really|pretty|very|so|just|today|thanks?|thank you|and|but)\b/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  const positiveCheckInWords = new Set([
+    "nice", "good", "great", "fine", "okay", "ok", "alright",
+    "well", "amazing", "awesome", "fantastic", "happy", "positive", "better"
+  ]);
+  const isPositiveCheckInAnswer = checkInWords.length > 0
+    && checkInWords.every((word) => positiveCheckInWords.has(word));
+  const isLowCheckInAnswer = /\b(?:bad|rough|awful|terrible|sad|low|stressed|anxious|overwhelmed)\b/.test(checkInAnswer)
+    || /\bnot\s+(?:good|great|fine|okay|ok|well|happy)\b/.test(checkInAnswer);
+  const previousQuestionInvitesCheckIn = /\b(?:how\s+(?:have|are|is)|how['’]s|what['’]s\s+your|how\s+do\s+you\s+feel|how\s+has\s+your)\b[\s\S]{0,48}\b(?:been|going|day|feeling|doing)\b/i
+    .test(aiSessionState.lastAssistantQuestion);
+  const isCheckInFollowUp = (aiSessionState.awaitingCheckIn || previousQuestionInvitesCheckIn)
+    && !checkInContainsAction
+    && !!checkInAnswer;
+  if (isCheckInFollowUp) {
     aiSessionState.awaitingCheckIn = false;
-    if (isBriefCheckInAnswer) {
+    if (isPositiveCheckInAnswer) {
       aiSessionState.lastIntent = "smalltalk-health";
       aiSessionState.lastAdvice = [];
       return {
-        response: "Nice, glad to hear it! What can I help with today?",
+        response: pickNonRepeatingVariant(AI_CASUAL_POSITIVE_REPLIES, "casual_positive")
+          || "Nice, glad to hear it! What can I help with today?",
+        isHtml: false
+      };
+    }
+    if (isLowCheckInAnswer) {
+      aiSessionState.lastIntent = "smalltalk-low";
+      aiSessionState.lastAdvice = [];
+      return {
+        response: pickNonRepeatingVariant([
+          "I’m sorry it feels that way. Want to tell me what’s going on?",
+          "I’m sorry today feels rough. I’m here to listen—what happened?",
+          "That sounds hard. You can tell me as much or as little as you want."
+        ], "casual_low") || "I’m sorry it feels that way. Want to tell me what’s going on?",
+        isHtml: false
+      };
+    }
+    if (!isLowCheckInAnswer && checkInAnswer) {
+      aiSessionState.lastIntent = "smalltalk-followup";
+      aiSessionState.lastAdvice = [];
+      return {
+        response: pickNonRepeatingVariant(AI_CASUAL_NEUTRAL_REPLIES, "casual_neutral")
+          || "Got it. Tell me more.",
         isHtml: false
       };
     }
@@ -18719,6 +19663,26 @@ async function buildSmartAiResponse(input, user) {
   const priorityBoard = buildPriorityBoard(snapshot, trendSignals);
   const sleepMoodInsight = buildSleepMoodPatternInsight(30);
   const behaviorPatterns = getBehaviorPatternMemory(35);
+
+  if (intent.key === "bored") {
+    aiSessionState.lastIntent = "bored";
+    aiSessionState.lastAdvice = [];
+    return {
+      response: pickNonRepeatingVariant(AI_CASUAL_BORED_REPLIES, "casual_bored")
+        || "Bored? Want a joke, a game, a weird fact, or a random idea?",
+      isHtml: false
+    };
+  }
+
+  if (/\b(?:completed|finished|did|done with)\b[\s\S]{0,32}\b(?:task|routine|assignment|work|study)\b/.test(msg)) {
+    aiSessionState.lastIntent = "positive-completion";
+    aiSessionState.lastAdvice = [];
+    return {
+      response: pickNonRepeatingVariant(AI_CASUAL_POSITIVE_REPLIES, "casual_positive")
+        || "Nice work 😄 That counts. What are you tackling next?",
+      isHtml: false
+    };
+  }
 
   if (intent.key === "greeting") {
     const greetingTemplate = pickNonRepeatingVariant(AI_GREETING_FULL_POOL, "greeting_full")
@@ -18977,8 +19941,20 @@ async function buildSmartAiResponse(input, user) {
 
   if (intent.key === "joke") {
     aiSessionState.lastIntent = "joke";
+    aiSessionState.lastAdvice = [];
     return {
-      response: "Why did the task finally get done? It stopped dating ‘later’ and committed to ‘now.’ 😄",
+      response: pickNonRepeatingVariant(AI_JOKE_REPLIES, "joke")
+        || "Why did the scarecrow win an award? Because he was outstanding in his field.",
+      isHtml: false
+    };
+  }
+
+  if (intent.key === "routine-missed") {
+    aiSessionState.lastIntent = "routine-missed";
+    aiSessionState.lastAdvice = [];
+    return {
+      response: pickNonRepeatingVariant(AI_ROUTINE_MISSED_REPLIES, "routine_missed")
+        || "You missed a step, not the entire day. Start with the next realistic activity.",
       isHtml: false
     };
   }
@@ -19387,6 +20363,10 @@ function enforceAiResponseQuality(inputText, responseText, isHtml = false) {
     "smalltalk-health",
     "smalltalk-activity",
     "smalltalk-casual",
+    "smalltalk-followup",
+    "bored",
+    "routine-missed",
+    "positive-completion",
     "math",
     "compare",
     "knowledge",
@@ -19497,6 +20477,15 @@ function formatChatHtml(text) {
   return String(text || "").replace(/(\s|>)([1-9][.)])\s+/g, "$1<br><br>$2 ");
 }
 
+function removeAiResponseEmojis(text) {
+  return String(text || "")
+    .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, "")
+    .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
+    .replace(/[\u{2600}-\u{27BF}]/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function getAiTypingPreview(messageText, isHtml) {
   if (!isHtml) return formatChatPlainText(messageText);
   const preview = document.createElement("div");
@@ -19518,6 +20507,26 @@ function scrollChatRowIntoView(row) {
   setTimeout(reveal, 0);
   setTimeout(reveal, 80);
 }
+
+function scrollChatToLatest() {
+  if (!chat) return;
+  const reveal = () => {
+    const bottom = Math.max(0, chat.scrollHeight - chat.clientHeight);
+    chat.scrollTop = bottom;
+    chat.scrollTo({ top: bottom, behavior: "auto" });
+  };
+  reveal();
+  requestAnimationFrame(reveal);
+  setTimeout(reveal, 0);
+  setTimeout(reveal, 80);
+  setTimeout(reveal, 300);
+  setTimeout(reveal, 800);
+  setTimeout(reveal, 1500);
+}
+
+window.addEventListener("load", () => {
+  if (chat?.querySelector(".chat-message")) scrollChatToLatest();
+});
 
 function renderAiTypingMessage(anchorRow = null) {
   clearStatusState(chat);
@@ -19554,7 +20563,7 @@ function removeAiTypingMessage(row) {
 
 async function revealAiResponse(row, messageText, isHtml) {
   if (!row) return;
-  const safeOutput = applyAiOutputSafetyFilter(messageText, isHtml);
+  const safeOutput = applyAiOutputSafetyFilter(removeAiResponseEmojis(messageText), isHtml);
   const displayText = safeOutput.text;
   const displayIsHtml = safeOutput.isHtml;
   const textNode = row.querySelector(".chat-text");
@@ -19572,7 +20581,7 @@ async function revealAiResponse(row, messageText, isHtml) {
   cursor.setAttribute("aria-hidden", "true");
   textNode.replaceChildren(content, cursor);
 
-  const typingText = `AI: ${previewText}`;
+  const typingText = `🌿 AI: ${previewText}`;
   const delay = Math.max(22, Math.min(48, 5200 / Math.max(1, typingText.length)));
   for (let index = 1; index <= typingText.length; index += 1) {
     if (!row.isConnected) return;
@@ -19581,7 +20590,7 @@ async function revealAiResponse(row, messageText, isHtml) {
   }
 
   if (!row.isConnected) return;
-  setChatText(textNode, `AI: ${displayText}`, displayIsHtml);
+  setChatText(textNode, `🌿 AI: ${displayText}`, displayIsHtml);
 }
 
 function renderChatMessage(role, messageText, isHtml, chatId, fieldName) {
@@ -19595,12 +20604,12 @@ function renderChatMessage(role, messageText, isHtml, chatId, fieldName) {
   let displayText = messageText;
   let displayIsHtml = !!isHtml;
   if (role === "ai") {
-    const safeOutput = applyAiOutputSafetyFilter(messageText, isHtml);
+    const safeOutput = applyAiOutputSafetyFilter(removeAiResponseEmojis(messageText), isHtml);
     displayText = safeOutput.text;
     displayIsHtml = safeOutput.isHtml;
   }
   textNode.dataset.rawText = displayText;
-  setChatText(textNode, `${role === "user" ? "You" : "AI"}: ${displayText}`, displayIsHtml);
+  setChatText(textNode, `${role === "user" ? "You" : "🌿 AI"}: ${displayText}`, displayIsHtml);
 
   row.append(textNode);
 
@@ -19861,10 +20870,16 @@ async function loadAiChats(userId) {
   aiSessionState.conversationSummary = "";
   aiSessionState.topicHistory.length = 0;
   aiSessionState.memoryPairs.length = 0;
+  resetAiUserProfile();
+  resetAiUserProfile();
 
   try {
-    const snapshot = await getDocs(collection(db, "users", userId, "aiChats"));
+    const [snapshot, memorySnapshot] = await Promise.all([
+      getDocs(collection(db, "users", userId, "aiChats")),
+      getDoc(doc(db, "users", userId, "settings", "aiMemory"))
+    ]);
     if (!isActiveDataLoadUser(userId)) return;
+    if (memorySnapshot.exists()) loadAiUserProfile(memorySnapshot.data());
     const docs = snapshot.docs
       .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
       .sort((a, b) => {
@@ -19877,9 +20892,31 @@ async function loadAiChats(userId) {
       if (entry.userMessage) rememberPrompt(entry.userMessage);
       renderChatPair(entry);
     });
+    const recentPairs = docs
+      .filter((entry) => entry.userMessage || entry.aiResponse)
+      .slice(-24)
+      .map((entry) => ({
+        user: String(entry.userMessage || ""),
+        ai: String(entry.aiResponse || ""),
+        aiResponseIsHtml: !!entry.aiResponseIsHtml
+      }));
+    aiSessionState.memoryPairs.push(...recentPairs);
+    const lastPair = recentPairs[recentPairs.length - 1];
+    if (lastPair) {
+      aiSessionState.lastUserMessage = lastPair.user;
+      const lastIntent = classifyIntent(lastPair.user);
+      aiSessionState.lastIntent = lastIntent.key;
+      aiSessionState.awaitingCheckIn = lastIntent.key === "greeting";
+      rememberAssistantQuestion(lastPair.ai, lastPair.aiResponseIsHtml);
+    }
+    if (!memorySnapshot.exists()) {
+      recentPairs.forEach((pair) => updateAiUserProfile(pair.user));
+      if (recentPairs.length) await saveAiUserProfile(userId);
+    }
     if (!docs.length) {
       setEmptyState(chat, getRandomEmptyMessage("chat", "No AI chats yet — ask one question to get started."));
     }
+    scrollChatToLatest();
     setAiClearButtonState(docs.length > 0);
     updateAiLimitUI();
     updateClearDataButtonState();
@@ -19949,11 +20986,14 @@ async function clearAiChats(options = {}) {
     aiSessionState.awaitingCheckIn = false;
     aiSessionState.conversationSummary = "";
     aiSessionState.topicHistory.length = 0;
+    aiSessionState.memoryPairs.length = 0;
+    resetAiUserProfile();
     setAiClearButtonState(false);
 
     const finalizeDelete = async () => {
       try {
         await Promise.all(docsToDelete.map((entry) => deleteDoc(entry.ref)));
+        await deleteDoc(doc(db, "users", user.uid, "settings", "aiMemory"));
       } catch (err) {
         notifyFirestoreError(err);
       }
@@ -20033,8 +21073,9 @@ async function aiChat(){
 
     try {
       const smart = await buildSmartAiResponse(input, user);
-      let response = smart.response;
-      let responseIsHtml = smart.isHtml;
+      const memoryAware = addLongTermMemoryToResponse(input, smart.response, smart.isHtml);
+      let response = memoryAware.response;
+      let responseIsHtml = memoryAware.isHtml;
       const qualityResult = enforceAiResponseQuality(input, response, responseIsHtml);
       response = qualityResult.text;
       responseIsHtml = qualityResult.isHtml;
@@ -20054,6 +21095,7 @@ async function aiChat(){
       responseIsHtml = safeOutput.isHtml;
       rememberAssistantQuestion(response, responseIsHtml);
       rememberPrompt(input);
+      updateAiUserProfile(input);
 
       const chatId = await storeAiChat(user.uid, input, response, responseIsHtml);
       if (!chatId) {
@@ -20078,6 +21120,7 @@ async function aiChat(){
       if (aiSessionState.memoryPairs.length > 24) {
         aiSessionState.memoryPairs.splice(0, aiSessionState.memoryPairs.length - 24);
       }
+      await saveAiUserProfile(user.uid);
       updateAiLimitUI();
       updateClearDataButtonState();
     } catch (err) {
@@ -20361,6 +21404,8 @@ async function addReminder() {
       const ref = await addDoc(collection(db, "users", user.uid, "reminders"), {
         text: t,
         minutes: m,
+        amount: Number(rawAmount),
+        unit: normalizeReminderUnitValue(rawUnit),
         targetAtMs,
         createdAt: serverTimestamp()
       });
@@ -20370,7 +21415,8 @@ async function addReminder() {
       reminderMinutes.value = "";
       const reminderMsg = pickNonRepeatingVariant(AI_REMINDER_ADDED_POOL, 'reminder_set')
         .replaceAll('{text}', t)
-        .replaceAll('{minutes}', String(m));
+        .replaceAll('{minutes}', formatReminderAmountAndUnit(rawAmount, rawUnit))
+        .replaceAll('{unit}', normalizeReminderUnitValue(rawUnit));
       showToast(reminderMsg);
       await trimCollectionToMaxEntries(user.uid, "reminders", MAX_REMINDER_ENTRIES, (entry) => {
         return Number(entry.targetAtMs) || toDateSafe(entry.createdAt)?.getTime?.() || 0;
@@ -20651,44 +21697,119 @@ async function addTask(options = {}){
 
 // Finance
 function calculateFinance(){
-  const cost = parseFloat(gCost.value) || 0;
-  const months = parseFloat(gMonths.value) || 1;
-  const buf = parseFloat(buffer.value) || 0;
+  const cost = Math.max(0, parseFloat(gCost.value) || 0);
+  const months = Math.max(1, parseFloat(gMonths.value) || 1);
+  const buf = Math.max(0, parseFloat(buffer.value) || 0);
   const currency = FINANCE_CURRENCY_OPTIONS[gCurrency?.value] || FINANCE_CURRENCY_OPTIONS.usd;
 
-  const total = cost * months * (1 + buf/100);
+  const baseTotal = cost * months;
+  const bufferAmount = baseTotal * (buf / 100);
+  const total = baseTotal + bufferAmount;
   const monthly = total / months;
+  const weekly = monthly / 4.345;
+  const daily = monthly / 30.437;
+  const weeklyBase = cost / 4.345;
+  const shoppingTrips = Math.max(1, Math.round(months * 4.345));
 
-  financeResult.innerText = `Total: ${currency.symbol}${total.toFixed(0)} | Monthly: ${currency.symbol}${monthly.toFixed(0)}`;
+  financeResult.innerHTML = `
+    <span class="finance-result-total">Plan total <strong>${currency.symbol}${total.toFixed(0)}</strong> <small>over ${months} month${months === 1 ? "" : "s"}</small></span>
+    <span>Monthly <strong>${currency.symbol}${monthly.toFixed(0)}</strong></span>
+    <span>Weekly target <strong>${currency.symbol}${weekly.toFixed(0)}</strong></span>
+    <span>Daily guide <strong>${currency.symbol}${daily.toFixed(0)}</strong></span>
+    <span>About <strong>${currency.symbol}${weeklyBase.toFixed(0)}</strong> per shop before buffer</span>
+    <span>${buf > 0 ? `Buffer (${buf}%) <strong>${currency.symbol}${bufferAmount.toFixed(0)}</strong>` : "No flexible buffer added."}</span>
+    <span><strong>${shoppingTrips}</strong> weekly shopping trips across the plan</span>
+  `;
 }
 
 // Mood
-function renderMoodLog(entry) {
+function getDisplayMoodLabel(moodValue) {
+  return String(moodValue || "")
+    .replace(/^[\s\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+/u, "")
+    .trim();
+}
+
+function renderMoodLog(entry, options = {}) {
   clearStatusState(moodLogs);
   const moodRow = document.createElement("div");
   moodRow.className = "mood-item";
+  moodRow.dataset.moodId = String(entry.id || "");
+  if (options.animate) moodRow.classList.add("mood-item-enter");
 
   const moodLabel = document.createElement("span");
   const rawTime = entry.time?.toDate?.() ?? new Date(entry.time || getServerNowDate().getTime());
-  moodLabel.textContent = `${rawTime.toLocaleTimeString()} - ${entry.mood}`;
+  moodLabel.textContent = `${rawTime.toLocaleTimeString()} - ${getDisplayMoodLabel(entry.mood)}`;
 
   const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
   removeBtn.className = "mood-remove remove-entry-btn";
   removeBtn.textContent = "Remove";
-  removeBtn.onclick = () => deleteMoodLog(entry.id);
+  removeBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    deleteMoodLog(moodRow.dataset.moodId);
+  });
 
   moodRow.append(moodLabel, removeBtn);
-  moodLogs.appendChild(moodRow);
+  moodLogs.insertBefore(moodRow, moodLogs.firstChild);
+}
+
+function waitForMoodRowAnimation(row, animationName, durationMs) {
+  if (!row) return Promise.resolve();
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      row.removeEventListener("animationend", onAnimationEnd);
+      resolve();
+    };
+    const onAnimationEnd = (event) => {
+      if (event.animationName === animationName) finish();
+    };
+    row.addEventListener("animationend", onAnimationEnd);
+    setTimeout(finish, durationMs + 40);
+  });
 }
 
 async function deleteMoodLog(moodId) {
   const user = auth.currentUser;
   if (!user || !moodId) return;
 
+  const moodRow = Array.from(moodLogs?.querySelectorAll(".mood-item") || [])
+    .find((row) => row.dataset.moodId === String(moodId));
+  const moodIndex = moodEntryIds.indexOf(String(moodId));
+  const removedMood = moodIndex >= 0 ? moodHistory[moodIndex] : null;
+  const removedMoodDate = moodIndex >= 0 ? moodDates[moodIndex] : null;
+  moodRow?.remove();
+  if (moodIndex >= 0) {
+    moodEntryIds.splice(moodIndex, 1);
+    moodHistory.splice(moodIndex, 1);
+    moodDates.splice(moodIndex, 1);
+  }
+  const removalAnimation = moodRow
+    ? (() => {
+      moodRow.classList.add("mood-item-removing");
+      return waitForMoodRowAnimation(moodRow, "mood-item-removing", 180);
+    })()
+    : Promise.resolve();
+  await removalAnimation;
+  moodRow?.remove();
+  if (!moodLogs?.querySelector(".mood-item")) {
+    setEmptyState(moodLogs, getRandomEmptyMessage("mood", "No mood logs yet — one check-in is enough to start."));
+  }
+  updateMoodLimitUI();
+  updateInsights();
+
   try {
     await fsDeleteDoc(doc(db, "users", user.uid, "moods", moodId));
-    await loadMoods(user.uid);
   } catch (err) {
+    if (moodIndex >= 0) {
+      moodEntryIds.splice(moodIndex, 0, String(moodId));
+      moodHistory.splice(moodIndex, 0, removedMood);
+      moodDates.splice(moodIndex, 0, removedMoodDate);
+    }
+    await loadMoods(user.uid).catch(() => {});
     notifyFirestoreError(err);
   }
 }
@@ -20696,6 +21817,7 @@ async function deleteMoodLog(moodId) {
 async function loadMoods(userId) {
   moodLogs.innerHTML = "";
   moodHistory.length = 0;
+  moodEntryIds.length = 0;
   moodDates.length = 0;
 
   try {
@@ -20713,6 +21835,7 @@ async function loadMoods(userId) {
     let renderedCount = 0;
     docs.forEach((entry) => {
       moodHistory.push(entry.mood);
+      moodEntryIds.push(String(entry.id || ""));
       const moodTime = entry.time?.toDate?.() ?? new Date(entry.time || getServerNowDate().getTime());
       moodDates.push(moodTime);
       if (dateToKey(moodTime) === todayKey) {
@@ -20749,11 +21872,22 @@ async function saveMood() {
   moodSubmitting = true;
   if (moodSaveBtn) moodSaveBtn.disabled = true;
 
+  const optimisticMoodId = `pending-${Date.now()}`;
+  const optimisticMoodTime = getServerNowDate();
+  moodHistory.push(moodValue);
+  moodEntryIds.push(optimisticMoodId);
+  moodDates.push(optimisticMoodTime);
+  renderMoodLog({ id: optimisticMoodId, mood: moodValue, time: optimisticMoodTime }, { animate: true });
+  updateInsights();
+
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
 
     const quotaResult = await reserveDailyQuota(user.uid, "moodCount", MOOD_DAILY_LIMIT);
     if (!quotaResult.ok) {
+      moodHistory.pop();
+      moodDates.pop();
+      await loadMoods(user.uid);
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s mood log limit (${MOOD_DAILY_LIMIT}/day)`));
       updateMoodLimitUI();
       return;
@@ -20770,15 +21904,20 @@ async function saveMood() {
         }
       );
 
-      moodHistory.push(moodValue);
-      moodDates.push(getServerNowDate());
-      renderMoodLog({ id: moodRef.id, mood: moodValue, time: getServerNowDate() });
-      const moodMsg = `Mood logged: ${moodValue}.`;
+      const optimisticMoodRow = Array.from(moodLogs?.querySelectorAll(".mood-item") || [])
+        .find((row) => row.dataset.moodId === optimisticMoodId);
+      if (optimisticMoodRow) optimisticMoodRow.dataset.moodId = moodRef.id;
+      const optimisticMoodIndex = moodEntryIds.indexOf(optimisticMoodId);
+      if (optimisticMoodIndex >= 0) moodEntryIds[optimisticMoodIndex] = moodRef.id;
+      const moodMsg = `Mood logged: ${getDisplayMoodLabel(moodValue)}.`;
       showToast(moodMsg);
       updateInsights();
       await trimCollectionToMaxEntries(user.uid, "moods", MAX_MOOD_ENTRIES, (entry) => toDateSafe(entry.time)?.getTime?.() || 0);
       updateMoodLimitUI();
     } catch (err) {
+      moodHistory.pop();
+      moodDates.pop();
+      await loadMoods(user.uid);
       await rollbackDailyQuota(user.uid, "moodCount");
       notifyFirestoreError(err);
     }
@@ -20792,20 +21931,13 @@ async function saveMood() {
 let waterGoal=0;
 function updateWaterProgress() {
   const todayKey = getTodayKey();
-  let latestTodayValue = 0;
-  for (let index = waterHistory.length - 1; index >= 0; index -= 1) {
-    const dateKey = dateToKey(waterDates[index]);
-    if (dateKey === todayKey) {
-      latestTodayValue = Number(waterHistory[index]) || 0;
-      break;
-    }
-  }
+  const todayTotal = getWaterTotalForDate(todayKey);
   if (waterGoal > 0) {
-    const percent = Math.round((latestTodayValue / waterGoal) * 100);
-    waterProgress.innerText = `${latestTodayValue}/${waterGoal} (${percent}%)`;
+    const percent = Math.round((todayTotal / waterGoal) * 100);
+    waterProgress.innerText = `${todayTotal}/${waterGoal} (${percent}%)`;
   } else {
-    waterProgress.innerText = latestTodayValue > 0
-      ? `${latestTodayValue} glass${latestTodayValue === 1 ? "" : "es"} logged • Set a daily goal to see progress.`
+    waterProgress.innerText = todayTotal > 0
+      ? `${todayTotal} glass${todayTotal === 1 ? "" : "es"} logged • Set a daily goal to see progress.`
       : "Set a daily goal to track water progress.";
   }
   updateWaterClearButtonState();
@@ -20940,14 +22072,7 @@ async function saveWater() {
   if (waterTrackBtn) waterTrackBtn.disabled = true;
 
   const previousTodayWater = (() => {
-    const todayKey = getTodayKey();
-    for (let index = waterHistory.length - 1; index >= 0; index -= 1) {
-      const dateKey = dateToKey(waterDates[index]);
-      if (dateKey === todayKey) {
-        return Number(waterHistory[index]) || 0;
-      }
-    }
-    return 0;
+    return getTodayWater();
   })();
 
   try {
@@ -20978,11 +22103,10 @@ async function saveWater() {
       }
 
       waterInput.value = "";
-      const prev = Number(previousTodayWater) || 0;
-      const totalNow = (prev + v).toFixed(1);
+      const latestWater = Number(v).toFixed(1);
       const waterMsg = pickNonRepeatingVariant(AI_WATER_LOGGED_POOL, 'water_logged')
         .replaceAll('{amount}', String(v))
-        .replaceAll('{total}', String(totalNow));
+        .replaceAll('{total}', String(latestWater));
       showToast(waterMsg);
       await trimCollectionToMaxEntries(user.uid, "waterIntake", MAX_WATER_ENTRIES, (entry) => toDateSafe(entry.time)?.getTime?.() || 0);
       updateWaterLimitUI();
@@ -21486,20 +22610,24 @@ async function saveSleep(){
   sleepSubmitting = true;
   if (sleepSaveBtn) sleepSaveBtn.disabled = true;
 
+  const optimisticSleepIndex = sleepHistory.length;
+  sleepHistory.push(hours);
+  sleepDates.push(getServerNowDate());
+  sleepResult.innerText = `${hours} hrs 💤`;
+  updateInsights();
+
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
 
     const quotaResult = await reserveDailyQuota(user.uid, "sleepCount", SLEEP_DAILY_LIMIT);
     if (!quotaResult.ok) {
+      sleepHistory.splice(optimisticSleepIndex, 1);
+      sleepDates.splice(optimisticSleepIndex, 1);
+      await loadSleepData(user.uid);
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s sleep log limit (${SLEEP_DAILY_LIMIT}/day)`));
       updateSleepLimitUI();
       return;
     }
-
-    sleepHistory.push(hours);
-    sleepDates.push(getServerNowDate());
-    sleepResult.innerText = `${hours} hrs 💤`;
-    updateInsights();
 
     try {
       await addDoc(collection(db, "users", user.uid, "sleepLogs"), {
@@ -21511,8 +22639,9 @@ async function saveSleep(){
       await trimCollectionToMaxEntries(user.uid, "sleepLogs", MAX_SLEEP_ENTRIES, (entry) => toDateSafe(entry.time)?.getTime?.() || 0);
       updateSleepLimitUI();
     } catch (err) {
-      sleepHistory.pop();
-      sleepDates.pop();
+      sleepHistory.splice(optimisticSleepIndex, 1);
+      sleepDates.splice(optimisticSleepIndex, 1);
+      await loadSleepData(user.uid);
       await rollbackDailyQuota(user.uid, "sleepCount");
       notifyFirestoreError(err);
     }
@@ -22513,11 +23642,21 @@ async function saveGratitude(){
   gratitudeSubmitting = true;
   if (gratitudeSaveBtn) gratitudeSaveBtn.disabled = true;
 
+  const optimisticGratitude = {
+    id: `pending-${Date.now()}`,
+    text: t,
+    time: getServerNowDate()
+  };
+  gratitudeEntries.push(optimisticGratitude);
+  renderGratitude(optimisticGratitude);
+  updateInsights();
+
   try {
     await ensureDailyUsageCurrent(user.uid);
 
     const quotaResult = await reserveDailyQuota(user.uid, "gratitudeCount", GRATITUDE_DAILY_LIMIT);
     if (!quotaResult.ok) {
+      await loadGratitude(user.uid);
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s gratitude limit (${GRATITUDE_DAILY_LIMIT}/day)`));
       updateGratitudeLimitUI();
       return;
@@ -22528,16 +23667,14 @@ async function saveGratitude(){
         text: t,
         time: serverTimestamp()
       });
-      const entry = { id: ref.id, text: t, time: getServerNowDate() };
-      gratitudeEntries.push(entry);
-      renderGratitude(entry);
       showToast(`Gratitude saved. ${getRandomCheer()}`);
       updateInsights();
       gratitudeInput.value="";
       await trimCollectionToMaxEntries(user.uid, "gratitudeLogs", MAX_GRATITUDE_ENTRIES, (entryItem) => toDateSafe(entryItem.time)?.getTime?.() || 0);
       updateGratitudeLimitUI();
     } catch (err) {
-        await rollbackDailyQuota(user.uid, "gratitudeCount");
+      await loadGratitude(user.uid);
+      await rollbackDailyQuota(user.uid, "gratitudeCount");
       notifyFirestoreError(err);
     }
   } finally {
@@ -22837,6 +23974,7 @@ function splitSnapshotChunks(serialized) {
 }
 
 async function buildExportPayloadForUser(userId, userMeta = {}, dbInstance = db) {
+  const profileSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "profile"), "profile");
   const waterSettingsSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "water"), 'water');
   const sleepSettingsSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "sleep"), 'sleep');
   const dailyRoutineSnap = await fsGetDoc(doc(dbInstance, "users", userId, "settings", "dailyRoutine"), 'dailyRoutine');
@@ -22877,6 +24015,7 @@ async function buildExportPayloadForUser(userId, userMeta = {}, dbInstance = db)
       email: userMeta.email || null,
       name: userMeta.name || null
     },
+    theme: normalizeTheme(profileSnap.exists ? profileSnap.data?.theme : ""),
     waterSettings: waterSettingsSnap.exists ? waterSettingsSnap.data : null,
     sleepSettings: sleepSettingsSnap.exists ? sleepSettingsSnap.data : null,
     dailyRoutine: dailyRoutineSnap.exists ? dailyRoutineSnap.data : null,
@@ -23223,6 +24362,15 @@ async function applyImportPayloadToCurrentUser(user, payload) {
   await deleteDoc(doc(db, "users", user.uid, "insights", "barGraphs")).catch((err) => structuredLog('warn', 'import.delete.graphs', err?.message || String(err)));
   persistedBarGraphs = null;
   persistedBehaviorPatterns = null;
+
+  const importedTheme = normalizeTheme(payload.theme);
+  if (importedTheme) {
+    await setDoc(doc(db, "users", user.uid, "settings", "profile"), {
+      theme: importedTheme,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    applyTheme(importedTheme, user.uid);
+  }
 
   const moods = Array.isArray(payload.moods) ? payload.moods : [];
   const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
@@ -23626,6 +24774,7 @@ Object.assign(window, {
   runCrashRescueFlow,
   openWellnessScoreInfoModal,
   closeWellnessScoreInfoModal,
+  focusDashboardCard,
   setNextWeekTargets,
   applyRecoverySchedule,
   nextInsightMetric,
@@ -23687,7 +24836,8 @@ Object.assign(window, {
   confirmDailyRoutineCustomActivity,
   clearDailyRoutine,
   generateStartupWeeklyReport,
-  copyStartupWeeklyReport
+  copyStartupWeeklyReport,
+  clearStartupWeeklyReport
 });
 
 

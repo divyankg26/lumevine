@@ -636,6 +636,27 @@
     padding:16px 12px 170px;
   }
 
+  .dashboard-focus-card{
+    padding:15px;
+  }
+
+  .dashboard-focus-grid,
+  .dashboard-priorities ol{
+    grid-template-columns:1fr;
+  }
+
+  .dashboard-focus-summary{
+    padding:16px 0 0;
+    border-top:1px solid rgba(255,255,255,.16);
+    border-left:0;
+  }
+
+  .dashboard-focus-heading{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
+  }
+
   .card{
     border-radius:16px;
     padding:14px;
@@ -651,6 +672,15 @@
   header h1{font-size:28px}
 
   header p{font-size:12px}
+
+  .dashboard-metric-row{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    row-gap:12px;
+  }
+
+  #financeResult{
+    grid-template-columns:1fr;
+  }
 
   .chat-message,
   .mood-item,

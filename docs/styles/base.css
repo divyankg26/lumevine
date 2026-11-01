@@ -233,6 +233,39 @@ html,body{
   font-size: 16px;
 }
 
+.password-field{
+  position:relative;
+  width:100%;
+  margin-top:14px;
+}
+
+.password-field input{
+  margin-top:0 !important;
+  padding-right:72px;
+}
+
+.password-visibility-btn{
+  position:absolute;
+  top:50%;
+  right:8px;
+  transform:translateY(-50%);
+  width:auto !important;
+  margin:0 !important;
+  padding:6px 8px !important;
+  border:1px solid rgba(255,255,255,.35) !important;
+  border-radius:8px !important;
+  background:rgba(255,255,255,.16) !important;
+  color:#fff;
+  font-size:12px !important;
+  font-weight:700;
+  line-height:1;
+}
+
+.password-visibility-btn:hover,
+.password-visibility-btn:focus-visible{
+  background:rgba(255,255,255,.3) !important;
+}
+
 .modal-content h2 + input,
 .modal-content input + input {
   margin-top: 14px;
@@ -357,6 +390,63 @@ html,body{
   backdrop-filter:blur(14px);
   box-shadow:0 14px 34px rgba(0,0,0,.35);
   animation:modalIn var(--motion-medium) var(--ease-gentle);
+}
+
+.account-help-link{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:48px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:14px;
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+  transition:background var(--motion-fast) var(--ease-soft), border-color var(--motion-fast) var(--ease-soft), transform var(--motion-fast) var(--ease-soft), box-shadow var(--motion-fast) var(--ease-soft);
+}
+
+.account-help-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.account-help-link-icon{
+  display:grid;
+  width:24px;
+  height:24px;
+  flex:0 0 24px;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.35);
+  border-radius:8px;
+  background:rgba(255,255,255,.12);
+  color:var(--primary);
+  font-size:14px;
+  font-weight:900;
+}
+
+.account-help-link-arrow{
+  margin-left:auto;
+  color:rgba(255,255,255,.62);
+  font-size:16px;
+  transition:transform var(--motion-fast) var(--ease-soft), color var(--motion-fast) var(--ease-soft);
+}
+
+.account-help-link:hover,
+.account-help-link:focus-visible{
+  background:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.46);
+  box-shadow:0 8px 18px rgba(0,0,0,.12);
+  transform:translateY(-1px);
+}
+
+.account-help-link:hover .account-help-link-arrow,
+.account-help-link:focus-visible .account-help-link-arrow{
+  color:#fff;
+  transform:translate(2px,-2px);
 }
 
 .import-transfer-card h3{
@@ -564,6 +654,10 @@ html,body{
 .guide-shortcut-keys{
   display:flex;
   flex-wrap:wrap;
+  }
+
+  .account-help-actions{
+  grid-template-columns:1fr;
   gap:6px;
   margin-bottom:6px;
 }
@@ -761,6 +855,85 @@ html,body{
   width:min(560px, calc(100vw - 24px));
 }
 
+.routine-picker{
+  position:relative;
+  width:100%;
+  margin-top:12px;
+}
+
+.routine-picker > select{
+  position:absolute;
+  width:1px;
+  height:1px;
+  opacity:0;
+  pointer-events:none;
+}
+
+.routine-picker-trigger{
+  display:block;
+  width:100%;
+  min-height:46px;
+  padding:11px 38px 11px 12px;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:10px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
+    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
+    rgba(255,255,255,.18);
+  color:var(--text);
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+
+.routine-picker-trigger:hover,
+.routine-picker.is-open .routine-picker-trigger{
+  background:
+    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
+    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
+    rgba(255,255,255,.28);
+  border-color:rgba(255,255,255,.58);
+}
+
+.routine-picker-menu{
+  position:absolute;
+  z-index:20;
+  top:calc(100% + 6px);
+  left:0;
+  right:0;
+  max-height:240px;
+  overflow-y:auto;
+  padding:6px;
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(31,67,91,.98),rgba(22,48,70,.98));
+  box-shadow:0 18px 38px rgba(0,0,0,.32);
+  animation:modalIn var(--motion-fast) var(--ease-gentle);
+}
+
+.routine-picker-option{
+  display:block;
+  width:100%;
+  padding:10px 12px;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:#fff;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+
+.routine-picker-option:hover,
+.routine-picker-option[aria-selected="true"]{
+  background:rgba(255,255,255,.16);
+}
+
+.routine-picker-option:disabled{
+  color:rgba(255,255,255,.48);
+  cursor:not-allowed;
+}
+
 .routine-editor-card .welcome-guide-body select,
 .routine-editor-card .welcome-guide-body input{
   display:block;
@@ -776,8 +949,27 @@ html,body{
   font:inherit;
 }
 
+.routine-editor-card .welcome-guide-body .routine-editor-select{
+  appearance:none;
+  color:var(--text);
+  color-scheme:dark;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
+    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
+    rgba(255,255,255,.18);
+  padding-right:38px;
+}
+
+.routine-editor-card .welcome-guide-body .routine-editor-select:hover{
+  background:
+    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
+    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
+    rgba(255,255,255,.26);
+}
+
 .routine-editor-card .welcome-guide-body select option{
   color:#111;
+  background:#fff;
 }
 
 .routine-editor-card .welcome-guide-body [hidden]{
@@ -786,13 +978,14 @@ html,body{
 
 .routine-editor-actions{
   display:flex;
-  justify-content:space-between;
+  justify-content:stretch;
   gap:10px;
   margin-top:14px;
 }
 
 .routine-editor-actions button{
-  min-width:104px;
+  flex:1 1 0;
+  min-width:0;
   border:0;
   border-radius:10px;
   padding:10px 14px;
@@ -807,6 +1000,15 @@ html,body{
 
 .routine-editor-cancel{
   background:rgba(255,255,255,.2);
+}
+
+.routine-editor-previous{
+  background:rgba(255,255,255,.2);
+}
+
+.routine-editor-previous:disabled{
+  opacity:.45;
+  cursor:not-allowed;
 }
 
 .routine-custom-card{

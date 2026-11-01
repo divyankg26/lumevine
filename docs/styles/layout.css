@@ -124,6 +124,33 @@
   color:#ff7b8f;
 }
 
+.tos-consent{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  margin:0;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:10px;
+  color:#fff;
+  font-size:13px;
+  cursor:pointer;
+  transition:border-color var(--motion-fast) var(--ease-soft), background var(--motion-fast) var(--ease-soft), box-shadow var(--motion-fast) var(--ease-soft);
+}
+
+.tos-consent input{
+  width:16px;
+  height:16px;
+  margin:1px 0 0;
+  accent-color:var(--primary);
+}
+
+.tos-consent.needs-attention{
+  border-color:#ff7b8f;
+  background:rgba(255,123,143,.12);
+  box-shadow:0 0 0 3px rgba(255,123,143,.16);
+}
+
 #accountBtn.account-btn-scrolled{
   top:14px;
   background:rgba(255,255,255,.18);
@@ -542,6 +569,8 @@
 
 .card h2{
   margin-top:0;
+  padding-left:1.35em;
+  text-indent:-1.35em;
   color:var(--primary);
   letter-spacing:.2px;
   font-size:24px;
