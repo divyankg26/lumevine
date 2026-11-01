@@ -1,36 +1,19 @@
 # Release Notes:
 
-- Fixed the routine Previous button not responding.
+- Updated the `FAQ &amp; Help Center` with answers that better match how Lumevine works. Replaced vague or evasive explanations with clear guidance on:
 
-- Exposed the previous-step handler correctly to the UI.
+Today’s Focus and adaptive priorities.
 
-- Previous now works across Add and Replace flows.
+Water logs, wellness scores, and changing estimates.
 
-- Preserves selected activities when moving backward.
+Routine scheduling and reminders.
 
-- Keeps Previous disabled on the first step.
+AI memory, saved chats, and clearing chat data.
 
-- Removed the custom in-app dropdown system after usability feedback.
+Friend connections and account data controls.
 
-- Restored native browser dropdowns throughout the app:
-Mood
-Reminders
-Currency
-Routine activities
-Routine times
-Routine start time
-Routine deletion
+Daily usage limits and contacting support.
 
-- Removed the custom picker JavaScript and styling.
+- Updated `About Us` to describe Lumevine’s current features and supportive approach, including Today’s Focus, Daily Routine, weekly reflections, Habit Journey, AI Companion memory, and personal data controls.
 
-- Replaced Show/Hide text with familiar eye and eye-off icons.
-
-- Fixed the button jumping vertically on hover.
-
-- Removed the circle, border, shadow, and hover movement.
-
-- Added a subtle inline style with invisible touch padding.
-
-- Preserved accessible labels and aria-pressed state.
-
-- Applied the control to both email authentication and Google setup.
+- Reset and countdown text now uses blue **only in Orchid**. Moss and Mist retain their normal theme colors. Updated `components.css`.
