@@ -39,18 +39,12 @@ textarea:focus-visible{
   font-weight:700;
 }
 
-:root[data-theme="burgundy"] .limit-note.show[data-live-countdown="1"],
-:root[data-theme="nature"] .limit-note.show[data-live-countdown="1"],
-:root[data-theme="glacier"] .limit-note.show[data-live-countdown="1"]{
+:root[data-theme="burgundy"] .limit-note.show[data-live-countdown="1"]{
   color:#8bd5ff;
 }
 
 :root[data-theme="burgundy"] .reset-countdown-alert,
-:root[data-theme="nature"] .reset-countdown-alert,
-:root[data-theme="glacier"] .reset-countdown-alert,
-:root[data-theme="burgundy"] .insight-reset-note,
-:root[data-theme="nature"] .insight-reset-note,
-:root[data-theme="glacier"] .insight-reset-note{
+:root[data-theme="burgundy"] .insight-reset-note{
   color:#8bd5ff;
 }
 

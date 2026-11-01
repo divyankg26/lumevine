@@ -482,18 +482,18 @@
   <p class="eyebrow">Lumevine · Help Center</p>
   <h1>Frequently Asked Questions</h1>
   <p class="updated">
-    Real answers to your questions, problems, and doubts about Lumevine.
+  Practical answers for the way Lumevine works today.
   </p>
 
   <div class="intro">
     <p>
-      Welcome to the Lumevine Help Center. This page is designed to help
-      you understand how features work, why something might not look right,
-      how your information is handled, and what to do when you encounter a problem.
+      Welcome to the Lumevine Help Center. Find clear guidance for Today’s Focus,
+      adaptive priorities, Daily Routine, wellness tracking, AI Companion,
+      account setup, and data controls.
     </p>
     <p>
-      You can search for a specific issue, browse by category, or expand
-      any question to read the answer and troubleshooting steps.
+      Search for a specific issue, browse by category, or expand a question.
+      The answers describe current app behavior rather than idealized tracking habits.
     </p>
     <div class="notice">
       <strong>Important:</strong> Wellness estimates and AI-generated responses
@@ -568,6 +568,39 @@
       <p class="section-description">
         Understand the app, its purpose, and how its features fit together.
       </p>
+
+      <details class="faq-item">
+        <summary>What is Today’s Focus meant to show me?</summary>
+        <div class="answer">
+          <p>
+            Today’s Focus is the dashboard’s quick answer to “What would help me feel
+            better today?” It combines the information available for today, including
+            mood, sleep, water, and tasks, then chooses one primary check-in and a
+            short list of relevant priorities.
+          </p>
+          <p>
+            It is not a diagnosis or a demand to complete everything. If a signal is
+            missing, it may suggest logging it; if tasks are open or sleep is low, it
+            may highlight those areas instead.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why do my Today’s Priorities change?</summary>
+        <div class="answer">
+          <p>
+            Priorities adapt to the data currently available for today. They can respond
+            to a missing mood or sleep check-in, a stressed or low mood, sleep below
+            seven hours, water below a personal goal, or open tasks.
+          </p>
+          <p>
+            When there is no clear gap, Lumevine uses the check-ins you have actually
+            recorded to suggest a next step. It should not invent a priority or assume
+            that every user has an eight-glass water goal.
+          </p>
+        </div>
+      </details>
 
       <details class="faq-item">
         <summary>What is Lumevine actually designed to help me do?</summary>
@@ -676,28 +709,36 @@
       </p>
 
       <details class="faq-item">
+        <summary>Why does my latest water log replace the earlier one?</summary>
+        <div class="answer">
+          <p>
+            Lumevine interprets the latest water entry for a day as your current
+            daily total. It does not add repeated corrections together, so changing
+            a log from 5 to 7 glasses shows 7 rather than 12.
+          </p>
+          <p>
+            If you have not chosen a personal water goal, the app keeps hydration
+            flexible instead of displaying an assumed target.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
         <summary>Why is my wellness score zero, blank, or unavailable?</summary>
         <div class="answer">
           <p>
-            A zero, blank value, or unavailable result does not necessarily
-            mean that your well-being is poor. The result may depend on the
-            information available to the relevant feature, whether required
-            entries have been recorded, or whether a calculation has completed.
+            A blank or unavailable value usually means the feature has not
+            finished loading or does not yet have the information it needs.
+            A score of zero is a value from the calculation, not a judgment
+            about you or a diagnosis.
           </p>
           <div class="steps">
             <ol>
-              <li>Check whether the relevant mood, sleep, hydration, or other
-                requested records have been saved.</li>
-              <li>Look for missing entries or incomplete check-ins.</li>
-              <li>Refresh the page and allow the feature to load.</li>
-              <li>If the value remains unexpected, report the score name,
-                approximate time, and steps that led to it.</li>
+              <li>Check that the relevant mood, sleep, water, or task entry is saved for the date shown.</li>
+              <li>Refresh the dashboard and give it a moment to update.</li>
+              <li>If it still looks wrong, contact support with the score name and the entries you expected it to use.</li>
             </ol>
           </div>
-          <p>
-            The exact meaning of zero or blank can differ by feature. Do not
-            interpret it as a diagnosis or a definitive statement about your health.
-          </p>
         </div>
       </details>
 
@@ -706,16 +747,13 @@
         <div class="answer">
           <p>
             A routine is only one possible part of a wellness picture.
-            A score or estimate may also depend on recorded check-ins, recent
-            entries, available historical information, or changes to the data
-            used by that feature.
+            Today’s score can also change when mood, sleep, water, or task
+            entries for today change, or when a previously missing entry is added.
           </p>
           <p>
-            Compare the underlying entries for the relevant period before
-            concluding that the score is incorrect. Lumevine does not publish
-            a verified, universal formula for every wellness score on this page,
-            so it would be misleading to attribute a specific change to one
-            particular input without further evidence.
+            Check the entries shown in the dashboard and remember that a wellness
+            score is a rough reflection of logged information, not a complete
+            measure of how you are doing.
           </p>
         </div>
       </details>
@@ -741,18 +779,13 @@
         <summary>Why does my mood-risk estimate change even when I feel the same?</summary>
         <div class="answer">
           <p>
-            An estimate is generated from app data and is not a direct
-            measurement of how you feel. The records available to a calculation
-            can change even when your subjective experience does not.
+            The estimate is calculated from logged information, not directly
+            from your feelings. Adding or correcting an entry can change the
+            estimate even when your mood has not changed.
           </p>
           <p>
-            Use your own reflection as the primary account of your experience.
-            Do not make a medical decision or conclude that you are at risk
-            solely because an estimate changes.
-          </p>
-          <p>
-            The exact contribution of individual inputs should not be assumed
-            unless it is explicitly documented by the feature.
+            Treat it as one prompt for reflection. Your own experience matters
+            more than a changing number, and the estimate is not a diagnosis.
           </p>
         </div>
       </details>
@@ -761,17 +794,16 @@
         <summary>Why isn't my newly added entry reflected in my score?</summary>
         <div class="answer">
           <p>
-            Saving an entry and updating a separate summary may not always
-            happen at exactly the same moment. The summary may need to reload,
-            or the relevant calculation may depend on additional information.
+            The dashboard may need a moment to refresh after an entry is saved.
+            It can also look unchanged if the entry was saved for a different
+            date than the one the summary is showing.
           </p>
           <div class="steps">
             <ol>
               <li>Reopen the tracker and verify that the entry is present.</li>
               <li>Refresh the relevant dashboard or insight.</li>
-              <li>Check that you are looking at the correct day or reporting period.</li>
-              <li>If the entry is saved but the summary remains unchanged,
-                report both the entry and the affected score.</li>
+              <li>Check that the summary is showing the same day as the entry.</li>
+              <li>If it still does not update, contact support with the entry date and affected summary.</li>
             </ol>
           </div>
         </div>
@@ -859,10 +891,9 @@
         <summary>How should I track something when I don't know the exact value?</summary>
         <div class="answer">
           <p>
-            Record an honest estimate only if the tracker supports estimates
-            and you are comfortable providing one. If you do not know the value,
-            leave it blank when possible. False precision can make later
-            reflections less useful.
+            Enter an estimate only when the tracker allows it and you feel
+            comfortable doing so. If you do not know, leave it blank rather than
+            guessing; missing data is more useful than a made-up precise number.
           </p>
         </div>
       </details>
@@ -877,18 +908,34 @@
       </p>
 
       <details class="faq-item">
+        <summary>How does Daily Routine generation choose activities?</summary>
+        <div class="answer">
+          <p>
+            When enough history is available, Lumevine uses your wellness and task
+            signals to shape a routine with real day activities such as waking up,
+            meals, open tasks, breaks, movement, and winding down. Without enough
+            history, it uses a varied starter pool.
+          </p>
+          <p>
+            Generated routines are saved to your account. You can add custom
+            activities, replace existing ones, choose a time range, or clear the
+            routine from the Daily Routine card.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
         <summary>Why does my routine start at a different time than expected?</summary>
         <div class="answer">
           <p>
-            Check the routine's configured start time and the individual
-            activity durations. Lumevine's routine scheduling can use the
-            start time to position activities in the schedule, so changing
-            that time may shift the displayed activity times.
+            The routine start time shifts the scheduled activities together.
+            If you change it, each activity keeps its duration but moves to a
+            new time in the day.
           </p>
           <p>
-            If the schedule still differs from what you configured, compare
-            the saved values with the displayed times and send support a
-            description of the discrepancy.
+            Check the start time and activity times shown on the Daily Routine
+            card. If the saved schedule does not match, contact support with
+            the expected and displayed times.
           </p>
         </div>
       </details>
@@ -897,15 +944,9 @@
         <summary>What happens when I change my routine's start time?</summary>
         <div class="answer">
           <p>
-            Where the schedule is calculated relative to the routine start,
-            changing that start can shift the activities together. It does
-            not necessarily mean that each activity has been individually
-            rescheduled.
-          </p>
-          <p>
-            Review the resulting schedule before relying on it. If you need
-            a specific activity to remain at a fixed clock time, verify
-            whether the relevant scheduling controls support that behavior.
+            All activities move by the same amount, while keeping their
+            durations. Review the updated routine after saving; you can still
+            edit an individual activity’s time from the routine controls.
           </p>
         </div>
       </details>
@@ -946,15 +987,13 @@
         <summary>Can I create a routine that fits an irregular schedule?</summary>
         <div class="answer">
           <p>
-            Configure the activities and start times using the controls
-            available in Lumevine. If your schedule changes frequently,
-            treat the routine as a flexible guide rather than a commitment
-            that must be followed exactly.
+            Yes. You can add or replace activities, choose a start time, and
+            set an activity’s time range. Treat the schedule as a flexible
+            guide and adjust it when your day changes.
           </p>
           <p>
-            The exact support for recurring days, exceptions, and independent
-            activity times depends on the controls available in your version
-            of the routine editor.
+            Daily Routine is a single daily schedule, not a separate weekday
+            calendar with recurring exceptions.
           </p>
         </div>
       </details>
@@ -979,23 +1018,19 @@
         <summary>Why didn't my reminder notify me?</summary>
         <div class="answer">
           <p>
-            A reminder appearing in the app is not necessarily the same as
-            a notification being delivered by your device. Delivery can
-            depend on the reminder's implementation, browser or device
-            permissions, operating-system settings, and whether the relevant
-            app or browser supports that type of notification.
+            Lumevine shows a countdown in the Reminders card and plays a chime
+            when the timer ends. The timer needs the app page to remain open;
+            browser or operating-system settings may pause or limit activity
+            when the page is in the background.
           </p>
           <div class="steps">
             <ol>
               <li>Verify the reminder's saved date and time.</li>
-              <li>Check browser or device notification permissions if applicable.</li>
-              <li>Check whether the reminder type requires the app to remain open.</li>
-              <li>Test with a new reminder and record the result.</li>
+              <li>Keep the Lumevine page open until the reminder is due.</li>
+              <li>Check that the reminder is still listed and its countdown is running.</li>
+              <li>Check your device’s sound level if you did not hear the chime.</li>
             </ol>
           </div>
-          <p>
-            Do not assume that all reminders are delivered as push notifications.
-          </p>
         </div>
       </details>
 
@@ -1003,14 +1038,9 @@
         <summary>Will changing a routine erase my previous tracking history?</summary>
         <div class="answer">
           <p>
-            Editing a schedule and deleting historical records are different
-            operations, but the exact effect depends on the feature's
-            implementation. Before making a major change, use the available
-            export or backup options if the history is important to you.
-          </p>
-          <p>
-            If a routine editor warns that existing records will be replaced
-            or removed, read the warning carefully before continuing.
+            Editing or clearing the Daily Routine changes the saved schedule;
+            it does not delete your mood, sleep, hydration, or task history.
+            Clearing the routine removes its saved activities from your account.
           </p>
         </div>
       </details>
@@ -1040,18 +1070,32 @@
       </p>
 
       <details class="faq-item">
+        <summary>What can AI memory remember?</summary>
+        <div class="answer">
+          <p>
+            Lumevine keeps a bounded profile of useful conversation context, such as
+            goals, recurring struggles, preferences, progress notes, and recent topics.
+            This helps the AI Companion respond more naturally when you return to a
+            subject later.
+          </p>
+          <p>
+            Clear AI Chats and Clear All Data remove the structured AI memory. AI
+            responses can still be incomplete and should not be treated as medical advice.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
         <summary>What can the Lumevine AI Companion actually do?</summary>
         <div class="answer">
           <p>
-            The AI Companion provides an AI-generated conversational
-            experience. It can help you think through questions and reflect
-            on information you provide in the conversation.
+            The AI Companion can chat about everyday topics, help you think
+            through routines or goals, respond to casual messages, and use
+            relevant context from earlier conversations.
           </p>
           <p>
-            Its actual access to account records, trackers, previous
-            conversations, or other app features depends on how the
-            integration is implemented. Do not assume it can automatically
-            see every item stored in Lumevine.
+            It does not change your account, tasks, or routine for you. It can
+            make mistakes, so treat its replies as suggestions rather than facts.
           </p>
         </div>
       </details>
@@ -1060,16 +1104,14 @@
         <summary>Can the AI Companion see my mood, sleep, and hydration logs?</summary>
         <div class="answer">
           <p>
-            The fact that these logs exist in Lumevine does not by itself
-            establish that they are automatically sent to the AI Companion.
-            Access depends on the information the app provides to the AI
-            feature and the context of the conversation.
+            The AI Companion can use the context supplied by the app and the
+            information you share in conversation. It does not automatically
+            turn every private tracker entry into a complete report, so its
+            understanding may be limited to the available context.
           </p>
           <p>
-            Until the exact integration and data flow are documented,
-            avoid assuming either complete access or complete separation.
-            Do not paste sensitive records into a chat unless you are
-            comfortable sharing that information with the feature.
+            Do not paste passwords, verification codes, or information you
+            would not want included in an AI conversation.
           </p>
         </div>
       </details>
@@ -1102,15 +1144,13 @@
         <summary>Does the AI Companion remember my previous conversations?</summary>
         <div class="answer">
           <p>
-            Saved chat history and AI memory are not the same thing.
-            A conversation may be stored for later viewing without every
-            detail being automatically available in a new conversation.
+            Lumevine saves chat history separately from a bounded AI profile.
+            That profile can retain useful high-level context such as goals,
+            recurring struggles, preferences, progress notes, and recent topics.
           </p>
           <p>
-            Whether the Companion receives earlier messages, summaries,
-            or persistent personal context depends on the integration.
-            Do not rely on it remembering an important detail unless that
-            behavior is explicitly confirmed by the feature.
+            It will not remember every sentence or every detail. Clear AI Chats
+            and Clear All Data remove the structured memory.
           </p>
         </div>
       </details>
@@ -1119,14 +1159,13 @@
         <summary>Why does the AI Companion forget something I told it earlier?</summary>
         <div class="answer">
           <p>
-            The information may be outside the context available to the
-            current response, the conversation may have changed, or the
-            system may not support persistent memory for that detail.
+            AI memory is intentionally limited and selective. A detail may not
+            have been saved to the bounded profile, may be outside the current
+            conversation context, or may have been cleared with your chat data.
           </p>
           <p>
-            Repeat the relevant information when needed. For anything
-            important, keep your own reliable record rather than relying
-            on an AI conversation to preserve it.
+            Repeat the relevant context when needed and avoid relying on the
+            Companion as the only record of something important.
           </p>
         </div>
       </details>
@@ -1135,19 +1174,17 @@
         <summary>Is my AI Companion conversation history saved?</summary>
         <div class="answer">
           <p>
-            AI messages may be stored with your account to provide
-            conversation history or related functionality. The exact
-            retention period, deletion behavior, and access controls
-            depend on the app's implementation and applicable privacy policy.
+            Yes. AI conversations are saved to your signed-in account so you
+            can see them when you return.
           </p>
           <p>
-            Review the
+            Use <strong>Clear</strong> in the AI Companion card to remove the
+            conversation history and its structured memory. You have five
+            seconds to undo the clear action. For broader data-handling details,
+            read the
             <a href="https://lumevine.runs-at.dev/privacy-policy">
               Lumevine Privacy Policy
-            </a>
-            for the applicable information. Avoid entering passwords,
-            payment-card details, or other highly sensitive information
-            into conversations.
+            </a>. Do not enter passwords or verification codes in a chat.
           </p>
         </div>
       </details>
@@ -1156,14 +1193,13 @@
         <summary>What happens if I clear my AI chat history?</summary>
         <div class="answer">
           <p>
-            The effect depends on the chat controls provided by Lumevine.
-            Removing visible messages may not necessarily remove every
-            associated record, backup, or log held by the underlying services.
+            The <strong>Clear</strong> button removes your saved AI conversations and
+            structured AI memory from the account. The action has a five-second
+            undo window; after that, the deletion is finalized.
           </p>
           <p>
-            Read any confirmation shown by the app. If you need permanent
-            deletion of associated personal data, contact support and ask
-            specifically about chat history and related records.
+            This clears AI data only. Use <strong>Clear All Data</strong> in Account if you
+            want to remove the rest of your Lumevine app data too.
           </p>
         </div>
       </details>
@@ -1225,14 +1261,12 @@
         <summary>Can the AI Companion take actions in my account?</summary>
         <div class="answer">
           <p>
-            Do not assume that the Companion can create tasks, edit routines,
-            change settings, or modify tracker records simply because it can
-            discuss those activities. Such actions require explicit support
-            in the app's AI integration.
+            No. The AI Companion can suggest ideas and discuss your plans, but
+            it cannot add tasks, edit your routine, change settings, or log
+            wellness entries for you.
           </p>
           <p>
-            Verify any proposed change in the actual feature and check
-            whether the app confirms that the action was completed.
+            Use the relevant card or control to make changes yourself.
           </p>
         </div>
       </details>
@@ -1376,16 +1410,14 @@
         <summary>What can my friends see about my Lumevine activity?</summary>
         <div class="answer">
           <p>
-            Visibility depends on the information the app makes available
-            through its friend and sharing features. Do not assume that
-            every tracker is private by default or that every tracker is
-            automatically shared.
+            Friends can compare progress with you through the Friends area.
+            A friend connection does not give someone access to your password,
+            private AI conversations, or every wellness entry in your account.
           </p>
           <p>
-            Review any sharing controls and the information shown in the
-            relevant social screen before connecting with someone. The exact
-            visibility of each data field should be confirmed by the app's
-            actual access controls and Privacy Policy.
+            Review the information shown in the friend card before connecting.
+            If a particular value is displayed there, treat it as shared with
+            your connected friends.
           </p>
         </div>
       </details>
@@ -1395,13 +1427,8 @@
         <div class="answer">
           <p>
             Accepting a request establishes a connection within the app.
-            It should not be assumed to grant access to every item in your
-            account, but the information made available through that
-            connection depends on the app's sharing implementation.
-          </p>
-          <p>
-            Check the resulting friend profile and available privacy
-            controls if you want to understand what has become visible.
+            You can compare progress and encourage one another from the Friends
+            area. It does not expose your full account or private AI chats.
           </p>
         </div>
       </details>
@@ -1427,12 +1454,9 @@
         <summary>What if I sent a friend request to the wrong person?</summary>
         <div class="answer">
           <p>
-            Look for an available cancel, remove, or disconnect control
-            in the relevant social screen. If no such control is available,
-            contact support for guidance.
-          </p>
-          <p>
-            Verify the account before sending another request.
+            Open Account → Friends → Sent Requests and cancel the request.
+            If the request has already been accepted, remove the connection
+            from Current Friends instead.
           </p>
         </div>
       </details>
@@ -1441,8 +1465,8 @@
         <summary>Can I disconnect from a friend later?</summary>
         <div class="answer">
           <p>
-            Use the connection management controls provided by the app,
-            if available. Removing a connection may change future visibility,
+            Open Account → Friends and use the controls beside the connection
+            to remove it. Removing a connection may change future visibility,
             but it does not necessarily delete information the other person
             has already seen or independently recorded.
           </p>
@@ -1458,9 +1482,9 @@
         <summary>Does sharing wellness information mean my data is public?</summary>
         <div class="answer">
           <p>
-            Not necessarily. Sharing through a friend feature and publishing
-            information publicly are different things. However, the exact
-            audience depends on the controls provided by Lumevine.
+            No. Friend connections are not public posts. Progress shown in the
+            Friends area is visible to connected friends, not to everyone on
+            the internet.
           </p>
           <p>
             Check the relevant screen and do not share information with
@@ -1480,6 +1504,21 @@
       </p>
 
       <details class="faq-item">
+        <summary>Why does email sign-up require verification?</summary>
+        <div class="answer">
+          <p>
+            Email verification confirms that you control the address used for the
+            account. Lumevine sends the verification email before finalizing the
+            profile, and an unverified session cannot initialize the dashboard.
+          </p>
+          <p>
+            If the email does not arrive, check spam or use the resend verification
+            action from the sign-in screen.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq-item">
         <summary>Where does Lumevine store my information?</summary>
         <div class="answer">
           <p>
@@ -1488,12 +1527,12 @@
             for preferences or session state.
           </p>
           <p>
-            The precise storage location and retention behavior can differ
-            by data type and service. Read the
+            Account data is stored in Firebase cloud services; some preferences
+            and sign-in state may also be kept in your browser. The
             <a href="https://lumevine.runs-at.dev/privacy-policy">
               Privacy Policy
             </a>
-            for the applicable details.
+            explains the data handling and service providers in more detail.
           </p>
         </div>
       </details>
@@ -1554,29 +1593,19 @@
         <summary>What does “Clear All Data” actually delete?</summary>
         <div class="answer">
           <p>
-          Use the confirmation message displayed by the app as
-          the primary reference for determining the scope of the
-          operation. Clearing app data and deleting an account are
-          two distinct actions. Clearing app data removes all
-          account-related data stored locally within the app but
-          does not delete the account or its associated
-          credentials.
-           
+            Clear All Data permanently removes your Lumevine app data, including
+            tasks, mood, water, sleep, gratitude, reminders, AI conversations,
+            insights, streaks, friends, and friend requests. It does not delete
+            your sign-in account or credentials, and it does not reset daily
+            usage limits.
           </p>
           <div class="steps">
             <ol>
-              <li>Read the confirmation carefully before proceeding.</li>
-              <li>Export any information you want to preserve, if export is available.</li>
-              <li>Check whether the operation refers to local data, cloud data,
-                or both.</li>
-              <li>Afterward, verify which information remains and whether
-                you can still sign in.</li>
+              <li>Export anything you want to keep before clearing.</li>
+              <li>Read both confirmation prompts; the action cannot be undone.</li>
+              <li>Your account remains signed in after the app data is removed.</li>
             </ol>
           </div>
-          <p>
-            If the scope is unclear, contact support before confirming a
-            potentially destructive operation.
-          </p>
         </div>
       </details>
 
@@ -1601,14 +1630,13 @@
         <summary>How do I export my Lumevine data?</summary>
         <div class="answer">
           <p>
-            Use the data export control available in Lumevine, if present,
-            and follow the instructions shown by the app. Check the resulting
-            file and its contents before relying on it as a complete backup.
+            Choose <strong>Export Data</strong> in Account and follow the
+            prompts. The app creates a downloadable backup that you can keep
+            or use in its import flow.
           </p>
           <p>
-            Export formats and coverage can differ. Do not assume that
-            a single export contains every chat, preference, account record,
-            or server-side log unless the export description explicitly says so.
+            Keep the exported file somewhere private: it contains personal
+            account information.
           </p>
         </div>
       </details>
@@ -1904,10 +1932,10 @@
       </details>
 
       <details class="faq-item">
-        <summary>What information should I include in a bug report?</summary>
+        <summary>What should I include when I contact support?</summary>
         <div class="answer">
           <p>
-            A useful report helps support reproduce the issue without
+            A useful support message helps us reproduce the issue without
             requiring access to your private account information.
           </p>
           <div class="steps">
@@ -2020,15 +2048,14 @@
         <summary>Does Lumevine have usage limits?</summary>
         <div class="answer">
           <p>
-            Limits can differ between features and the services that power
-            them. Do not assume that every feature has the same limit or
-            that a limit resets on a particular schedule unless the app
-            explicitly says so.
+            Yes. Some actions have daily limits, including AI messages and
+            certain tracking or reminder actions. The app shows a message when
+            a limit is reached, including its reset timing when applicable.
           </p>
           <p>
-            If you see a limit message, note its exact wording and any
-            reset time shown. If no reset time is provided, contact support
-            rather than assuming one.
+            Clearing your app data does not reset daily usage limits. Check
+            the message shown in the relevant feature for the current limit
+            and reset time.
           </p>
         </div>
       </details>
