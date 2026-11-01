@@ -9535,16 +9535,51 @@ const aiSessionState = {
   memoryPairs: []
 };
 const aiUserProfile = {
+  preferredNames: [],
   goals: [],
   recurringStruggles: [],
   preferences: [],
+  interests: [],
+  lifeContext: [],
+  rememberedFacts: [],
   progressNotes: [],
   lastTopics: [],
   updatedAt: ""
 };
 
-function addAiProfileItem(list, value, limit = 12) {
-  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+const AI_PROFILE_VERSION = 3;
+const AI_PROFILE_FIELDS = [
+  "preferredNames",
+  "goals",
+  "recurringStruggles",
+  "preferences",
+  "interests",
+  "lifeContext",
+  "rememberedFacts",
+  "progressNotes",
+  "lastTopics"
+];
+const AI_PROFILE_ITEM_LIMITS = {
+  preferredNames: 1,
+  goals: 24,
+  recurringStruggles: 24,
+  preferences: 24,
+  interests: 24,
+  lifeContext: 24,
+  rememberedFacts: 30,
+  progressNotes: 30,
+  lastTopics: 12
+};
+
+function normalizeAiProfileValue(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.!?]+$/, "");
+}
+
+function addAiProfileItem(list, value, limit = 24) {
+  const normalized = normalizeAiProfileValue(value);
   if (!normalized || normalized.length < 3) return;
   const existingIndex = list.findIndex((entry) => entry.toLowerCase() === normalized.toLowerCase());
   if (existingIndex >= 0) list.splice(existingIndex, 1);
@@ -9553,94 +9588,209 @@ function addAiProfileItem(list, value, limit = 12) {
 }
 
 function updateAiUserProfile(inputText) {
-  const text = String(inputText || "").replace(/\s+/g, " ").trim();
+  const rawText = String(inputText || "").replace(/\s+/g, " ").trim();
+  const rememberMatch = rawText.match(/^(?:please\s+)?remember(?:\s+that)?\s*[:,-]?\s*(.+)$/i);
+  const text = String(rememberMatch?.[1] || rawText).trim();
   const lower = text.toLowerCase();
-  if (!text) return;
+  if (!text || (!rememberMatch && /^(?:what|who|when|where|why|how|can you|could you|do you|did you|tell me|show me)\b/i.test(text))) return;
+  const isCorrection = /^(?:actually|correction|to clarify|update)\b/i.test(text);
+  let capturedProfileDetail = false;
 
-  const goalMatch = text.match(/(?:my goal is|i want to|i'm trying to|i am trying to|i plan to|i'd like to)\s+(.+)/i);
-  if (goalMatch?.[1] && goalMatch[1].length < 180) addAiProfileItem(aiUserProfile.goals, goalMatch[1]);
-
-  const struggleMatch = text.match(/(?:i keep|i often|i always|i struggle to|i'm struggling to|i am struggling to|i can't|i cannot|i missed|i keep missing)\s+(.+)/i);
-  if (struggleMatch?.[1] && struggleMatch[1].length < 180) addAiProfileItem(aiUserProfile.recurringStruggles, struggleMatch[1]);
-  if (/\b(?:missed|failed|failing|struggle|hard|difficult|can't stick|cannot stick)\b/.test(lower)) {
-    addAiProfileItem(aiUserProfile.recurringStruggles, text);
+  const nameMatch = text.match(/(?:my name is|call me|you can call me|please call me|i am called|i'm called|i go by|my preferred name is|i prefer to be called)\s+(.+)/i);
+  const preferredName = normalizeAiProfileValue(nameMatch?.[1])
+    .replace(/\s+(?:from now on|please|instead)$/i, "")
+    .replace(/[,;:]+$/, "")
+    .trim();
+  if (nameMatch && isValidLearnedName(preferredName)) {
+    if (isCorrection || aiUserProfile.preferredNames.length) aiUserProfile.preferredNames.length = 0;
+    addAiProfileItem(aiUserProfile.preferredNames, preferredName, AI_PROFILE_ITEM_LIMITS.preferredNames);
+    capturedProfileDetail = true;
   }
 
-  const preferenceMatch = text.match(/(?:i like|i love|i prefer|i don't like|i hate|please remember that)\s+(.+)/i);
-  if (preferenceMatch?.[1] && preferenceMatch[1].length < 160) addAiProfileItem(aiUserProfile.preferences, preferenceMatch[1]);
+  const goalMatch = text.match(/(?:my goal is(?: to)?|i want to|i'm trying to|i am trying to|i plan to|i'd like to)\s+(.+)/i);
+  if (isCorrection && goalMatch) aiUserProfile.goals.length = 0;
+  if (goalMatch?.[1] && goalMatch[1].length < 180) {
+    addAiProfileItem(aiUserProfile.goals, goalMatch[1]);
+    capturedProfileDetail = true;
+  }
+
+  const struggleMatch = text.match(/(?:i keep|i often|i struggle (?:to|with)|i'm struggling (?:to|with)|i am struggling (?:to|with)|i can't stick to|i cannot stick to|i missed|i keep missing)\s+(.+)/i);
+  if (isCorrection && struggleMatch) aiUserProfile.recurringStruggles.length = 0;
+  if (struggleMatch?.[1] && struggleMatch[1].length < 180) {
+    addAiProfileItem(aiUserProfile.recurringStruggles, text);
+    capturedProfileDetail = true;
+  }
+
+  const preferenceMatch = text.match(/(?:i like|i love|i prefer(?! to be called)|i don't like|i do not like|i hate)\s+(.+)/i);
+  if (isCorrection && preferenceMatch) aiUserProfile.preferences.length = 0;
+  if (preferenceMatch?.[1] && preferenceMatch[1].length < 160) {
+    addAiProfileItem(aiUserProfile.preferences, preferenceMatch[1]);
+    capturedProfileDetail = true;
+  }
+
+  const interestMatch = text.match(/(?:i enjoy|i'm interested in|i am interested in|i'm into|i am into|my hobbies include)\s+(.+)/i);
+  if (isCorrection && interestMatch) aiUserProfile.interests.length = 0;
+  if (interestMatch?.[1] && interestMatch[1].length < 180) {
+    addAiProfileItem(aiUserProfile.interests, interestMatch[1]);
+    capturedProfileDetail = true;
+  }
+
+  const lifeContextMatch = text.match(/(?:(?:i am|i'm) (?:a student|a parent|a caregiver|a teacher|a nurse|a developer|a freelancer)|i work (?:nights|days|full time|part time)|i study|my schedule is)\b[\s\S]*/i);
+  if (isCorrection && lifeContextMatch) aiUserProfile.lifeContext.length = 0;
+  if (lifeContextMatch && text.length < 180) {
+    addAiProfileItem(aiUserProfile.lifeContext, text);
+    capturedProfileDetail = true;
+  }
+
+  if (rememberMatch && !capturedProfileDetail) {
+    if (isCorrection) aiUserProfile.rememberedFacts.length = 0;
+    addAiProfileItem(aiUserProfile.rememberedFacts, text, AI_PROFILE_ITEM_LIMITS.rememberedFacts);
+    capturedProfileDetail = true;
+  }
 
   if (/\b(?:managed|improved|better|progress|succeeded|completed|stuck with|did it)\b/.test(lower)) {
-    addAiProfileItem(aiUserProfile.progressNotes, text);
+    addAiProfileItem(aiUserProfile.progressNotes, text, AI_PROFILE_ITEM_LIMITS.progressNotes);
+    capturedProfileDetail = true;
   }
 
   const topic = classifyIntent(text)?.key;
-  if (topic && topic !== "fallback") addAiProfileItem(aiUserProfile.lastTopics, topic, 10);
-  aiUserProfile.updatedAt = getServerNowDate().toISOString();
+  if (topic && topic !== "fallback") addAiProfileItem(aiUserProfile.lastTopics, topic, AI_PROFILE_ITEM_LIMITS.lastTopics);
+  if (capturedProfileDetail || (topic && topic !== "fallback")) {
+    aiUserProfile.updatedAt = getServerNowDate().toISOString();
+  }
 }
 
 function resetAiUserProfile() {
-  aiUserProfile.goals.length = 0;
-  aiUserProfile.recurringStruggles.length = 0;
-  aiUserProfile.preferences.length = 0;
-  aiUserProfile.progressNotes.length = 0;
-  aiUserProfile.lastTopics.length = 0;
+  AI_PROFILE_FIELDS.forEach((key) => {
+    aiUserProfile[key].length = 0;
+  });
   aiUserProfile.updatedAt = "";
 }
 
 async function saveAiUserProfile(userId) {
-  if (!userId) return;
+  if (!userId) return false;
   try {
+    const profile = Object.fromEntries(
+      AI_PROFILE_FIELDS.map((key) => [key, [...aiUserProfile[key]]])
+    );
     await setDoc(doc(db, "users", userId, "settings", "aiMemory"), {
-      goals: aiUserProfile.goals,
-      recurringStruggles: aiUserProfile.recurringStruggles,
-      preferences: aiUserProfile.preferences,
-      progressNotes: aiUserProfile.progressNotes,
-      lastTopics: aiUserProfile.lastTopics,
+      profileVersion: AI_PROFILE_VERSION,
+      profile,
+      ...profile,
       updatedAt: serverTimestamp()
     }, { merge: true });
+    return true;
   } catch (err) {
     structuredLog("warn", "ai.memory.save", err?.message || String(err), { userId });
+    return false;
   }
 }
 
 function loadAiUserProfile(data = {}) {
   resetAiUserProfile();
-  ["goals", "recurringStruggles", "preferences", "progressNotes", "lastTopics"].forEach((key) => {
-    const values = Array.isArray(data?.[key]) ? data[key] : [];
-    values.forEach((value) => addAiProfileItem(aiUserProfile[key], value, key === "lastTopics" ? 10 : 12));
+  const profile = data?.profile && typeof data.profile === "object" ? data.profile : data;
+  AI_PROFILE_FIELDS.forEach((key) => {
+    const values = Array.isArray(profile?.[key]) ? profile[key] : [];
+    values.forEach((value) => addAiProfileItem(aiUserProfile[key], value, AI_PROFILE_ITEM_LIMITS[key]));
   });
-  aiUserProfile.updatedAt = String(data?.updatedAt || "");
+  const updatedAt = data?.updatedAt;
+  aiUserProfile.updatedAt = updatedAt?.toDate?.()?.toISOString?.()
+    || (typeof updatedAt === "string" ? updatedAt : "");
 }
 
 function getAiProfileContext() {
   const parts = [];
+  if (aiUserProfile.preferredNames.length) parts.push(`preferred name: ${aiUserProfile.preferredNames[aiUserProfile.preferredNames.length - 1]}`);
   if (aiUserProfile.goals.length) parts.push(`goals: ${aiUserProfile.goals.slice(-3).join("; ")}`);
   if (aiUserProfile.recurringStruggles.length) parts.push(`recurring difficulties: ${aiUserProfile.recurringStruggles.slice(-3).join("; ")}`);
   if (aiUserProfile.preferences.length) parts.push(`preferences: ${aiUserProfile.preferences.slice(-3).join("; ")}`);
+  if (aiUserProfile.interests.length) parts.push(`interests: ${aiUserProfile.interests.slice(-3).join("; ")}`);
+  if (aiUserProfile.lifeContext.length) parts.push(`life context: ${aiUserProfile.lifeContext.slice(-3).join("; ")}`);
+  if (aiUserProfile.rememberedFacts.length) parts.push(`explicitly remembered facts: ${aiUserProfile.rememberedFacts.slice(-3).join("; ")}`);
   if (aiUserProfile.progressNotes.length) parts.push(`recent progress: ${aiUserProfile.progressNotes.slice(-3).join("; ")}`);
   return parts.join(" | ");
 }
 
-function addLongTermMemoryToResponse(inputText, response, isHtml) {
+function getAiUserProfileSnapshot() {
+  return Object.fromEntries(
+    AI_PROFILE_FIELDS.map((key) => [key, [...aiUserProfile[key]]])
+  );
+}
+
+function buildAiUserProfileSummary(user) {
+  const sections = [
+    ["Preferred name", aiUserProfile.preferredNames],
+    ["Goals", aiUserProfile.goals],
+    ["Challenges you’ve mentioned", aiUserProfile.recurringStruggles],
+    ["Preferences", aiUserProfile.preferences],
+    ["Interests", aiUserProfile.interests],
+    ["Useful context", aiUserProfile.lifeContext],
+    ["Other details you asked me to remember", aiUserProfile.rememberedFacts],
+    ["Progress you’ve shared", aiUserProfile.progressNotes],
+    ["Recent conversation topics", aiUserProfile.lastTopics.map((topic) => topic.replaceAll("-", " "))]
+  ].filter(([, values]) => values.length);
+  const displayName = getPreferredAiDisplayName(user);
+  if (displayName && !aiUserProfile.preferredNames.length) sections.unshift(["Name", [displayName]]);
+
+  if (!sections.length) {
+    return "I don’t have much personal context saved yet. As you share your goals, preferences, interests, routines, or challenges, I can remember the useful details and tailor suggestions to you.";
+  }
+
+  const list = sections.map(([label, values]) =>
+    `<li><strong>${escapeHtml(label)}:</strong> ${values.map((value) => escapeHtml(value)).join("; ")}</li>`
+  ).join("");
+  return `Here’s what I currently remember from what you’ve shared:<ul>${list}</ul><p>This is a summary of saved conversation details, not assumptions about you. If something is outdated, start your correction with “Actually…”. Use Clear to erase your saved AI conversations and profile.</p>`;
+}
+
+function isAiUserProfileQuestion(inputText) {
+  return /\bwhat\s+(?:do|did)\s+you\s+(?:know|remember)\s+about\s+me\b|\bwhat\s+have\s+you\s+learned\s+about\s+me\b|\bwhat\s+can\s+you\s+tell\s+me\s+about\s+myself\b|\bshow\s+me\s+my\s+profile\b/i
+    .test(String(inputText || ""));
+}
+
+function addLongTermMemoryToResponse(inputText, response, isHtml, previousProfile = null) {
   const text = String(inputText || "").toLowerCase();
-  const struggles = aiUserProfile.recurringStruggles;
   const hasProgress = /\b(?:managed|improved|better|progress|succeeded|completed|stuck with|did it)\b/.test(text);
   const hasDifficulty = /\b(?:missed|failed|failing|struggle|hard|difficult|can't stick|cannot stick)\b/.test(text);
-  if ((!struggles.length && !aiUserProfile.goals.length) || (!hasProgress && !hasDifficulty && !/\b(?:advice|plan|routine|help|should|how)\b/.test(text))) {
+  const asksForSuggestion = /\b(?:advice|plan|routine|help|should|how|suggest|recommend|idea|what can i)\b/.test(text);
+  if (!asksForSuggestion && !hasProgress && !hasDifficulty) {
     return { response, isHtml };
   }
 
   let memoryLine = "";
-  if (hasProgress && aiUserProfile.progressNotes.length) {
-    memoryLine = "I remember this has been a recurring challenge, so this improvement matters. Let’s build on what worked instead of making the routine bigger.";
-  } else if (hasDifficulty) {
-    memoryLine = "I remember this has come up before. Let’s make the next step smaller and more realistic rather than treating it as a failure.";
-  } else if (aiUserProfile.goals.length && /\b(?:advice|plan|routine|help|should|how)\b/.test(text)) {
-    memoryLine = `I’ll keep your goal of “${aiUserProfile.goals[aiUserProfile.goals.length - 1]}” in mind as we work through this.`;
+  const previousStruggles = previousProfile?.recurringStruggles || [];
+  const currentInput = normalizeAiProfileValue(inputText).toLowerCase();
+  const latestStruggle = aiUserProfile.recurringStruggles.find((item) => item.toLowerCase() === currentInput)
+    || previousStruggles[previousStruggles.length - 1]
+    || aiUserProfile.recurringStruggles[aiUserProfile.recurringStruggles.length - 1];
+  const latestGoal = aiUserProfile.goals[aiUserProfile.goals.length - 1];
+  const latestPreference = aiUserProfile.preferences[aiUserProfile.preferences.length - 1];
+  const latestInterest = aiUserProfile.interests[aiUserProfile.interests.length - 1];
+  const latestLifeContext = aiUserProfile.lifeContext[aiUserProfile.lifeContext.length - 1];
+  const latestProgress = aiUserProfile.progressNotes[aiUserProfile.progressNotes.length - 1];
+  if (hasProgress && previousStruggles.length && latestProgress) {
+    memoryLine = `You’ve mentioned “${latestStruggle}” before, and you’ve now shared “${latestProgress}.” That’s meaningful progress; let’s build on what worked.`;
+  } else if (hasDifficulty && latestStruggle) {
+    const alreadyKnown = previousStruggles.some((item) => item.toLowerCase() === latestStruggle.toLowerCase());
+    memoryLine = alreadyKnown
+      ? `You’ve mentioned “${latestStruggle}” before, so I’ll keep this next step small and realistic.`
+      : `You mentioned “${latestStruggle},” so I’ll keep this next step small and realistic.`;
+  } else if (asksForSuggestion && latestGoal) {
+    memoryLine = `Since you’re working toward “${latestGoal},” I’ll shape this suggestion around that goal.`;
+  } else if (asksForSuggestion && latestPreference) {
+    memoryLine = `I’ll keep your preference for “${latestPreference}” in mind while suggesting a next step.`;
+  } else if (asksForSuggestion && latestInterest) {
+    memoryLine = `Since you enjoy “${latestInterest},” I’ll use that as a starting point for this suggestion.`;
+  } else if (asksForSuggestion && latestLifeContext) {
+    memoryLine = `I’ll take your schedule and circumstances (“${latestLifeContext}”) into account as I suggest a next step.`;
+  } else if (asksForSuggestion && aiUserProfile.rememberedFacts.length) {
+    const rememberedFact = aiUserProfile.rememberedFacts[aiUserProfile.rememberedFacts.length - 1];
+    memoryLine = `I’ll keep in mind what you asked me to remember: “${rememberedFact}.”`;
   }
   if (!memoryLine || String(response || "").includes(memoryLine)) return { response, isHtml };
   return {
-    response: isHtml ? `${memoryLine}<br><br>${response}` : `${memoryLine}\n\n${response}`,
+    response: isHtml
+      ? `<p>${escapeHtml(memoryLine)}</p>${response}`
+      : `${memoryLine}\n\n${response}`,
     isHtml
   };
 }
@@ -15727,6 +15877,8 @@ function getUserName(user) {
 }
 
 function getPreferredAiDisplayName(user) {
+  const savedPreferredName = aiUserProfile.preferredNames[aiUserProfile.preferredNames.length - 1];
+  if (savedPreferredName) return savedPreferredName;
   const accountPanelDisplayName = normalizeDisplayNameValue(accountDisplayName?.innerText || "");
   if (accountPanelDisplayName && accountPanelDisplayName !== "-") return accountPanelDisplayName;
 
@@ -19092,7 +19244,7 @@ async function tryAiAction(input, user, options = {}) {
     return withGreeting("ℹ️ Unknown mode. Use: balanced, coach, strict, creative, ultra.");
   }
 
-  const rememberMatch = commandMsg.match(/^remember\s+(?:that\s+)?(.+)/i);
+  const rememberMatch = commandMsg.match(/^(?:please\s+)?remember(?:\s+that)?\s*[:,-]?\s*(.+)/i);
   if (rememberMatch?.[1]) {
     learnFromUserInput(rememberMatch[1]);
     return withGreeting(`✅ Saved memory: ${escapeHtml(rememberMatch[1].trim())}`);
@@ -19466,6 +19618,14 @@ async function buildSmartAiResponse(input, user) {
   const normalizedInput = shouldSkipAiTypoNormalizationForPlannerInput(rawInput)
     ? rawInput
     : normalizeTyposForAi(rawInput).trim();
+  if (isAiUserProfileQuestion(normalizedInput)) {
+    aiSessionState.lastIntent = "user-profile";
+    aiSessionState.lastAdvice = [];
+    return {
+      response: buildAiUserProfileSummary(user),
+      isHtml: true
+    };
+  }
   const checkInAnswer = normalizeLocalIntentText(normalizedInput);
   const checkInContainsAction = /\b(?:add|log|save|set|delete|clear|complete|completed|finish|finished|create|remind|water|task|routine|mood|sleep|gratitude|schedule)\b/.test(checkInAnswer);
   const checkInWords = checkInAnswer
@@ -20400,14 +20560,6 @@ function removeAiResponseEmojis(text) {
     .trim();
 }
 
-function getAiTypingPreview(messageText, isHtml) {
-  if (!isHtml) return formatChatPlainText(messageText);
-  const preview = document.createElement("div");
-  preview.innerHTML = String(messageText || "");
-  preview.querySelectorAll("br").forEach((lineBreak) => lineBreak.replaceWith("\n"));
-  return formatChatPlainText(preview.textContent || "");
-}
-
 function scrollChatRowIntoView(row) {
   if (!chat || !row) return;
   const reveal = () => {
@@ -20487,20 +20639,36 @@ async function revealAiResponse(row, messageText, isHtml) {
   row.setAttribute("aria-label", "AI response");
   textNode.dataset.rawText = displayText;
 
-  const previewText = getAiTypingPreview(displayText, displayIsHtml);
-  const content = document.createElement("span");
-  content.className = "ai-typewriter-content";
+  const typingText = `🌿 AI: ${displayText}`;
+  setChatText(textNode, typingText, displayIsHtml);
+  const walker = document.createTreeWalker(textNode, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  let totalCharacters = 0;
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const originalText = node.textContent || "";
+    textNodes.push({ node, originalText });
+    totalCharacters += originalText.length;
+    node.textContent = "";
+  }
+
   const cursor = document.createElement("span");
   cursor.className = "ai-typewriter-cursor";
   cursor.setAttribute("aria-hidden", "true");
-  textNode.replaceChildren(content, cursor);
+  const lastTextNode = textNodes[textNodes.length - 1]?.node;
+  if (lastTextNode?.parentNode) {
+    lastTextNode.parentNode.insertBefore(cursor, lastTextNode.nextSibling);
+  } else {
+    textNode.appendChild(cursor);
+  }
 
-  const typingText = `🌿 AI: ${previewText}`;
-  const delay = Math.max(22, Math.min(48, 5200 / Math.max(1, typingText.length)));
-  for (let index = 1; index <= typingText.length; index += 1) {
-    if (!row.isConnected) return;
-    content.textContent = typingText.slice(0, index);
-    await new Promise((resolve) => setTimeout(resolve, delay));
+  const delay = Math.max(22, Math.min(48, 5200 / Math.max(1, totalCharacters)));
+  for (const { node, originalText } of textNodes) {
+    for (let index = 1; index <= originalText.length; index += 1) {
+      if (!row.isConnected) return;
+      node.textContent = originalText.slice(0, index);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   }
 
   if (!row.isConnected) return;
@@ -20785,7 +20953,6 @@ async function loadAiChats(userId) {
   aiSessionState.topicHistory.length = 0;
   aiSessionState.memoryPairs.length = 0;
   resetAiUserProfile();
-  resetAiUserProfile();
 
   try {
     const [snapshot, memorySnapshot] = await Promise.all([
@@ -20823,9 +20990,10 @@ async function loadAiChats(userId) {
       aiSessionState.awaitingCheckIn = lastIntent.key === "greeting";
       rememberAssistantQuestion(lastPair.ai, lastPair.aiResponseIsHtml);
     }
-    if (!memorySnapshot.exists()) {
-      recentPairs.forEach((pair) => updateAiUserProfile(pair.user));
-      if (recentPairs.length) await saveAiUserProfile(userId);
+    const storedProfileVersion = Number(memorySnapshot.data()?.profileVersion) || 0;
+    if (storedProfileVersion < AI_PROFILE_VERSION) {
+      docs.forEach((entry) => updateAiUserProfile(entry.userMessage));
+      if (docs.length || getAiProfileContext()) await saveAiUserProfile(userId);
     }
     if (!docs.length) {
       setEmptyState(chat, getRandomEmptyMessage("chat", "No AI chats yet — ask one question to get started."));
@@ -20986,8 +21154,13 @@ async function aiChat(){
     }
 
     try {
+      const previousAiProfile = getAiUserProfileSnapshot();
+      updateAiUserProfile(input);
+      if (!await saveAiUserProfile(user.uid)) {
+        showToast("Your conversation can continue, but your AI profile could not sync. Check your connection.");
+      }
       const smart = await buildSmartAiResponse(input, user);
-      const memoryAware = addLongTermMemoryToResponse(input, smart.response, smart.isHtml);
+      const memoryAware = addLongTermMemoryToResponse(input, smart.response, smart.isHtml, previousAiProfile);
       let response = memoryAware.response;
       let responseIsHtml = memoryAware.isHtml;
       const qualityResult = enforceAiResponseQuality(input, response, responseIsHtml);
@@ -21009,7 +21182,6 @@ async function aiChat(){
       responseIsHtml = safeOutput.isHtml;
       rememberAssistantQuestion(response, responseIsHtml);
       rememberPrompt(input);
-      updateAiUserProfile(input);
 
       const chatId = await storeAiChat(user.uid, input, response, responseIsHtml);
       if (!chatId) {

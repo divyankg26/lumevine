@@ -782,10 +782,6 @@ textarea:focus-visible{
   vertical-align:middle;
 }
 
-.ai-typewriter-content{
-  white-space:pre-wrap;
-}
-
 .ai-typewriter-cursor{
   margin-left:4px;
 }
