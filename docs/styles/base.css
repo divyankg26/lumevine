@@ -241,29 +241,46 @@ html,body{
 
 .password-field input{
   margin-top:0 !important;
-  padding-right:72px;
+  padding-right:58px;
 }
 
 .password-visibility-btn{
   position:absolute;
   top:50%;
   right:8px;
-  transform:translateY(-50%);
-  width:auto !important;
+  transform:translateY(-50%) !important;
+  width:38px !important;
+  height:38px;
   margin:0 !important;
-  padding:6px 8px !important;
-  border:1px solid rgba(255,255,255,.35) !important;
-  border-radius:8px !important;
-  background:rgba(255,255,255,.16) !important;
-  color:#fff;
-  font-size:12px !important;
-  font-weight:700;
-  line-height:1;
+  padding:8px !important;
+  border:0 !important;
+  border-radius:4px !important;
+  background:transparent !important;
+  color:rgba(255,255,255,.72);
+  line-height:0;
+  box-shadow:none !important;
+  filter:none !important;
+  transition:color var(--motion-fast) var(--ease-soft), opacity var(--motion-fast) var(--ease-soft) !important;
+}
+
+.password-visibility-icon{
+  display:block;
+  width:21px;
+  height:21px;
+  fill:none;
+  stroke:currentColor;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-width:1.8;
 }
 
 .password-visibility-btn:hover,
 .password-visibility-btn:focus-visible{
-  background:rgba(255,255,255,.3) !important;
+  background:transparent !important;
+  color:#fff;
+  box-shadow:none !important;
+  filter:none !important;
+  transform:translateY(-50%) !important;
 }
 
 .modal-content h2 + input,
@@ -855,85 +872,6 @@ html,body{
   width:min(560px, calc(100vw - 24px));
 }
 
-.routine-picker{
-  position:relative;
-  width:100%;
-  margin-top:12px;
-}
-
-.routine-picker > select{
-  position:absolute;
-  width:1px;
-  height:1px;
-  opacity:0;
-  pointer-events:none;
-}
-
-.routine-picker-trigger{
-  display:block;
-  width:100%;
-  min-height:46px;
-  padding:11px 38px 11px 12px;
-  border:1px solid rgba(255,255,255,.28);
-  border-radius:10px;
-  background:
-    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
-    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
-    rgba(255,255,255,.18);
-  color:var(--text);
-  font:inherit;
-  text-align:left;
-  cursor:pointer;
-}
-
-.routine-picker-trigger:hover,
-.routine-picker.is-open .routine-picker-trigger{
-  background:
-    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
-    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
-    rgba(255,255,255,.28);
-  border-color:rgba(255,255,255,.58);
-}
-
-.routine-picker-menu{
-  position:absolute;
-  z-index:20;
-  top:calc(100% + 6px);
-  left:0;
-  right:0;
-  max-height:240px;
-  overflow-y:auto;
-  padding:6px;
-  border:1px solid rgba(255,255,255,.3);
-  border-radius:14px;
-  background:linear-gradient(145deg,rgba(31,67,91,.98),rgba(22,48,70,.98));
-  box-shadow:0 18px 38px rgba(0,0,0,.32);
-  animation:modalIn var(--motion-fast) var(--ease-gentle);
-}
-
-.routine-picker-option{
-  display:block;
-  width:100%;
-  padding:10px 12px;
-  border:0;
-  border-radius:9px;
-  background:transparent;
-  color:#fff;
-  font:inherit;
-  text-align:left;
-  cursor:pointer;
-}
-
-.routine-picker-option:hover,
-.routine-picker-option[aria-selected="true"]{
-  background:rgba(255,255,255,.16);
-}
-
-.routine-picker-option:disabled{
-  color:rgba(255,255,255,.48);
-  cursor:not-allowed;
-}
-
 .routine-editor-card .welcome-guide-body select,
 .routine-editor-card .welcome-guide-body input{
   display:block;
@@ -950,21 +888,8 @@ html,body{
 }
 
 .routine-editor-card .welcome-guide-body .routine-editor-select{
-  appearance:none;
   color:var(--text);
   color-scheme:dark;
-  background:
-    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
-    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
-    rgba(255,255,255,.18);
-  padding-right:38px;
-}
-
-.routine-editor-card .welcome-guide-body .routine-editor-select:hover{
-  background:
-    linear-gradient(45deg, transparent 50%, var(--text) 50%) calc(100% - 18px) 50% / 6px 6px no-repeat,
-    linear-gradient(135deg, var(--text) 50%, transparent 50%) calc(100% - 13px) 50% / 6px 6px no-repeat,
-    rgba(255,255,255,.26);
 }
 
 .routine-editor-card .welcome-guide-body select option{

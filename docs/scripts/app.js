@@ -3234,13 +3234,16 @@ function setPasswordVisibility(input, button, visible) {
   if (!input || !button) return;
   const isVisible = !!visible;
   input.type = isVisible ? "text" : "password";
-  button.innerText = isVisible ? "Hide" : "Show";
+  button.innerHTML = isVisible
+    ? '<svg class="password-visibility-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.7 10.7 0 0 1 12 5c5.2 0 8.7 4.2 9.8 7a10.7 10.7 0 0 1-3.1 4.5M6.3 6.3C3.9 7.8 2.5 10 2.2 12c.5 1.8 1.8 3.8 4 5.4A10.7 10.7 0 0 0 12 19c1.1 0 2.2-.2 3.2-.5"/></svg>'
+    : '<svg class="password-visibility-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12C3.3 8.8 6.8 5 12 5s8.7 3.8 9.8 7c-1.1 3.2-4.6 7-9.8 7S3.3 15.2 2.2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
   button.setAttribute("aria-label", isVisible ? "Hide password" : "Show password");
   button.setAttribute("aria-pressed", isVisible ? "true" : "false");
 }
 
 function bindPasswordVisibility(input, button) {
   if (!input || !button) return;
+  setPasswordVisibility(input, button, false);
   button.addEventListener("click", () => {
     setPasswordVisibility(input, button, input.type === "password");
   });
@@ -15054,95 +15057,6 @@ function setRoutineCustomError(message = "") {
   dailyRoutineCustomError.style.display = message ? "block" : "none";
 }
 
-const routinePickerInstances = new Map();
-
-function renderRoutinePicker(select) {
-  const instance = routinePickerInstances.get(select);
-  if (!instance) return;
-
-  instance.menu.replaceChildren();
-  Array.from(select.options).forEach((option) => {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = "routine-picker-option";
-    item.textContent = option.textContent || option.value;
-    item.disabled = option.disabled;
-    item.setAttribute("role", "option");
-    item.setAttribute("aria-selected", option.value === select.value ? "true" : "false");
-    item.addEventListener("click", () => {
-      if (option.disabled) return;
-      select.value = option.value;
-      select.dispatchEvent(new Event("change", { bubbles: true }));
-      instance.close();
-    });
-    instance.menu.appendChild(item);
-  });
-
-  const selected = select.selectedOptions?.[0];
-  instance.button.textContent = selected?.textContent || "Choose an option";
-  instance.button.setAttribute("aria-expanded", instance.menu.hidden ? "false" : "true");
-}
-
-function enhanceRoutinePicker(select) {
-  if (!select || routinePickerInstances.has(select)) return;
-  const wrapper = document.createElement("div");
-  wrapper.className = "routine-picker";
-  select.parentNode?.insertBefore(wrapper, select);
-  wrapper.appendChild(select);
-
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "routine-picker-trigger";
-  button.setAttribute("aria-haspopup", "listbox");
-  button.setAttribute("aria-expanded", "false");
-  button.setAttribute("aria-label", select.getAttribute("aria-label") || "Choose an option");
-
-  const menu = document.createElement("div");
-  menu.className = "routine-picker-menu";
-  menu.setAttribute("role", "listbox");
-  menu.hidden = true;
-
-  const close = () => {
-    menu.hidden = true;
-    button.setAttribute("aria-expanded", "false");
-    wrapper.classList.remove("is-open");
-  };
-  const open = () => {
-    document.querySelectorAll(".routine-picker.is-open").forEach((other) => {
-      if (other !== wrapper) other.querySelector(".routine-picker-trigger")?.click();
-    });
-    menu.hidden = false;
-    button.setAttribute("aria-expanded", "true");
-    wrapper.classList.add("is-open");
-  };
-
-  button.addEventListener("click", () => (menu.hidden ? open() : close()));
-  select.addEventListener("change", () => renderRoutinePicker(select));
-  wrapper.append(button, menu);
-  routinePickerInstances.set(select, { button, menu, close });
-
-  const observer = new MutationObserver(() => renderRoutinePicker(select));
-  observer.observe(select, { childList: true, subtree: true, attributes: true });
-  renderRoutinePicker(select);
-}
-
-function initializeRoutinePickers() {
-  [
-    dailyRoutineActivitySelect,
-    dailyRoutineTimeSelect,
-    dailyRoutineStartTimeSelect,
-    dailyRoutineDeleteSelect
-  ].forEach(enhanceRoutinePicker);
-  document.addEventListener("click", (event) => {
-    if (event.target.closest(".routine-picker")) return;
-    document.querySelectorAll(".routine-picker.is-open").forEach((picker) => {
-      picker.querySelector(".routine-picker-trigger")?.click();
-    });
-  });
-}
-
-initializeRoutinePickers();
-
 function renderRoutineEditorStep() {
   const isActivityStep = routineEditorMode === "add"
     ? routineEditorStep === 0
@@ -24832,6 +24746,7 @@ Object.assign(window, {
   openDailyRoutineEditor,
   closeDailyRoutineEditor,
   advanceDailyRoutineEditor,
+  goToPreviousDailyRoutineEditorStep,
   closeDailyRoutineCustomActivity,
   confirmDailyRoutineCustomActivity,
   clearDailyRoutine,

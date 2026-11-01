@@ -48,7 +48,7 @@
     <input id="emailInput" type="email" placeholder="Enter email">
     <div class="password-field">
       <input id="passwordInput" type="password" placeholder="Enter password" autocomplete="current-password">
-      <button id="passwordVisibilityBtn" class="password-visibility-btn" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+      <button id="passwordVisibilityBtn" class="password-visibility-btn" type="button" aria-label="Show password" aria-pressed="false"></button>
     </div>
     <button id="actionButton" onclick="handleAuth()">Sign In</button>
     <button id="resetPasswordButton" class="google-btn" onclick="sendResetPasswordEmail()">Reset Password</button>
@@ -83,7 +83,7 @@
     <input id="googleIdentityDisplayNameInput" type="text" placeholder="Choose display name" autocomplete="off" autocapitalize="words" spellcheck="false">
     <div class="password-field">
       <input id="googleIdentityPasswordInput" type="password" placeholder="Set password" autocomplete="new-password" autocapitalize="none" spellcheck="false">
-      <button id="googleIdentityPasswordVisibilityBtn" class="password-visibility-btn" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+      <button id="googleIdentityPasswordVisibilityBtn" class="password-visibility-btn" type="button" aria-label="Show password" aria-pressed="false"></button>
     </div>
     <div class="identity-setup-actions">
       <button id="googleIdentitySaveBtn" onclick="submitGoogleIdentitySetup()">Continue</button>
@@ -865,6 +865,6 @@
     if (terms && legalTerms) legalTerms.textContent = terms.textContent || "";
   })();
 </script>
-<script src="scripts/app.js?v=20261101-42"></script>
+<script src="scripts/app.js?v=20261101-48"></script>
 </body>
 </html>
