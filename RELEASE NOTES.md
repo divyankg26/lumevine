@@ -1,25 +1,9 @@
 # Release Notes:
 
-- Added an Edit AI Memory option in Account → Personalization, with a more aligned editor and consistent input sizes.
+- Gratitude, task, reminder, water, and sleep fields now clear immediately when submitted. If saving fails, the draft is restored unless you’ve already started a new entry.
 
-- Fixed Backspace closing the memory editor.
+- Habit Journey streak support protects one missed day; missing two days in a row resets the streak at 00:00 GMT. The card explains when support is available or has been used.
 
-- Improved persistent AI memory, including remembering preferred names and details users explicitly ask it to remember.
+- Switching graphs in Patterns & Progress no longer unexpectedly scrolls the page.
 
-- Added more specific answers about saved goals, interests, challenges, and other memory categories.
-
-- AI now understands different ways of asking about the same memory: questions about your goals and what you want to achieve or become all draw from the saved Goals category. It applies the same category-aware matching to other profile details.
-
-- Improved memory answer formatting while it types, and fixed old chat replies changing when memory is edited.
-
-- Added more varied AI replies, including additional responses for missed routine activities.
-
-- Introduced a calm, pastel-colored Day progress bar in Today, based on check-ins, configured water goals, and planned tasks. Reduced jumps from small actions.
-
-- Fixed account identity loading so a chosen username isn’t replaced by one derived from the email address.
-
-- Updated the Music shortcut and another repeated-key shortcut so each shortcut uses distinct keys.
-
-- Made data exports show progress immediately while preparing and saving a backup.
-
-- Aligned the header with the dashboard cards, updated its tagline, and moved the Account button inward to fit the narrower header.
+- The FAQ now covers streak support, manual AI memory editing, and how the Companion matches questions—such as “What do I want to achieve?”—to saved categories like Goals.
