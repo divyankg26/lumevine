@@ -11308,9 +11308,6 @@ function renderInsightMetricView(payload) {
 function nextInsightMetric() {
   insightMetricIndex = (insightMetricIndex + 1) % 4;
   updateInsights();
-  if (insightsCard?.scrollIntoView) {
-    insightsCard.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
 }
 
 function dateKeyToDate(dateKey) {
@@ -12025,8 +12022,6 @@ function generateAdaptiveQuests(todayKey = getTodayKey()) {
     questWeekStartKey = weekStartKey;
     weeklyQuestUsedIds = [];
     questCompletedDateKeys = [];
-    questStreakCount = 0;
-    questLastStreakDateKey = "";
   }
 
   const selected = pickUniqueAdaptiveQuestItems(QUEST_LIBRARY, 4)
@@ -12074,16 +12069,16 @@ function renderHabitQuestUI(animatedDateKey = "") {
   if (questXpEl) questXpEl.innerText = `Progress ${questXp}/100`;
   updateQuestRecoveryBonusUI();
   const progressPercent = Math.max(0, Math.min(100, questXp));
-  if (questStreakEl) questStreakEl.innerText = progressPercent >= 100
-    ? `🔥 ${questStreakCount}-day journey`
+  if (questStreakEl) questStreakEl.innerText = questStreakCount > 0
+    ? `🔥 ${questStreakCount}-day streak`
     : `${habitQuests.filter((entry) => entry.completed).length} of ${habitQuests.length || 4} steps today`;
   if (questProgressFill) questProgressFill.style.width = `${progressPercent}%`;
   if (questShieldEl) {
     questShieldEl.innerText = questShieldAvailable
-      ? "Streak support: Available — protects one missed day"
+      ? "Streak support: Available — one missed day won’t affect your streak; two missed days in a row reset it at 00:00 GMT."
       : questShieldLastUsedDateKey === getTodayKey()
-        ? "Streak support: Used today — your streak was protected"
-        : "Streak support: Earned at 100 progress";
+        ? "Streak support: One missed day is protected. Missing two days in a row resets your streak at 00:00 GMT."
+        : "Streak support is earned at 100 progress. It protects one missed day; two missed days in a row reset your streak at 00:00 GMT.";
   }
   if (questProgressHintEl) {
     questProgressHintEl.innerText = progressPercent >= 100
@@ -12204,29 +12199,37 @@ function dayDiffFromKeys(fromKey, toKey) {
 }
 
 function normalizeQuestStreakForToday(todayKey = getTodayKey()) {
+  let changed = false;
   const currentWeekStart = getQuestWeekStartKeySunday();
   if (questWeekStartKey !== currentWeekStart) {
     questWeekStartKey = currentWeekStart;
-    questStreakCount = 0;
-    questLastStreakDateKey = "";
     weeklyQuestUsedIds = [];
     questCompletedDateKeys = [];
-    return false;
+    changed = true;
   }
 
   if (!questLastStreakDateKey) {
-    questStreakCount = 0;
-    return false;
+    if (questStreakCount !== 0) {
+      questStreakCount = 0;
+      changed = true;
+    }
+    return changed;
   }
   const diff = dayDiffFromKeys(questLastStreakDateKey, todayKey);
   if (diff === 2 && questShieldAvailable) {
     questShieldAvailable = false;
     questShieldLastUsedDateKey = todayKey;
-    questLastStreakDateKey = todayKey;
-    return true;
+    const lastStreakDate = new Date(`${questLastStreakDateKey}T00:00:00.000Z`);
+    lastStreakDate.setUTCDate(lastStreakDate.getUTCDate() + 1);
+    questLastStreakDateKey = dateToKey(lastStreakDate);
+    changed = true;
+  } else if (diff > 1 || diff < 0) {
+    if (questStreakCount !== 0) {
+      questStreakCount = 0;
+      changed = true;
+    }
   }
-  if (diff > 1 || diff < 0) questStreakCount = 0;
-  return false;
+  return changed;
 }
 
 function awardQuestStreakForToday(todayKey = getTodayKey()) {
@@ -12253,6 +12256,7 @@ function triggerQuestStreakCelebration() {
 async function loadHabitQuest(userId) {
   questDateKey = getTodayKey();
   const currentWeekStart = getQuestWeekStartKeySunday();
+  let questStateNeedsSave = false;
 
   try {
     const snap = await fsGetDoc(doc(db, "users", userId, "settings", "habitQuest"), 'habitQuest');
@@ -12273,12 +12277,10 @@ async function loadHabitQuest(userId) {
         questWeekStartKey = currentWeekStart;
         weeklyQuestUsedIds = [];
         questCompletedDateKeys = [];
-        questStreakCount = 0;
-        questLastStreakDateKey = "";
+        questStateNeedsSave = true;
       }
 
-      const shieldStateChanged = normalizeQuestStreakForToday(questDateKey);
-      if (shieldStateChanged) await saveHabitQuestState(userId);
+      questStateNeedsSave = normalizeQuestStreakForToday(questDateKey) || questStateNeedsSave;
 
       if (data.dateKey === questDateKey && Array.isArray(data.quests) && data.quests.length >= 4) {
         const loadedQuests = [];
@@ -12321,10 +12323,6 @@ async function loadHabitQuest(userId) {
           questXp = 0;
           questRecoveryBonusDateKey = "";
           questRecoveryBonusClaimed = false;
-          if (data.dateKey === questDateKey) {
-            questShieldAvailable = false;
-            questShieldLastUsedDateKey = "";
-          }
           generateAdaptiveQuests(questDateKey);
           await saveHabitQuestState(userId);
         }
@@ -12332,8 +12330,6 @@ async function loadHabitQuest(userId) {
         questXp = 0;
         questRecoveryBonusDateKey = "";
         questRecoveryBonusClaimed = false;
-        questShieldAvailable = false;
-        questShieldLastUsedDateKey = "";
         generateAdaptiveQuests(questDateKey);
         await saveHabitQuestState(userId);
       }
@@ -12351,6 +12347,7 @@ async function loadHabitQuest(userId) {
       generateAdaptiveQuests(questDateKey);
       await saveHabitQuestState(userId);
     }
+    if (questStateNeedsSave) await saveHabitQuestState(userId);
   } catch (err) {
     notifyFirestoreError(err);
   }
@@ -12511,8 +12508,6 @@ function ensureHabitQuestCurrent() {
   const currentWeekStart = getQuestWeekStartKeySunday();
   if (questWeekStartKey !== currentWeekStart) {
     questWeekStartKey = currentWeekStart;
-    questStreakCount = 0;
-    questLastStreakDateKey = "";
     weeklyQuestUsedIds = [];
     questCompletedDateKeys = [];
   }
@@ -21863,12 +21858,17 @@ async function addReminder() {
 
   reminderSubmitting = true;
   if (reminderSetBtn) reminderSetBtn.disabled = true;
+  reminderText.value = "";
+  if (reminderMinutes) reminderMinutes.value = "";
+  let reminderSaved = false;
 
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
 
     const quotaResult = await reserveDailyQuota(user.uid, "reminderCount", REMINDER_DAILY_LIMIT);
     if (!quotaResult.ok) {
+      if (!reminderText.value) reminderText.value = t;
+      if (reminderMinutes && !reminderMinutes.value) reminderMinutes.value = String(rawAmount);
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s reminder limit (${REMINDER_DAILY_LIMIT}/day)`));
       await updateReminderLimitUI(user.uid);
       return;
@@ -21885,10 +21885,9 @@ async function addReminder() {
         targetAtMs,
         createdAt: serverTimestamp()
       });
+      reminderSaved = true;
 
       renderReminder({ id: ref.id, text: t, minutes: m, targetAtMs }, { insertAtTop: true });
-      reminderText.value = "";
-      reminderMinutes.value = "";
       const reminderMsg = pickNonRepeatingVariant(AI_REMINDER_ADDED_POOL, 'reminder_set')
         .replaceAll('{text}', t)
         .replaceAll('{minutes}', formatReminderAmountAndUnit(rawAmount, rawUnit))
@@ -21900,9 +21899,19 @@ async function addReminder() {
       await updateReminderLimitUI(user.uid);
       updateClearDataButtonState();
     } catch (err) {
-      await rollbackDailyQuota(user.uid, "reminderCount");
+      if (!reminderSaved) {
+        if (!reminderText.value) reminderText.value = t;
+        if (reminderMinutes && !reminderMinutes.value) reminderMinutes.value = String(rawAmount);
+        await rollbackDailyQuota(user.uid, "reminderCount");
+      }
       notifyFirestoreError(err);
     }
+  } catch (err) {
+    if (!reminderSaved) {
+      if (!reminderText.value) reminderText.value = t;
+      if (reminderMinutes && !reminderMinutes.value) reminderMinutes.value = String(rawAmount);
+    }
+    notifyFirestoreError(err);
   } finally {
     reminderSubmitting = false;
     await updateReminderLimitUI(user.uid);
@@ -21949,6 +21958,8 @@ function renderTask(entry, options = {}) {
   clearStatusState(taskList);
   const li = document.createElement("li");
   li.className = "item-row";
+  li.dataset.taskId = String(entry.id || "");
+  const isPending = String(entry.id || "").startsWith("pending-");
   const span = document.createElement("span");
   span.className = "item-text";
   span.textContent = entry.scheduleLabel
@@ -21963,6 +21974,7 @@ function renderTask(entry, options = {}) {
   const toggleBtn = document.createElement("button");
   toggleBtn.textContent = entry.completed ? "✅" : "⬜";
   toggleBtn.title = "Toggle complete";
+  toggleBtn.disabled = isPending;
   toggleBtn.onclick = async () => {
     const recoveryBonusEligible = !entry.completed && isBurnoutRecoveryBonusEligible();
     entry.completed = !entry.completed;
@@ -22000,6 +22012,7 @@ function renderTask(entry, options = {}) {
 
   const editBtn = document.createElement("button");
   editBtn.textContent = "✏️";
+  editBtn.disabled = isPending;
   editBtn.onclick = async () => {
     const newText = await appPrompt("Edit task", entry.text, { title: "Edit task" });
     if (!newText || !newText.trim()) return;
@@ -22017,6 +22030,7 @@ function renderTask(entry, options = {}) {
   const deleteBtn = document.createElement("button");
   deleteBtn.classList.add("remove-entry-btn");
   deleteBtn.textContent = "🗑️";
+  deleteBtn.disabled = isPending;
   deleteBtn.onclick = async () => {
     if (!await appConfirm(`Delete task "${entry.text || "Task"}"?`, { title: "Delete task", confirmText: "Delete" })) return;
     const user = auth.currentUser;
@@ -22117,19 +22131,47 @@ async function addTask(options = {}){
 
   taskSubmitting = true;
   if (taskAddBtn) taskAddBtn.disabled = true;
+  const optimisticTask = {
+    id: `pending-${Date.now()}`,
+    text: t,
+    completed: false,
+    completedAt: null,
+    time: getServerNowDate(),
+    ...(schedule ? {
+      scheduledStartAtMs: schedule.startAtMs,
+      scheduledEndAtMs: schedule.endAtMs,
+      scheduleLabel: schedule.label
+    } : {})
+  };
+  const removeOptimisticTask = () => {
+    const optimisticIndex = taskEntries.indexOf(optimisticTask);
+    if (optimisticIndex >= 0) taskEntries.splice(optimisticIndex, 1);
+    renderTaskList();
+    updateInsights();
+    updateWellnessScore();
+  };
+  task.value = "";
+  taskEntries.push(optimisticTask);
+  renderTaskList();
+  updateInsights();
+  updateWellnessScore();
 
+  let taskSaved = false;
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
 
     const quotaResult = await reserveDailyQuota(user.uid, "taskCount", TASK_DAILY_LIMIT);
     if (!quotaResult.ok) {
+      removeOptimisticTask();
+      if (!task.value) task.value = t;
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s task limit (${TASK_DAILY_LIMIT}/day)`));
       updateTaskLimitUI();
       return;
     }
 
+    let ref;
     try {
-      const ref = await addDoc(collection(db, "users", user.uid, "tasks"), {
+      ref = await addDoc(collection(db, "users", user.uid, "tasks"), {
         text: t,
         completed: false,
         completedAt: null,
@@ -22140,31 +22182,33 @@ async function addTask(options = {}){
           scheduleLabel: schedule.label
         } : {})
       });
-      const newTask = {
-        id: ref.id,
-        text: t,
-        completed: false,
-        completedAt: null,
-        time: getServerNowDate(),
-        ...(schedule ? {
-          scheduledStartAtMs: schedule.startAtMs,
-          scheduledEndAtMs: schedule.endAtMs,
-          scheduleLabel: schedule.label
-        } : {})
-      };
-      taskEntries.push(newTask);
-      renderTaskList();
-      const taskMsg = pickNonRepeatingVariant(AI_TASK_ADDED_POOL, 'task_added').replaceAll('{task}', t);
-      showToast(taskMsg);
-      updateInsights();
-      updateWellnessScore();
-      task.value="";
-      await trimCollectionToMaxEntries(user.uid, "tasks", MAX_TASK_ENTRIES, (entry) => toDateSafe(entry.time)?.getTime?.() || 0);
-      updateTaskLimitUI();
+      taskSaved = true;
     } catch (err) {
+      removeOptimisticTask();
+      if (!task.value) task.value = t;
       await rollbackDailyQuota(user.uid, "taskCount");
       notifyFirestoreError(err);
+      return;
     }
+
+    optimisticTask.id = ref.id;
+    renderTaskList();
+    const taskMsg = pickNonRepeatingVariant(AI_TASK_ADDED_POOL, 'task_added').replaceAll('{task}', t);
+    showToast(taskMsg);
+    updateInsights();
+    updateWellnessScore();
+    try {
+      await trimCollectionToMaxEntries(user.uid, "tasks", MAX_TASK_ENTRIES, (entry) => toDateSafe(entry.time)?.getTime?.() || 0);
+    } catch (err) {
+      notifyFirestoreError(err);
+    }
+    updateTaskLimitUI();
+  } catch (err) {
+    if (!taskSaved) {
+      removeOptimisticTask();
+      if (!task.value) task.value = t;
+    }
+    notifyFirestoreError(err);
   } finally {
     taskSubmitting = false;
     updateTaskLimitUI();
@@ -22549,23 +22593,24 @@ async function saveWater() {
 
   waterSubmitting = true;
   if (waterTrackBtn) waterTrackBtn.disabled = true;
+  waterInput.value = "";
 
   const previousTodayWater = (() => {
     return getTodayWater();
   })();
+  let waterLogSaved = false;
 
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
 
     const quotaResult = await reserveDailyQuota(user.uid, "waterCount", WATER_DAILY_LIMIT);
     if (!quotaResult.ok) {
+      if (!waterInput.value) waterInput.value = rawWater;
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s water log limit (${WATER_DAILY_LIMIT}/day)`));
       updateWaterLimitUI();
       return;
     }
-
     waterHistory.push(v);
-    let waterLogSaved = false;
 
     try {
       await addDoc(collection(db, "users", user.uid, "waterIntake"), {
@@ -22581,7 +22626,6 @@ async function saveWater() {
         await appAlert("Water goal complete!", { title: "Nice work" });
       }
 
-      waterInput.value = "";
       const latestWater = Number(v).toFixed(1);
       const waterMsg = pickNonRepeatingVariant(AI_WATER_LOGGED_POOL, 'water_logged')
         .replaceAll('{amount}', String(v))
@@ -22590,13 +22634,19 @@ async function saveWater() {
       await trimCollectionToMaxEntries(user.uid, "waterIntake", MAX_WATER_ENTRIES, (entry) => toDateSafe(entry.time)?.getTime?.() || 0);
       updateWaterLimitUI();
     } catch (err) {
-      waterHistory.pop();
-      await rollbackDailyQuota(user.uid, "waterCount");
+      if (!waterLogSaved) {
+        waterHistory.pop();
+        if (!waterInput.value) waterInput.value = rawWater;
+        await rollbackDailyQuota(user.uid, "waterCount");
+      }
       notifyFirestoreError(err);
     }
     if (waterLogSaved && v >= 1) {
       await awardBurnoutRecoveryBonus(user.uid, recoveryBonusEligible);
     }
+  } catch (err) {
+    if (!waterLogSaved && !waterInput.value) waterInput.value = rawWater;
+    notifyFirestoreError(err);
   } finally {
     waterSubmitting = false;
     updateWaterLimitUI();
@@ -23089,6 +23139,7 @@ async function saveSleep(){
 
   sleepSubmitting = true;
   if (sleepSaveBtn) sleepSaveBtn.disabled = true;
+  sleepInput.value = "";
 
   const optimisticSleepIndex = sleepHistory.length;
   sleepHistory.push(hours);
@@ -23096,6 +23147,7 @@ async function saveSleep(){
   sleepResult.innerText = `${hours} hrs 💤`;
   updateInsights();
   updateDashboardFocus();
+  let sleepLogSaved = false;
 
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
@@ -23105,6 +23157,7 @@ async function saveSleep(){
       sleepHistory.splice(optimisticSleepIndex, 1);
       sleepDates.splice(optimisticSleepIndex, 1);
       await loadSleepData(user.uid);
+      if (!sleepInput.value) sleepInput.value = rawSleep;
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s sleep log limit (${SLEEP_DAILY_LIMIT}/day)`));
       updateSleepLimitUI();
       return;
@@ -23115,17 +23168,23 @@ async function saveSleep(){
         hours,
         time: serverTimestamp()
       });
-      sleepInput.value = "";
+      sleepLogSaved = true;
       showToast(`Sleep logged. ${getRandomCheer()}`);
       await trimCollectionToMaxEntries(user.uid, "sleepLogs", MAX_SLEEP_ENTRIES, (entry) => toDateSafe(entry.time)?.getTime?.() || 0);
       updateSleepLimitUI();
     } catch (err) {
-      sleepHistory.splice(optimisticSleepIndex, 1);
-      sleepDates.splice(optimisticSleepIndex, 1);
-      await loadSleepData(user.uid);
-      await rollbackDailyQuota(user.uid, "sleepCount");
+      if (!sleepLogSaved) {
+        sleepHistory.splice(optimisticSleepIndex, 1);
+        sleepDates.splice(optimisticSleepIndex, 1);
+        await loadSleepData(user.uid);
+        if (!sleepInput.value) sleepInput.value = rawSleep;
+        await rollbackDailyQuota(user.uid, "sleepCount");
+      }
       notifyFirestoreError(err);
     }
+  } catch (err) {
+    if (!sleepLogSaved && !sleepInput.value) sleepInput.value = rawSleep;
+    notifyFirestoreError(err);
   } finally {
     sleepSubmitting = false;
     updateSleepLimitUI();
@@ -24009,6 +24068,7 @@ function renderGratitude(entry) {
   clearStatusState(gratitudeLogs);
   const row = document.createElement("div");
   row.className = "item-row";
+  row.dataset.gratitudeId = String(entry.id || "");
   const rawTime = entry.time?.toDate?.() ?? new Date(entry.time || getServerNowDate().getTime());
 
   const label = document.createElement("span");
@@ -24132,6 +24192,7 @@ async function saveGratitude(){
   gratitudeEntries.push(optimisticGratitude);
   renderGratitude(optimisticGratitude);
   updateInsights();
+  gratitudeInput.value = "";
 
   try {
     await ensureDailyUsageCurrent(user.uid);
@@ -24139,26 +24200,43 @@ async function saveGratitude(){
     const quotaResult = await reserveDailyQuota(user.uid, "gratitudeCount", GRATITUDE_DAILY_LIMIT);
     if (!quotaResult.ok) {
       await loadGratitude(user.uid);
+      if (!gratitudeInput.value) gratitudeInput.value = t;
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s gratitude limit (${GRATITUDE_DAILY_LIMIT}/day)`));
       updateGratitudeLimitUI();
       return;
     }
 
+    let ref;
     try {
-      const ref = await addDoc(collection(db, "users", user.uid, "gratitudeLogs"), {
+      ref = await addDoc(collection(db, "users", user.uid, "gratitudeLogs"), {
         text: t,
         time: serverTimestamp()
       });
-      showToast(`Gratitude saved. ${getRandomCheer()}`);
-      updateInsights();
-      gratitudeInput.value="";
-      await trimCollectionToMaxEntries(user.uid, "gratitudeLogs", MAX_GRATITUDE_ENTRIES, (entryItem) => toDateSafe(entryItem.time)?.getTime?.() || 0);
-      updateGratitudeLimitUI();
     } catch (err) {
       await loadGratitude(user.uid);
+      if (!gratitudeInput.value) gratitudeInput.value = t;
       await rollbackDailyQuota(user.uid, "gratitudeCount");
       notifyFirestoreError(err);
+      return;
     }
+
+    const optimisticRow = Array.from(gratitudeLogs?.querySelectorAll(".item-row") || [])
+      .find((row) => row.dataset.gratitudeId === optimisticGratitude.id);
+    if (optimisticRow) optimisticRow.dataset.gratitudeId = ref.id;
+    optimisticGratitude.id = ref.id;
+    showToast(`Gratitude saved. ${getRandomCheer()}`);
+    updateInsights();
+    try {
+      await trimCollectionToMaxEntries(user.uid, "gratitudeLogs", MAX_GRATITUDE_ENTRIES, (entryItem) => toDateSafe(entryItem.time)?.getTime?.() || 0);
+    } catch (err) {
+      await loadGratitude(user.uid);
+      notifyFirestoreError(err);
+    }
+    updateGratitudeLimitUI();
+  } catch (err) {
+    await loadGratitude(user.uid);
+    if (!gratitudeInput.value) gratitudeInput.value = t;
+    notifyFirestoreError(err);
   } finally {
     gratitudeSubmitting = false;
     updateGratitudeLimitUI();
