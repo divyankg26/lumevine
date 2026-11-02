@@ -1039,6 +1039,10 @@ const appDialogMessage = document.getElementById("appDialogMessage");
 const appDialogInput = document.getElementById("appDialogInput");
 const appDialogCancelBtn = document.getElementById("appDialogCancelBtn");
 const appDialogConfirmBtn = document.getElementById("appDialogConfirmBtn");
+const aiProfileEditorModal = document.getElementById("aiProfileEditorModal");
+const aiProfileEditorSaveBtn = document.getElementById("aiProfileEditorSaveBtn");
+const aiProfileEditorCancelBtn = document.getElementById("aiProfileEditorCancelBtn");
+const editAiMemoryBtn = document.getElementById("editAiMemoryBtn");
 const friendRequestsList = document.getElementById("friendRequestsList");
 const sentRequestsList = document.getElementById("sentRequestsList");
 const currentFriendsList = document.getElementById("currentFriendsList");
@@ -1370,6 +1374,12 @@ const wellnessReassuranceEl = document.getElementById("wellnessReassurance");
 const wellnessDoNowEl = document.getElementById("wellnessDoNow");
 const wellnessActionsEl = document.getElementById("wellnessActions");
 const wellnessFriendInsight = document.getElementById("wellnessFriendInsight");
+const dayProgressEl = document.getElementById("dayProgress");
+const dayProgressBarEl = document.getElementById("dayProgressBar");
+const dayProgressFillEl = document.getElementById("dayProgressFill");
+const dayProgressValueEl = document.getElementById("dayProgressValue");
+const dayProgressStatusEl = document.getElementById("dayProgressStatus");
+const dayProgressNoteEl = document.getElementById("dayProgressNote");
 const todayFocusStateEl = document.getElementById("todayFocusState");
 const todayFocusPromptEl = document.getElementById("todayFocusPrompt");
 const todayFocusActionEl = document.getElementById("todayFocusAction");
@@ -1534,6 +1544,18 @@ appDialogInput?.addEventListener("input", () => {
 appDialogModal?.addEventListener("click", (event) => {
   if (event.target === appDialogModal) closeAppDialog(false);
 });
+aiProfileEditorSaveBtn?.addEventListener("click", saveAiProfileEdits);
+aiProfileEditorCancelBtn?.addEventListener("click", closeAiProfileEditor);
+editAiMemoryBtn?.addEventListener("click", openAiProfileEditor);
+aiProfileEditorModal?.addEventListener("click", (event) => {
+  if (event.target === aiProfileEditorModal) closeAiProfileEditor();
+});
+aiProfileEditorModal?.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeAiProfileEditor();
+  }
+});
 dailyRoutineStartTimeSelect?.addEventListener("change", () => {
   handleDailyRoutineStartTimeChange().catch((err) => {
     structuredLog("error", "dailyRoutine.startTime", err?.message || String(err));
@@ -1574,6 +1596,10 @@ function ensureAppBackGuardState(reason = "guard", forcePush = false) {
 function closeTopLayerForSystemBack() {
   if (activeAppDialog) {
     closeAppDialog(false);
+    return true;
+  }
+
+  if (aiProfileEditorModal && aiProfileEditorModal.style.display === "flex") {
     return true;
   }
 
@@ -1850,13 +1876,13 @@ async function loadAccountIdentityFromProfile(user) {
   const googleSeed = buildUsernameSeedFromDisplayName(user?.displayName) || "user";
   const storedUsername = readCachedAccountUsername(activeUid);
   let profileData = {};
+  let usernameResolvedFromProfile = false;
   const normalizeResolvedUsername = (value) => {
     const normalized = normalizeUsernameForLookup(value);
     if (isGoogleAccount && emailLocalIdentity && normalized === emailLocalIdentity) return "";
     return normalized;
   };
-  let usernameValue = (isGoogleAccount ? googleSeed : emailLocalIdentity)
-    || "user";
+  let usernameValue = storedUsername || (isGoogleAccount ? googleSeed : "user");
   let displayNameValue = normalizeDisplayNameValue(user?.displayName) || usernameValue;
   let hasLegacyInvalidDisplayName = false;
 
@@ -1868,8 +1894,11 @@ async function loadAccountIdentityFromProfile(user) {
       if (profileDisplayRaw && !validateSignupDisplayName(profileDisplayRaw).ok) {
         hasLegacyInvalidDisplayName = true;
       }
-      usernameValue = normalizeResolvedUsername(profileData.username || profileData.name || "")
-        || usernameValue;
+      const profileUsernameValue = normalizeResolvedUsername(profileData.username || profileData.name || "");
+      if (profileUsernameValue) {
+        usernameValue = profileUsernameValue;
+        usernameResolvedFromProfile = true;
+      }
       displayNameValue = normalizeDisplayNameValue(profileData.displayName)
         || normalizeDisplayNameValue(user?.displayName)
         || usernameValue;
@@ -1890,6 +1919,10 @@ async function loadAccountIdentityFromProfile(user) {
       return normalizeResolvedUsername(docSnap?.id || "") === profileUsername;
     }) || ownedUsernameDocs.find((docSnap) => !!normalizeResolvedUsername(docSnap?.id || ""));
     let canonicalUsername = profileUsername || normalizeResolvedUsername(canonicalDoc?.id || "");
+    if (canonicalUsername) {
+      usernameValue = canonicalUsername;
+      usernameResolvedFromProfile = true;
+    }
     const canonicalData = canonicalDoc?.data?.() || {};
     let legacyIdentityData = {};
     if (safeEmail) {
@@ -1938,13 +1971,14 @@ async function loadAccountIdentityFromProfile(user) {
         if (safeEmail) {
           await setDoc(doc(db, "userDirectory", safeEmail), repairedProfile, { merge: true });
         }
+        usernameResolvedFromProfile = true;
       } catch (err) {
         structuredLog('warn', 'profile.username.recovery', err?.message || String(err), { userId: activeUid });
       }
     }
 
     if (canonicalUsername) {
-      usernameValue = storedUsername || canonicalUsername;
+      usernameValue = canonicalUsername;
     }
   } catch (err) {
     structuredLog('warn', 'profile.identity.sync', err?.message || String(err), { userId: activeUid });
@@ -1953,9 +1987,11 @@ async function loadAccountIdentityFromProfile(user) {
   const stillActive = String(auth.currentUser?.uid || "").trim() === activeUid;
   if (!stillActive) return;
 
-  accountIdentityCache.set(activeUid, { username: usernameValue, displayName: displayNameValue });
-  cacheAccountUsername(activeUid, usernameValue);
-  if (accountName) accountName.innerText = usernameValue;
+  if (usernameResolvedFromProfile || (storedUsername && storedUsername !== emailLocalIdentity)) {
+    accountIdentityCache.set(activeUid, { username: usernameValue, displayName: displayNameValue });
+    cacheAccountUsername(activeUid, usernameValue);
+  }
+  if (accountName) accountName.innerText = usernameValue || storedUsername || "user";
   if (accountDisplayName) accountDisplayName.innerText = displayNameValue;
   if (hasLegacyInvalidDisplayName) {
     setAccountDisplayNameError("Legacy display name contains unsupported symbols. Edit Display Name to fix it.");
@@ -3910,7 +3946,7 @@ const CARD_SHORTCUTS = [
   { cardIndex: 5, keys: ["m", "c"], label: "Mood Check-in" },
   { cardIndex: 6, keys: ["h", "y"], label: "Hydration" },
   { cardIndex: 7, keys: ["g", "p"], label: "Grocery Planning" },
-  { cardIndex: 8, keys: ["m", "m"], label: "Music for a Moment" },
+  { cardIndex: 8, keys: ["m", "u"], label: "Music for a Moment" },
   { cardIndex: 9, keys: ["f", "r"], label: "Future Self Reflection" },
   { cardIndex: 10, keys: ["w", "c"], label: "Words to Carry With You" },
   { cardIndex: 11, keys: ["g", "j"], label: "Gratitude Journal" },
@@ -3920,7 +3956,7 @@ const CARD_SHORTCUTS = [
   { cardIndex: 15, keys: ["w", "a"], label: "Weekly Reflection + AI Coach" },
   { cardIndex: 16, keys: ["h", "j"], label: "Habit Journey" },
   { cardIndex: 17, keys: ["r", "o"], label: "Recovery Outlook" },
-  { cardIndex: 18, keys: ["p", "p"], label: "Patterns & Progress" },
+  { cardIndex: 18, keys: ["p", "a"], label: "Patterns & Progress" },
   { cardIndex: 19, keys: ["d", "r"], label: "Daily Routine" },
   { cardIndex: 20, keys: ["w", "s"], label: "Weekly Snapshot" },
   { cardIndex: 21, keys: ["y", "p"], label: "Your Patterns" }
@@ -9547,7 +9583,7 @@ const aiUserProfile = {
   updatedAt: ""
 };
 
-const AI_PROFILE_VERSION = 3;
+const AI_PROFILE_VERSION = 4;
 const AI_PROFILE_FIELDS = [
   "preferredNames",
   "goals",
@@ -9572,10 +9608,14 @@ const AI_PROFILE_ITEM_LIMITS = {
 };
 
 function normalizeAiProfileValue(value) {
-  return String(value || "")
+  const normalized = String(value || "")
     .replace(/\s+/g, " ")
     .trim()
     .replace(/[.!?]+$/, "");
+  const firstCharacter = Array.from(normalized)[0];
+  return firstCharacter
+    ? `${firstCharacter.toUpperCase()}${normalized.slice(firstCharacter.length)}`
+    : "";
 }
 
 function addAiProfileItem(list, value, limit = 24) {
@@ -9717,6 +9757,52 @@ function getAiUserProfileSnapshot() {
   );
 }
 
+function rephraseAiProfileValueForUser(value) {
+  return String(value || "").replace(
+    /(^|[.!?;]\s*)(I\s+am|I’m|I'm|Im|I\s+have|I’ve|I've|Ive|I\s+had|I\s+will|I’ll|I'll|Ill|I\s+can(?:not)?|I\s+can't|I\s+cannot|I\s+don't|I\s+do\s+not|I\s+like|I\s+love|I\s+prefer|I\s+enjoy|I\s+work|I\s+study|I\s+live|I\s+want|I\s+need|I\s+keep|I\s+often|I\s+struggle(?:\s+to|\s+with)?|I\s+missed|I\s+managed|I\s+improved|I\s+completed|I\s+succeeded)\b/gi,
+    (match, boundary, phrase) => {
+      const normalized = phrase.toLowerCase().replace(/[’']/g, "'");
+      const replacements = {
+        "i am": "You are",
+        "i'm": "You're",
+        im: "You're",
+        "i have": "You have",
+        "i've": "You've",
+        ive: "You've",
+        "i had": "You had",
+        "i will": "You will",
+        "i'll": "You'll",
+        ill: "You'll",
+        "i can": "You can",
+        "i cannot": "You cannot",
+        "i can't": "You can't",
+        "i don't": "You don't",
+        "i do not": "You do not",
+        "i like": "You like",
+        "i love": "You love",
+        "i prefer": "You prefer",
+        "i enjoy": "You enjoy",
+        "i work": "You work",
+        "i study": "You study",
+        "i live": "You live",
+        "i want": "You want",
+        "i need": "You need",
+        "i keep": "You keep",
+        "i often": "You often",
+        "i struggle": "You struggle",
+        "i struggle to": "You struggle to",
+        "i struggle with": "You struggle with",
+        "i missed": "You missed",
+        "i managed": "You managed",
+        "i improved": "You improved",
+        "i completed": "You completed",
+        "i succeeded": "You succeeded"
+      };
+      return `${boundary}${replacements[normalized] || phrase}`;
+    }
+  );
+}
+
 function buildAiUserProfileSummary(user) {
   const sections = [
     ["Preferred name", aiUserProfile.preferredNames],
@@ -9737,14 +9823,155 @@ function buildAiUserProfileSummary(user) {
   }
 
   const list = sections.map(([label, values]) =>
-    `<li><strong>${escapeHtml(label)}:</strong> ${values.map((value) => escapeHtml(value)).join("; ")}</li>`
+    `<li><strong>${escapeHtml(label)}:</strong> ${values.map((value) => escapeHtml(rephraseAiProfileValueForUser(value))).join("; ")}</li>`
   ).join("");
   return `Here’s what I currently remember from what you’ve shared:<ul>${list}</ul><p>This is a summary of saved conversation details, not assumptions about you. If something is outdated, start your correction with “Actually…”. Use Clear to erase your saved AI conversations and profile.</p>`;
+}
+
+function openAiProfileEditor() {
+  if (!auth.currentUser) {
+    showToast("Sign in to edit your saved AI memory.");
+    return;
+  }
+  if (!aiProfileEditorModal) return;
+  aiProfileEditorModal.querySelectorAll("[data-ai-profile-field]").forEach((input) => {
+    const field = input.dataset.aiProfileField;
+    input.value = Array.isArray(aiUserProfile[field]) ? aiUserProfile[field].join("\n") : "";
+  });
+  aiProfileEditorModal.style.display = "flex";
+  aiProfileEditorModal.setAttribute("aria-hidden", "false");
+  aiProfileEditorModal.querySelector("[data-ai-profile-field]")?.focus();
+}
+
+function closeAiProfileEditor() {
+  if (!aiProfileEditorModal) return;
+  aiProfileEditorModal.style.display = "none";
+  aiProfileEditorModal.setAttribute("aria-hidden", "true");
+}
+
+async function saveAiProfileEdits() {
+  const user = auth.currentUser;
+  if (!user || !aiProfileEditorModal) {
+    showToast("Sign in to edit your saved AI memory.");
+    return;
+  }
+
+  const inputs = [...aiProfileEditorModal.querySelectorAll("[data-ai-profile-field]")];
+  const editedValues = Object.fromEntries(inputs.map((input) => [
+    input.dataset.aiProfileField,
+    input.value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
+  ]));
+  if ((editedValues.preferredNames || []).length > AI_PROFILE_ITEM_LIMITS.preferredNames) {
+    showToast("Enter one preferred name, or leave it blank to remove it.");
+    return;
+  }
+
+  const previousProfile = getAiUserProfileSnapshot();
+  AI_PROFILE_FIELDS.forEach((field) => {
+    aiUserProfile[field].length = 0;
+    (editedValues[field] || []).forEach((value) => {
+      addAiProfileItem(aiUserProfile[field], value, AI_PROFILE_ITEM_LIMITS[field]);
+    });
+  });
+  aiUserProfile.updatedAt = getServerNowDate().toISOString();
+  if (aiProfileEditorSaveBtn) aiProfileEditorSaveBtn.disabled = true;
+  const saved = await saveAiUserProfile(user.uid);
+  if (aiProfileEditorSaveBtn) aiProfileEditorSaveBtn.disabled = false;
+  if (!saved) {
+    loadAiUserProfile({ profile: previousProfile });
+    showToast("Your memory edits could not be saved. Check your connection and try again.");
+    return;
+  }
+
+  closeAiProfileEditor();
+  showToast("AI memory updated.");
 }
 
 function isAiUserProfileQuestion(inputText) {
   return /\bwhat\s+(?:do|did)\s+you\s+(?:know|remember)\s+about\s+me\b|\bwhat\s+have\s+you\s+learned\s+about\s+me\b|\bwhat\s+can\s+you\s+tell\s+me\s+about\s+myself\b|\bshow\s+me\s+my\s+profile\b/i
     .test(String(inputText || ""));
+}
+
+function getAiUserProfileQuestionCategory(inputText) {
+  const text = String(inputText || "").trim();
+  if (!/\b(?:what|who|which|tell me|show me|remind me|recall|remember|do i|am i|have i|did i|can you)\b/i.test(text)) return null;
+
+  const categories = [
+    {
+      keys: ["preferredNames"],
+      label: "preferred name",
+      responseLabel: "name",
+      matches: /\b(?:name|preferred name|what to call me)\b/i
+    },
+    {
+      keys: ["goals"],
+      label: "goal",
+      responseLabel: "goals",
+      matches: /\b(?:goals?|ambitions?|aspirations?|dreams?)\b|\bwhat\s+(?:do|would|did)\s+i\s+(?:want|hope|plan|wish)\s+to\s+(?:become|achieve|accomplish|do)\b|\bwhat\s+do\s+i\s+want\s+(?:in|from)\s+(?:my\s+)?life\b|\bwhat\s+am\s+i\s+(?:working|aiming|trying)\s+(?:towards?|for|to\s+achieve)\b/i
+    },
+    {
+      keys: ["recurringStruggles"],
+      label: "challenges",
+      responseLabel: "challenges",
+      matches: /\b(?:challenges?|difficulties|struggles?|obstacles?|what(?:'s|\s+is)\s+hard\s+for\s+me|what\s+do\s+i\s+struggle\s+with)\b/i
+    },
+    {
+      keys: ["interests", "preferences"],
+      label: "interests or preferences",
+      responseLabel: "interests and preferences",
+      matches: /\b(?:interests?|hobbies|what\s+am\s+i\s+interested\s+in|what\s+am\s+i\s+into|what\s+do\s+i\s+enjoy(?:\s+doing)?|what\s+do\s+i\s+like\s+doing)\b/i
+    },
+    {
+      keys: ["preferences"],
+      label: "preferences",
+      responseLabel: "preferences",
+      matches: /\bpreferences?\b|\bwhat\s+do\s+i\s+(?:like|love|prefer|dislike|hate)\b/i
+    },
+    {
+      keys: ["lifeContext"],
+      label: "useful context",
+      responseLabel: "useful context",
+      matches: /\b(?:context|schedule|work|study|studies|family|background|living situation)\b|\bwhat\s+do\s+you\s+know\s+about\s+my\s+(?:life|work|schedule|studies|family)\b/i
+    },
+    {
+      keys: ["rememberedFacts"],
+      label: "details you asked me to remember",
+      responseLabel: "details you asked me to remember",
+      matches: /\b(?:remembered facts?|details? you (?:asked|told) me to remember|(?:what\s+did\s+i|what\s+do\s+you\s+know\s+about\s+what\s+i)\s+ask(?:ed)?\s+you\s+to\s+remember)\b/i
+    },
+    {
+      keys: ["progressNotes"],
+      label: "progress",
+      responseLabel: "progress",
+      matches: /\b(?:progress|accomplishments?|successes|what\s+have\s+i\s+(?:achieved|accomplished|completed|improved))\b/i
+    },
+    {
+      keys: ["lastTopics"],
+      label: "recent conversation topics",
+      responseLabel: "recent conversation topics",
+      matches: /\b(?:topics?|conversations?|what\s+have\s+we\s+(?:talked|discussed)\s+about)\b/i
+    }
+  ];
+  return categories.find((category) => category.matches.test(text)) || null;
+}
+
+function buildAiUserProfileCategoryAnswer(category, user) {
+  const values = [...new Set(category.keys.flatMap((key) => aiUserProfile[key] || []))];
+  if (category.keys.includes("preferredNames") && !values.length) {
+    const displayName = getPreferredAiDisplayName(user);
+    if (displayName) values.push(displayName);
+  }
+  if (category.keys.includes("lastTopics")) {
+    values.forEach((value, index) => {
+      values[index] = value.replaceAll("-", " ");
+    });
+  }
+  if (!values.length) {
+    return `I don’t have any ${category.label} saved yet. You can tell me about it, or add it in Account → Personalization → Edit AI Memory.`;
+  }
+  const label = category.responseLabel;
+  const details = values.map((value) => `<li>${escapeHtml(rephraseAiProfileValueForUser(value))}</li>`).join("");
+  return `Here’s what I currently have saved about your ${label}:<ul>${details}</ul>`;
 }
 
 function addLongTermMemoryToResponse(inputText, response, isHtml, previousProfile = null) {
@@ -9947,6 +10174,8 @@ const userDirectoryIdentityCache = new Map();
 const usernameDirectoryCache = new Map();
 let exportCooldownUntilMs = 0;
 let exportCooldownIntervalId = null;
+let isExportingData = false;
+let exportInProgressLabel = "Preparing export…";
 let displayNameEditCooldownUntilMs = 0;
 let displayNameEditCooldownIntervalId = null;
 let accountPasswordResetCooldownUntilMs = 0;
@@ -14032,6 +14261,70 @@ function chooseTodayPriorities(todayKey, signalSeed, details) {
   return priorities.slice(0, 3);
 }
 
+function getDayProgressDetails({ moodLogged, sleepLogged, hasWaterGoal, waterToday, waterGoalValue, totalTasks, doneTasks }) {
+  const progressSignalReferenceUnits = 10;
+  const signals = [
+    { complete: moodLogged ? 1 : 0, weight: 1 },
+    { complete: sleepLogged ? 1 : 0, weight: 1 }
+  ];
+  const trackedParts = ["mood and sleep check-ins"];
+  if (hasWaterGoal && waterGoalValue > 0) {
+    const waterWeight = Math.min(
+      1,
+      Math.max(1 / progressSignalReferenceUnits, waterGoalValue / progressSignalReferenceUnits)
+    );
+    signals.push({
+      complete: Math.min(1, Math.max(0, Number(waterToday) || 0) / waterGoalValue),
+      weight: waterWeight
+    });
+    trackedParts.push("your water goal");
+  }
+  if (totalTasks > 0) {
+    const taskWeight = Math.min(
+      1,
+      Math.max(1 / progressSignalReferenceUnits, totalTasks / progressSignalReferenceUnits)
+    );
+    signals.push({
+      complete: Math.min(1, Math.max(0, Number(doneTasks) || 0) / totalTasks),
+      weight: taskWeight
+    });
+    trackedParts.push(`${totalTasks} planned task${totalTasks === 1 ? "" : "s"}`);
+  }
+
+  const percent = Math.round(
+    signals.reduce((sum, signal) => sum + signal.complete * signal.weight, 0)
+      / signals.reduce((sum, signal) => sum + signal.weight, 0) * 100
+  );
+  const progressState = percent >= 100
+    ? { key: "complete", status: "Tracked check-ins are in place" }
+    : percent >= 70
+      ? { key: "steady", status: "A steady rhythm is taking shape" }
+      : percent >= 35
+        ? { key: "taking-shape", status: "Taking shape, one step at a time" }
+        : { key: "starting", status: "A gentle start" };
+  const trackedSummary = trackedParts.length > 2
+    ? `${trackedParts.slice(0, -1).join(", ")}, and ${trackedParts[trackedParts.length - 1]}`
+    : trackedParts.join(" and ");
+
+  return {
+    percent,
+    ...progressState,
+    note: `Reflects ${trackedSummary}. This is a snapshot, not a score.`
+  };
+}
+
+function renderDayProgress(details) {
+  if (!dayProgressEl || !dayProgressBarEl || !dayProgressFillEl) return;
+  const { percent, key, status, note } = details;
+  dayProgressEl.dataset.progressState = key;
+  dayProgressFillEl.style.width = `${percent}%`;
+  dayProgressBarEl.setAttribute("aria-valuenow", String(percent));
+  dayProgressBarEl.setAttribute("aria-valuetext", `${percent}% — ${status}`);
+  if (dayProgressValueEl) dayProgressValueEl.textContent = `${percent}%`;
+  if (dayProgressStatusEl) dayProgressStatusEl.textContent = status;
+  if (dayProgressNoteEl) dayProgressNoteEl.textContent = note;
+}
+
 function updateDashboardFocus() {
   if (!todayFocusActionEl) return;
   const todayKey = getTodayKey();
@@ -14051,6 +14344,15 @@ function updateDashboardFocus() {
     doneTasks: todayTasks.filter((entry) => !!entry.completed).length
   };
   const pendingCount = todayTasks.filter((entry) => !entry.completed).length;
+  renderDayProgress(getDayProgressDetails({
+    moodLogged: moodMeta.logged,
+    sleepLogged: sleepToday > 0,
+    hasWaterGoal,
+    waterToday,
+    waterGoalValue: effectiveWaterGoal,
+    totalTasks: taskCounts.totalTasks,
+    doneTasks: taskCounts.doneTasks
+  }));
 
   if (todayFocusMoodEl) todayFocusMoodEl.innerText = moodMeta.logged ? moodMeta.label : "Not logged";
   if (todayFocusSleepEl) todayFocusSleepEl.innerText = sleepToday > 0 ? `${Number(sleepToday).toFixed(1)}h` : "Not logged";
@@ -16995,13 +17297,63 @@ const AI_ROUTINE_MISSED_POOL = [
   "Missing a routine happens. You haven’t ruined anything—just restart with the next item, not the whole day.",
   "No guilt trip. Pick the next routine activity you can still do and continue from there.",
   "That’s okay. Routines are maps, not contracts. Want to resume from the next activity or adjust today’s routine?",
-  "You missed a step, not the entire day. Start with the next realistic activity and keep moving."
+  "You missed a step, not the entire day. Start with the next realistic activity and keep moving.",
+  "A missed activity does not cancel the rest of your routine. Find the next useful step and begin there.",
+  "It’s fine to pick up where you are. Choose one activity that still fits today and let the rest be flexible.",
+  "You don’t need to make up for the missed step. Continue with the next part of your routine when you’re ready.",
+  "One skipped activity is just one moment. Reset with the next thing that feels realistic.",
+  "Your routine can bend with the day. Start again from the next activity that still makes sense.",
+  "No need to restart from the beginning. Keep the next manageable part of your routine.",
+  "The day can still move forward. Pick one next activity and leave the missed one behind.",
+  "You can adjust the plan instead of catching up. What is the next activity that fits now?",
+  "A routine is allowed to change. Resume with one small step that works for the time you have.",
+  "Let the missed step stay missed; there’s no need to turn it into a bigger task. Continue from here.",
+  "You’re not behind beyond repair. Choose the next routine item that feels doable today.",
+  "A gentle restart is enough. Pick the next activity, even if the rest of the schedule shifts.",
+  "You can return to your routine without catching up on everything. Start with one useful next step.",
+  "The plan can flex around real life. Continue with whichever activity makes sense now."
 ];
 const AI_CASUAL_POSITIVE_REPLIES = expandAiResponsePool(AI_CASUAL_POSITIVE_POOL, { min: 12, max: 32, frames: [(text) => text] });
 const AI_CASUAL_NEUTRAL_REPLIES = expandAiResponsePool(AI_CASUAL_NEUTRAL_POOL, { min: 12, max: 32, frames: [(text) => text] });
 const AI_CASUAL_BORED_REPLIES = expandAiResponsePool(AI_CASUAL_BORED_POOL, { min: 12, max: 32, frames: [(text) => text] });
 const AI_JOKE_REPLIES = expandAiResponsePool(AI_JOKE_POOL, { min: AI_JOKE_POOL.length, max: AI_JOKE_POOL.length, frames: [(text) => text] });
-const AI_ROUTINE_MISSED_REPLIES = expandAiResponsePool(AI_ROUTINE_MISSED_POOL, { min: 12, max: 32, frames: [(text) => text] });
+const AI_ROUTINE_MISSED_REPLIES = expandAiResponsePool(AI_ROUTINE_MISSED_POOL, {
+  min: AI_ROUTINE_MISSED_POOL.length,
+  max: AI_ROUTINE_MISSED_POOL.length,
+  frames: [(text) => text]
+});
+const AI_REPEATED_RESPONSE_OPENERS = {
+  action: [
+    "A quick update:",
+    "Here’s the latest:",
+    "One more way to put it:",
+    "Just to keep it clear:",
+    "For this step:",
+    "Here’s that update again:",
+    "In short:",
+    "To put it another way:"
+  ],
+  support: [
+    "A gentle reminder:",
+    "One kind way to look at it:",
+    "For right now:",
+    "A little perspective:",
+    "Let’s keep this simple:",
+    "One small thought:",
+    "A softer way to frame it:",
+    "Just a reminder:"
+  ],
+  general: [
+    "Another way to look at it:",
+    "Here’s a different take:",
+    "One more way to put it:",
+    "To say it a little differently:",
+    "Here’s the short version:",
+    "A useful way to frame it:",
+    "In other words:",
+    "One more thought:"
+  ]
+};
 const AI_BYE_BASE = [
   "See you later, {name}!",
   "Bye for now, {name}!",
@@ -19626,6 +19978,15 @@ async function buildSmartAiResponse(input, user) {
       isHtml: true
     };
   }
+  const profileCategory = getAiUserProfileQuestionCategory(normalizedInput);
+  if (profileCategory) {
+    aiSessionState.lastIntent = "user-profile";
+    aiSessionState.lastAdvice = [];
+    return {
+      response: buildAiUserProfileCategoryAnswer(profileCategory, user),
+      isHtml: true
+    };
+  }
   const checkInAnswer = normalizeLocalIntentText(normalizedInput);
   const checkInContainsAction = /\b(?:add|log|save|set|delete|clear|complete|completed|finish|finished|create|remind|water|task|routine|mood|sleep|gratitude|schedule)\b/.test(checkInAnswer);
   const checkInWords = checkInAnswer
@@ -20311,6 +20672,27 @@ function hasRecentResponseRepetition(text, isHtml = false) {
   return recent.some((item) => item === signature);
 }
 
+function addRepeatedResponseVariation(text, isHtml = false) {
+  const response = String(text || "");
+  if (!response.trim() || !hasRecentResponseRepetition(response, isHtml)) {
+    return { text: response, isHtml };
+  }
+
+  const intent = String(aiSessionState?.lastIntent || "").toLowerCase();
+  const pool = intent === "action" || intent.startsWith("action-")
+    ? AI_REPEATED_RESPONSE_OPENERS.action
+    : intent === "routine-missed" || intent.includes("emotion") || intent === "stress"
+      ? AI_REPEATED_RESPONSE_OPENERS.support
+      : AI_REPEATED_RESPONSE_OPENERS.general;
+  const opener = pickNonRepeatingVariant(pool, `repeated_response_${intent || "general"}`);
+  if (!opener) return { text: response, isHtml };
+
+  return {
+    text: isHtml ? `<p>${escapeHtml(opener)}</p>${response}` : `${opener} ${response}`,
+    isHtml
+  };
+}
+
 function buildImmediateBenefitOutcome(snapshot, topAction) {
   const pendingTasks = Number(snapshot?.pendingTasks) || 0;
   const waterToday = Number(snapshot?.waterToday) || 0;
@@ -20479,7 +20861,6 @@ function enforceAiResponseQuality(inputText, responseText, isHtml = false) {
     nextIsHtml = nextIsHtml || /<[^>]+>/.test(nextText);
   }
 
-  rememberAiResponseSignature(nextText, nextIsHtml);
   return { text: nextText, isHtml: nextIsHtml };
 }
 
@@ -20777,7 +21158,9 @@ async function editChatMessage(chatId, fieldName, textNode, role) {
     }
 
     const smart = await buildSmartAiResponse(nextText, user);
-    const safeEdited = applyAiOutputSafetyFilter(smart.response, smart.isHtml);
+    const variedEdited = addRepeatedResponseVariation(smart.response, smart.isHtml);
+    const safeEdited = applyAiOutputSafetyFilter(variedEdited.text, variedEdited.isHtml);
+    rememberAiResponseSignature(safeEdited.text, safeEdited.isHtml);
     await updateDoc(doc(db, "users", user.uid, "aiChats", chatId), {
       userMessage: nextText,
       aiResponse: safeEdited.text,
@@ -20813,12 +21196,15 @@ async function editChatMessage(chatId, fieldName, textNode, role) {
 
 function renderChatPair(entry) {
   renderChatMessage("user", entry.userMessage || "", false, entry.id, "userMessage");
-  renderChatMessage("ai", entry.aiResponse || "", !!entry.aiResponseIsHtml, entry.id, "aiResponse");
-  rememberAssistantQuestion(entry.aiResponse || "", !!entry.aiResponseIsHtml);
+  const aiResponse = entry.aiResponse || "";
+  const aiResponseIsHtml = !!entry.aiResponseIsHtml;
+  renderChatMessage("ai", aiResponse, aiResponseIsHtml, entry.id, "aiResponse");
+  rememberAiResponseSignature(aiResponse, aiResponseIsHtml);
+  rememberAssistantQuestion(aiResponse, aiResponseIsHtml);
 
   aiSessionState.memoryPairs.push({
     user: String(entry.userMessage || ""),
-    ai: String(entry.aiResponse || "")
+    ai: String(aiResponse || "")
   });
   if (aiSessionState.memoryPairs.length > 24) {
     aiSessionState.memoryPairs.splice(0, aiSessionState.memoryPairs.length - 24);
@@ -21166,6 +21552,9 @@ async function aiChat(){
       const qualityResult = enforceAiResponseQuality(input, response, responseIsHtml);
       response = qualityResult.text;
       responseIsHtml = qualityResult.isHtml;
+      const variedResponse = addRepeatedResponseVariation(response, responseIsHtml);
+      response = variedResponse.text;
+      responseIsHtml = variedResponse.isHtml;
       const shouldAttachWhy =
         !AI_CASUAL_MODE
         &&
@@ -21180,6 +21569,7 @@ async function aiChat(){
       const safeOutput = applyAiOutputSafetyFilter(response, responseIsHtml);
       response = safeOutput.text;
       responseIsHtml = safeOutput.isHtml;
+      rememberAiResponseSignature(response, responseIsHtml);
       rememberAssistantQuestion(response, responseIsHtml);
       rememberPrompt(input);
 
@@ -21886,6 +22276,7 @@ async function deleteMoodLog(moodId) {
   }
   updateMoodLimitUI();
   updateInsights();
+  updateDashboardFocus();
 
   try {
     await fsDeleteDoc(doc(db, "users", user.uid, "moods", moodId));
@@ -21965,6 +22356,7 @@ async function saveMood() {
   moodDates.push(optimisticMoodTime);
   renderMoodLog({ id: optimisticMoodId, mood: moodValue, time: optimisticMoodTime }, { animate: true });
   updateInsights();
+  updateDashboardFocus();
 
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
@@ -22028,6 +22420,7 @@ function updateWaterProgress() {
   }
   updateWaterClearButtonState();
   updateInsights();
+  updateDashboardFocus();
 }
 
 function updateWaterClearButtonState() {
@@ -22672,6 +23065,7 @@ async function loadSleepData(userId) {
     }
     updateSleepLimitUI();
     updateInsights();
+    updateDashboardFocus();
   } catch (err) {
     notifyFirestoreError(err);
   }
@@ -22701,6 +23095,7 @@ async function saveSleep(){
   sleepDates.push(getServerNowDate());
   sleepResult.innerText = `${hours} hrs 💤`;
   updateInsights();
+  updateDashboardFocus();
 
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
@@ -22764,6 +23159,7 @@ async function clearSleepData() {
   updateBedtimeSetButtonState();
   updateSleepLimitUI();
   updateInsights();
+  updateDashboardFocus();
 
   try {
     await Promise.allSettled([
@@ -23820,13 +24216,18 @@ function applyExportCooldownUI(remainingMs) {
   if (!exportDataBtn) return;
   const safeRemaining = Math.max(0, Number(remainingMs) || 0);
   const coolingDown = safeRemaining > 0;
-  exportDataBtn.disabled = coolingDown;
-  exportDataBtn.innerText = coolingDown
-    ? `Export in ${formatCountdownClock(safeRemaining)}`
-    : "Export My Data";
-  exportDataBtn.title = coolingDown
-    ? "Export cooldown active"
-    : "";
+  exportDataBtn.disabled = coolingDown || isExportingData;
+  exportDataBtn.innerText = isExportingData
+    ? exportInProgressLabel
+    : coolingDown
+      ? `Export in ${formatCountdownClock(safeRemaining)}`
+      : "Export My Data";
+  exportDataBtn.title = isExportingData
+    ? "Preparing your secure backup"
+    : coolingDown
+      ? "Export cooldown active"
+      : "";
+  exportDataBtn.setAttribute("aria-busy", String(isExportingData));
 }
 
 function stopExportCooldownTicker() {
@@ -24171,6 +24572,7 @@ async function readUserSnapshotFromFirebase(userId, dbInstance = db) {
 }
 
 async function exportAllData() {
+  if (isExportingData) return;
   const user = auth.currentUser;
   if (!user) {
     showToast("Please sign in first.");
@@ -24183,6 +24585,10 @@ async function exportAllData() {
       showToast(`Export cooldown active. Try again in ${formatCountdownClock(localRemaining)}.`);
       return;
     }
+
+    isExportingData = true;
+    exportInProgressLabel = "Preparing export…";
+    applyExportCooldownUI(0);
 
     const snapshotMetaRef = doc(db, "users", user.uid, "settings", EXPORT_SNAPSHOT_DOC_ID);
     const snapshotMeta = await getDoc(snapshotMetaRef);
@@ -24205,11 +24611,16 @@ async function exportAllData() {
       email: user.email || null,
       name: user.displayName || null
     }, db);
+    exportInProgressLabel = "Saving backup…";
+    applyExportCooldownUI(0);
     await replaceUserSnapshotInFirebase(user.uid, payload, db);
     startExportCooldown(EXPORT_COOLDOWN_MS);
     showToast("Cloud backup saved. Your previous backup was replaced.");
   } catch (err) {
     notifyFirestoreError(err);
+  } finally {
+    isExportingData = false;
+    updateExportCooldownTicker();
   }
 }
 

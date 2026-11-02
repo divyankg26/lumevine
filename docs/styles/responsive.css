@@ -589,11 +589,12 @@
 @media (max-width: 640px){
   header{
     padding:20px 12px 18px;
+    margin:10px 12px 0;
   }
 
   #accountBtn{
     top:10px;
-    right:12px;
+    right:24px;
   }
 
   #accountBtn.account-btn-scrolled{

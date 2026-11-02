@@ -194,7 +194,7 @@
 
 <header>
   <h1>Lumevine</h1>
-  <p>Mind • Body • Money • Music • Productivity</p>
+  <p>A calmer way to make everyday progress.</p>
 </header>
 
 <button id="accountBtn" onclick="toggleAccountPanel()">Account</button>
@@ -265,6 +265,11 @@
       <h4 style="margin:0 0 8px;font-size:15px;color:#fff;">Theme</h4>
       <p class="export-note" style="margin-top:0;text-align:left;">Choose the color mood for your Lumevine dashboard.</p>
       <div id="accountThemeOptions" class="theme-choice-grid theme-choice-grid-account"></div>
+    </div>
+    <div class="account-transfer-box">
+      <h4 style="margin:0 0 8px;font-size:15px;color:#fff;">AI Memory</h4>
+      <p class="export-note" style="margin-top:0;text-align:left;">Review and edit the details Lumevine’s AI remembers to personalize your conversations and suggestions.</p>
+      <button id="editAiMemoryBtn" type="button">Edit AI Memory</button>
     </div>
   </div>
 
@@ -389,6 +394,28 @@
   </div>
 </div>
 
+<div id="aiProfileEditorModal" class="app-dialog-modal ai-profile-editor-modal" aria-hidden="true">
+  <div class="import-transfer-card ai-profile-editor-card" role="dialog" aria-modal="true" aria-labelledby="aiProfileEditorTitle" aria-describedby="aiProfileEditorNote">
+    <h3 id="aiProfileEditorTitle">Edit saved AI memory</h3>
+    <p id="aiProfileEditorNote" class="import-transfer-note">Edit what Lumevine remembers about you. Use one detail per line; leave a section empty to remove those details. A preferred name can contain one entry.</p>
+    <div class="ai-profile-editor-fields">
+      <label><span>Preferred name</span><textarea data-ai-profile-field="preferredNames" rows="1" placeholder="One name"></textarea></label>
+      <label><span>Goals</span><textarea data-ai-profile-field="goals" rows="2"></textarea></label>
+      <label><span>Challenges</span><textarea data-ai-profile-field="recurringStruggles" rows="2"></textarea></label>
+      <label><span>Preferences</span><textarea data-ai-profile-field="preferences" rows="2"></textarea></label>
+      <label><span>Interests</span><textarea data-ai-profile-field="interests" rows="2"></textarea></label>
+      <label><span>Useful context</span><textarea data-ai-profile-field="lifeContext" rows="2"></textarea></label>
+      <label><span>Details you asked AI to remember</span><textarea data-ai-profile-field="rememberedFacts" rows="2"></textarea></label>
+      <label><span>Progress you’ve shared</span><textarea data-ai-profile-field="progressNotes" rows="2"></textarea></label>
+      <label><span>Recent conversation topics</span><textarea data-ai-profile-field="lastTopics" rows="2"></textarea></label>
+    </div>
+    <div class="import-transfer-actions">
+      <button id="aiProfileEditorCancelBtn" type="button" class="import-transfer-cancel">Cancel</button>
+      <button id="aiProfileEditorSaveBtn" type="button">Save memory</button>
+    </div>
+  </div>
+</div>
+
 <div id="dailyRoutineEditorModal" onclick="closeDailyRoutineEditor(event)">
   <div class="welcome-guide-card routine-editor-card" role="dialog" aria-modal="true" aria-labelledby="dailyRoutineEditorTitle" onclick="event.stopPropagation()">
     <div class="welcome-guide-top">
@@ -479,6 +506,26 @@
   <span id="todayFocusState" class="dashboard-focus-state">A moment to check in</span>
 </div>
 <p id="todayFocusPrompt" class="dashboard-focus-prompt">Start with one small check-in. You do not need to do everything today.</p>
+<div class="day-progress" id="dayProgress" data-progress-state="starting" aria-label="Day progress">
+  <div class="day-progress-heading">
+    <span class="dashboard-section-label">Day progress</span>
+    <span class="day-progress-reading">
+      <b id="dayProgressValue" class="day-progress-value">0%</b>
+      <span id="dayProgressStatus" class="day-progress-status">A gentle start</span>
+    </span>
+  </div>
+  <div
+    id="dayProgressBar"
+    class="day-progress-track"
+    role="progressbar"
+    aria-label="Today's tracked progress"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+    aria-valuetext="0% — A gentle start"
+  ><span id="dayProgressFill" class="day-progress-fill"></span></div>
+  <p id="dayProgressNote" class="day-progress-note">Based on today's check-ins and any goals or tasks you track.</p>
+</div>
 <div class="dashboard-focus-grid">
   <div class="dashboard-focus-checkin">
     <p class="dashboard-section-label">One primary check-in</p>
@@ -865,6 +912,6 @@
     if (terms && legalTerms) legalTerms.textContent = terms.textContent || "";
   })();
 </script>
-<script src="scripts/app.js?v=20261101-52"></script>
+<script src="scripts/app.js?v=20261102-64"></script>
 </body>
 </html>

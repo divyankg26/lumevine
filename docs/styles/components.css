@@ -599,6 +599,79 @@ textarea:focus-visible{
   line-height:1.4;
 }
 
+.day-progress{
+  --day-progress-color:#d8c8f2;
+  margin:0 0 16px;
+}
+
+.day-progress[data-progress-state="taking-shape"]{
+  --day-progress-color:#cbb9ef;
+}
+
+.day-progress[data-progress-state="steady"]{
+  --day-progress-color:#bdc9ed;
+}
+
+.day-progress[data-progress-state="complete"]{
+  --day-progress-color:#b9dec9;
+}
+
+.day-progress-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:7px;
+}
+
+.day-progress-heading .dashboard-section-label{
+  margin:0;
+}
+
+.day-progress-reading{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+}
+
+.day-progress-value{
+  color:var(--accent);
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+
+.day-progress-status{
+  color:var(--accent);
+  font-size:11px;
+  font-weight:700;
+  text-align:right;
+}
+
+.day-progress-track{
+  height:8px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:999px;
+  background:rgba(255,255,255,.13);
+}
+
+.day-progress-fill{
+  display:block;
+  width:0;
+  height:100%;
+  border-radius:inherit;
+  background:var(--day-progress-color);
+  box-shadow:0 0 10px rgba(255,255,255,.16);
+  transition:width 420ms ease, background-color 420ms ease;
+}
+
+.day-progress-note{
+  margin:6px 0 0;
+  color:rgba(255,255,255,.68);
+  font-size:11px;
+  line-height:1.35;
+}
+
 .dashboard-focus-grid{
   display:grid;
   grid-template-columns:minmax(0,1.25fr) minmax(300px,.9fr);
