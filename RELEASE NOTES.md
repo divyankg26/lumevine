@@ -1,9 +1,25 @@
 # Release Notes:
 
-- “What do you know about me?” now presents saved details in clear, categorized sections, including your goals, preferences, interests, challenges, context, progress, and details you explicitly asked the AI to remember. It also explains how to correct or clear saved information.
+- Added an Edit AI Memory option in Account → Personalization, with a more aligned editor and consistent input sizes.
 
-- Memory persists in Firebase and can personalize future suggestions. The profile can learn from conversation details and recognizes requests such as “Call me Alex” and “Remember: I work nights.”
+- Fixed Backspace closing the memory editor.
 
-- Profile answers now keep their formatting while typing. The typewriter reveals text in the same formatted layout used by the finished message, so headings and lists don’t switch from plain text to spaced formatting at the end.
+- Improved persistent AI memory, including remembering preferred names and details users explicitly ask it to remember.
 
-- Updated the app’s script cache version.
+- Added more specific answers about saved goals, interests, challenges, and other memory categories.
+
+- AI now understands different ways of asking about the same memory: questions about your goals and what you want to achieve or become all draw from the saved Goals category. It applies the same category-aware matching to other profile details.
+
+- Improved memory answer formatting while it types, and fixed old chat replies changing when memory is edited.
+
+- Added more varied AI replies, including additional responses for missed routine activities.
+
+- Introduced a calm, pastel-colored Day progress bar in Today, based on check-ins, configured water goals, and planned tasks. Reduced jumps from small actions.
+
+- Fixed account identity loading so a chosen username isn’t replaced by one derived from the email address.
+
+- Updated the Music shortcut and another repeated-key shortcut so each shortcut uses distinct keys.
+
+- Made data exports show progress immediately while preparing and saving a backup.
+
+- Aligned the header with the dashboard cards, updated its tagline, and moved the Account button inward to fit the narrower header.
