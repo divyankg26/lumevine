@@ -335,99 +335,95 @@
 
 .challenge-streak{
   width:100%;
+  min-width:0;
+  box-sizing:border-box;
   margin-top:10px;
 }
 
-.challenge-streak-labels,
-.challenge-streak-circles{
-  display:grid;
-  grid-template-columns:repeat(7,minmax(0,1fr));
-  gap:6px;
-  width:100%;
+.challenge-streak-caption{
+  display:block;
+  margin-bottom:8px;
+  color:var(--text);
+  font-size:12px;
+  font-weight:600;
+  opacity:.75;
 }
 
-.challenge-streak-labels{
-  margin-bottom:6px;
+.challenge-streak-days{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:2px;
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  padding:8px 4px;
+  border:1px solid var(--border-soft);
+  border-radius:12px;
+  background:var(--glass);
 }
 
 .challenge-streak-day{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:5px;
+  min-width:0;
+  padding:4px 2px;
   text-align:center;
   font-size:11px;
-  opacity:.92;
+  font-weight:600;
+  opacity:.75;
+}
+
+.challenge-streak-day.today{
+  opacity:1;
+}
+
+.challenge-streak-weekday{
+  line-height:1.2;
+}
+
+.challenge-streak-today{
+  color:var(--primary);
+  font-size:9px;
+  font-weight:600;
+  line-height:1;
 }
 
 .challenge-streak-circle{
-  width:26px;
-  height:26px;
+  width:min(28px, 100%);
+  aspect-ratio:1;
+  height:auto;
+  box-sizing:border-box;
   border-radius:999px;
-  border:2px solid rgba(255,255,255,.45);
+  border:1px solid rgba(255,255,255,.24);
   background:rgba(255,255,255,.06);
   position:relative;
-  overflow:hidden;
   display:flex;
   align-items:center;
   justify-content:center;
-  margin:0 auto;
-  font-size:0;
+  margin:0;
+  color:var(--text);
+  font-size:12px;
+  font-weight:600;
   line-height:1;
-  transition:transform .2s ease, background .2s ease, border-color .2s ease;
-}
-
-.challenge-streak-circle::before{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  top:100%;
-  bottom:0;
-  background:linear-gradient(180deg,#ffb347 0%, #ff8c00 55%, #ff6a00 100%);
+  transition:background .2s ease, border-color .2s ease;
 }
 
 .challenge-streak-circle.filled{
-  background:rgba(255,140,0,.18);
-  border-color:#ff9f43;
+  color:#fff;
+  background:var(--primary);
+  border-color:var(--primary);
 }
 
-.challenge-streak-circle.filled::before{
-  top:0;
+.challenge-streak-circle.today{
+  border:2px solid var(--primary);
 }
 
-.challenge-streak-fire{
+.challenge-streak-circle-date{
   position:relative;
   z-index:1;
-  font-size:15px;
-  line-height:1;
-  filter:drop-shadow(0 0 6px rgba(255,120,0,.5));
-}
-
-.challenge-streak-circle.fire-fill{
-  animation:challengeCirclePop .65s ease-out;
-}
-
-@keyframes challengeFireRise{
-  0%{top:100%}
-  55%{top:18%}
-  100%{top:0}
-}
-
-@keyframes challengeCirclePop{
-  0%{transform:scale(.86)}
-  60%{transform:scale(1.08)}
-  100%{transform:scale(1)}
-}
-
-.challenge-streak-circle.fire-fill::before{
-  animation:challengeFireRise .75s ease-out forwards;
-}
-
-.challenge-streak-circle.fire-fill .challenge-streak-fire{
-  animation:challengeFireEmoji .75s ease-out;
-}
-
-@keyframes challengeFireEmoji{
-  0%{opacity:0;transform:translateY(8px) scale(.75)}
-  60%{opacity:1;transform:translateY(-1px) scale(1.08)}
-  100%{opacity:1;transform:translateY(0) scale(1)}
 }
 
 .quest-top{
@@ -445,75 +441,50 @@
 
 .quest-stat{
   font-size:13px;
-  opacity:.95;
+  opacity:.8;
 }
 
 .quest-recovery-bonus{
   margin:8px 0;
   padding:8px 10px;
-  border:1px solid rgba(255,255,255,.2);
+  border:1px solid var(--border-soft);
   border-radius:10px;
-  background:rgba(255,255,255,.08);
+  background:var(--glass);
   font-size:12px;
   line-height:1.4;
 }
 
 .quest-recovery-bonus.is-earned{
-  border-color:rgba(130,220,170,.45);
-  background:rgba(70,180,120,.14);
+  background:var(--glass-strong);
 }
 
 #questStreak{
-  padding:6px 10px;
-  border-radius:999px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.25);
-  box-shadow:0 0 0 rgba(255,140,0,0);
-  transition:transform .2s ease, box-shadow .25s ease, background .25s ease;
-}
-
-#questStreak.streak-pop{
-  transform:scale(1.08);
-  background:rgba(255,140,0,.22);
-  box-shadow:0 0 18px rgba(255,140,0,.55);
-}
-
-.quest-streak-fx{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  overflow:hidden;
-}
-
-.quest-flame{
-  position:absolute;
-  left:50%;
-  top:36%;
-  font-size:18px;
-  opacity:0;
-  transform:translate(-50%, -50%) scale(.5);
-  animation:flameBurst .9s ease-out forwards;
-}
-
-@keyframes flameBurst{
-  0%{opacity:0;transform:translate(-50%, -50%) scale(.5)}
-  20%{opacity:1}
-  100%{opacity:0;transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.1)}
+  margin:8px 0;
+  padding:8px 12px;
+  border:1px solid var(--border-soft);
+  border-radius:12px;
+  background:var(--glass);
+  color:var(--text);
+  font-size:14px;
+  font-weight:500;
+  line-height:1.4;
+  text-align:center;
 }
 
 .quest-progress{
   width:100%;
-  height:10px;
-  border-radius:10px;
-  background:rgba(255,255,255,.2);
+  height:8px;
+  border-radius:999px;
+  background:var(--glass-strong);
   overflow:hidden;
-  margin:14px 0 12px;
+  margin:6px 0 12px;
 }
 
 .quest-progress-fill{
   height:100%;
   width:0%;
-  background:linear-gradient(90deg,#a8cdbb,#a9c3d5);
+  background:var(--primary);
+  border-radius:inherit;
 }
 
 .insight-fill{
@@ -522,6 +493,7 @@
 
 #questShield{
   margin:6px 0 12px;
+  opacity:.75;
 }
 
 .quest-list{margin:10px 0 0;padding:0;list-style:none}
@@ -533,7 +505,7 @@
   margin-bottom:8px;
   padding:8px 10px;
   border-radius:10px;
-  background:rgba(255,255,255,.1);
+  background:rgba(255,255,255,.06);
 }
 .quest-text{font-size:14px;line-height:1.4;flex:1}
 .quest-done{opacity:.7;text-decoration:line-through}

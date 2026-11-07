@@ -554,7 +554,7 @@ function structuredLog(level, code, message, meta = {}){
   } catch (_) {}
 }
 
-async function fsGetDoc(ref, schemaName = null){
+async function fsGetDoc(ref, schemaName = null, options = {}){
   try{
     const res = await safeGetDoc(ref, schemaName);
     structuredLog('info', 'fs.get', 'read', { path: ref.path, schema: schemaName, exists: !!res.exists, uid: auth.currentUser?.uid || null });
@@ -562,6 +562,10 @@ async function fsGetDoc(ref, schemaName = null){
   } catch (err){
     const stack = (new Error()).stack;
     const meta = { path: ref?.path, schema: schemaName, uid: auth.currentUser?.uid || null, stack };
+    if (options?.silentPermissionDenied && isFirestorePermissionDeniedError(err)) {
+      structuredLog('warn', 'fs.get.permission_denied.silent', err?.message || String(err), meta);
+      throw err;
+    }
     structuredLog('error', 'fs.get.error', err?.message || String(err), meta);
     try { console.error('FS GET ERROR', meta); } catch (_) {}
     notifyFirestoreError(err);
@@ -569,12 +573,16 @@ async function fsGetDoc(ref, schemaName = null){
   }
 }
 
-async function fsGetDocs(q, schemaName = null){
+async function fsGetDocs(q, schemaName = null, options = {}){
   try{
     const snap = await getDocs(q);
     structuredLog('info', 'fs.getDocs', 'query', { size: snap.size });
     return snap;
   } catch(err){
+    if (options?.silentPermissionDenied && isFirestorePermissionDeniedError(err)) {
+      structuredLog('warn', 'fs.getDocs.permission_denied.silent', err?.message || String(err));
+      throw err;
+    }
     structuredLog('error', 'fs.getDocs.error', err?.message || String(err));
     notifyFirestoreError(err);
     throw err;
@@ -1261,8 +1269,7 @@ const weeklyTargetsDisplay = document.getElementById("weeklyTargetsDisplay");
 const questXpEl = document.getElementById("questXp");
 const questRecoveryBonusEl = document.getElementById("questRecoveryBonus");
 const questStreakEl = document.getElementById("questStreak");
-const questWeekStreakLabels = document.getElementById("questWeekStreakLabels");
-const questWeekStreakCircles = document.getElementById("questWeekStreakCircles");
+const questWeekStreakDays = document.getElementById("questWeekStreakDays");
 const questProgressFill = document.getElementById("questProgressFill");
 const questShieldEl = document.getElementById("questShield");
 const questProgressHintEl = document.getElementById("questProgressHint");
@@ -1389,6 +1396,8 @@ const todayFocusWaterEl = document.getElementById("todayFocusWater");
 const todayFocusTasksEl = document.getElementById("todayFocusTasks");
 const todayFocusPrioritiesEl = document.getElementById("todayFocusPriorities");
 const insightsCard = document.getElementById("insightsCard");
+const dashboardLoadingMessage = document.getElementById("dashboardLoadingMessage");
+const insightTaskProgress = document.getElementById("insightTaskProgress");
 const insightTaskTopLabel = document.getElementById("insightTaskTopLabel");
 const insightTaskTopBar = document.getElementById("insightTaskTopBar");
 const insightMetricTitle = document.getElementById("insightMetricTitle");
@@ -1403,6 +1412,30 @@ const insightGraphScroll = document.getElementById("insightGraphScroll");
 const uxToast = document.getElementById("uxToast");
 const uxToastText = document.getElementById("uxToastText");
 const uxToastAction = document.getElementById("uxToastAction");
+let dashboardLoadingMessageTimer = null;
+
+function syncDashboardLoadingMessage() {
+  if (dashboardLoadingMessageTimer) {
+    clearTimeout(dashboardLoadingMessageTimer);
+    dashboardLoadingMessageTimer = null;
+  }
+  if (!dashboardLoadingMessage) return;
+  dashboardLoadingMessage.textContent = "Loading...";
+  if (!dashboard?.classList.contains("preload-shell") || dashboard.style.display === "none") return;
+  dashboardLoadingMessageTimer = setTimeout(() => {
+    if (dashboard.classList.contains("preload-shell") && dashboard.style.display !== "none") {
+      dashboardLoadingMessage.textContent = "Please wait. It’s taking a bit longer than usual.";
+    }
+  }, 7000);
+}
+
+if (dashboard && dashboardLoadingMessage) {
+  new MutationObserver(syncDashboardLoadingMessage).observe(dashboard, {
+    attributes: true,
+    attributeFilter: ["class", "style"]
+  });
+  syncDashboardLoadingMessage();
+}
 const dailyRoutineList = document.getElementById("dailyRoutineList");
 const dailyRoutineMeta = document.getElementById("dailyRoutineMeta");
 const dailyRoutineGenerateBtn = document.getElementById("dailyRoutineGenerateBtn");
@@ -1826,7 +1859,6 @@ function updateAccountPanel(user) {
       ? (cachedIdentity?.displayName || accountDisplayName?.innerText || fallbackName)
       : (user.displayName || "")
   ).trim();
-  const rawDisplayValidation = validateSignupDisplayName(rawDisplayName);
   if (accountName) accountName.innerText = cachedIdentity?.username || storedUsername || fallbackName;
   if (accountDisplayName) {
     accountDisplayName.innerText = cachedIdentity?.displayName
@@ -1838,11 +1870,7 @@ function updateAccountPanel(user) {
   if (accountVerifyStatus) accountVerifyStatus.innerText = isVerifiedForDisplay ? "Verified ✅" : "Not verified ⚠️";
   if (accountUid) accountUid.innerText = user.uid || "Not available";
   updateAccountPasswordResetCooldownTicker();
-  if (rawDisplayName && !rawDisplayValidation.ok) {
-    setAccountDisplayNameError("Legacy display name contains unsupported symbols. Edit Display Name to fix it.");
-  } else {
-    setAccountDisplayNameError("");
-  }
+  setAccountDisplayNameError("");
 
   void syncAccountIdentityFromProfile(user);
 }
@@ -1993,9 +2021,9 @@ async function loadAccountIdentityFromProfile(user) {
   }
   if (accountName) accountName.innerText = usernameValue || storedUsername || "user";
   if (accountDisplayName) accountDisplayName.innerText = displayNameValue;
-  if (hasLegacyInvalidDisplayName) {
-    setAccountDisplayNameError("Legacy display name contains unsupported symbols. Edit Display Name to fix it.");
-  }
+  setAccountDisplayNameError(hasLegacyInvalidDisplayName
+    ? "Legacy display name contains unsupported symbols. Edit Display Name to fix it."
+    : "");
 }
 
 document.addEventListener("click", (event) => {
@@ -2211,7 +2239,7 @@ async function clearAllAccountData() {
     return;
   }
 
-  const warningOne = await appConfirm("⚠️ Warning: Clear All Data also removes your friends, incoming/outgoing friend requests, and related social data. It will permanently delete your Lumevine app data (tasks, mood, water, sleep, gratitude, reminders, AI chats, and insights). All STREAKS will also be cleared. Daily limits for AI, mood, sleep, water, tasks, reminders, and gratitude will NOT be reset. Continue?");
+  const warningOne = await appConfirm("⚠️ Warning: Clear All Data also removes your friends, incoming/outgoing friend requests, and related social data. It will permanently delete your Lumevine app data (tasks, mood, water, sleep, gratitude, reminders, AI chats and saved AI memory, and insights). All STREAKS will also be cleared. Daily limits for AI, mood, sleep, water, tasks, reminders, and gratitude will NOT be reset. Continue?");
   if (!warningOne) return;
 
   const warningTwo = await appConfirm("Final warning: this cannot be undone. Your account will stay signed in, but all app data and social links (friends, sent requests, pending requests) will be erased. Proceed?");
@@ -2733,7 +2761,7 @@ try {
         updateQuestRecoveryBonusUI();
         if (questStreakEl) questStreakEl.innerText = "A new journey begins";
         if (questProgressFill) questProgressFill.style.width = "0%";
-        if (questShieldEl) questShieldEl.innerText = "Streak support: Resting";
+        if (questShieldEl) questShieldEl.innerText = "Streak support is not active yet. Complete today's progress to earn one protected missed day.";
         if (questListEl) questListEl.innerHTML = "";
         closeWelcomeGuide();
         welcomeGuideStepIndex = 0;
@@ -3414,7 +3442,7 @@ async function ensureGoogleIdentitySetupIfNeeded(user) {
   let profileData = {};
   let profileReadSucceeded = false;
   try {
-    const profileRes = await fsGetDoc(doc(db, "users", activeUserId, "settings", "profile"), 'profile');
+    const profileRes = await fsGetDoc(doc(db, "users", activeUserId, "settings", "profile"), 'profile', { silentPermissionDenied: true });
     profileReadSucceeded = true;
     if (profileRes.exists) {
       profileData = profileRes.data || {};
@@ -3966,7 +3994,7 @@ let welcomeGuideUserId = "";
 let welcomeGuideCheckedThisSession = false;
 let welcomeGuideCompleting = false;
 const friendRequestActionsInFlight = new Set();
-const WELCOME_GUIDE_VERSION = 1;
+const WELCOME_GUIDE_VERSION = 2;
 const TOS_VERSION = "2026-05-14";
 
 // ---------- Loading state manager for UI feedback ----------
@@ -4111,51 +4139,50 @@ setInterval(() => {
 
 const WELCOME_GUIDE_STEPS = [
   {
-    title: "Dashboard Overview",
-    text: "Use the cards to log mood, water, sleep, reminders, tasks, gratitude, and more in one flow.",
-    tip: "Start wherever feels easy, and check in when it suits you. Use Shift+Enter to add a new line in text boxes."
+    title: "Start with today",
+    text: "Today’s Focus at the top of your dashboard brings together your mood, sleep, water, and tasks, then suggests one small next step.",
+    tip: "Use “Check in with mood” to jump to a check-in. Day progress is a snapshot, not a score."
   },
   {
-    title: "Daily Limits",
-    text: "Trackers have daily limits and reset times to help keep your entries comfortable and manageable.",
-    tip: "If a button is unavailable, its note will show when it becomes available again."
+    title: "Check in your way",
+    text: "Log mood, sleep, water, gratitude, or a task whenever it is useful. Set a water goal or a bedtime reminder if you want them.",
+    tip: "Your check-ins update the dashboard right away. There is no need to fill every card or keep a perfect streak."
   },
   {
-    title: "Habit Journey",
-    text: "A few small check-ins can help you explore your habits. Take each step at a pace that feels comfortable.",
-    tip: "There is no need to rush; choose the steps that feel right for you."
+    title: "Shape a flexible routine",
+    text: "The Daily Routine card can suggest a rhythm, or you can add, replace, and time activities yourself. Gentle Reminders can help with something specific you want to remember.",
+    tip: "Your routine is editable. Keep only the parts that work for you."
   },
   {
-    title: "Patterns & Weekly Reflection",
-    text: "Your logs feed into weekly insight bars and AI coaching so you can spot patterns quickly.",
-    tip: "Tip: Use the Insights Next button to switch mood/water/sleep views."
+    title: "Talk with AI Companion",
+    text: "Use natural language to talk through what is on your mind or ask for a practical next step. The companion can follow up based on what you share.",
+    tip: "Clearing AI chats removes conversation history but keeps saved AI memory. Review that memory in Account → Personalization."
   },
   {
-    title: "Friends & Requests",
-    text: "Open Account to send friend requests by username, accept or decline incoming requests, and view current friends.",
-    tip: "Friends can share gentle check-in reflections, if that feels helpful."
+    title: "Notice patterns over time",
+    text: "Patterns & Progress shows task, sleep, water, and mood trends alongside weekly reflections. Weekly Snapshot gives you another overview when you choose to generate it.",
+    tip: "Use Next to switch metrics. These are gentle observations from your logs, not grades or medical advice."
   },
   {
-    title: "Account Controls",
-    text: "Use the Account button to export/import data, change password, or clear app data when needed.",
-    tip: "Tip: Account also contains your shortcuts box with OS-aware key combos."
+    title: "Connect with friends, if you like",
+    text: "Open Account → Friends → Add Friends and send a request using a username. You can review sent requests, respond to incoming requests, and see your current friends there.",
+    tip: "After connecting, friend reflections may appear on relevant cards. Connecting is optional."
   },
   {
-    title: "Keyboard Shortcuts",
-    text: "All dashboard cards have shortcuts. Hold {shortcut_mod}, then press two letters quickly to jump to a card, including Today’s Focus, Daily Routine, Weekly Snapshot, and Your Patterns.",
-    tip: "Shortcut list is shown below.",
+    title: "Make the app yours and manage data",
+    text: "Account → Personalization lets you choose a theme and review AI memory. Account → General includes data export/import and Clear All Data.",
+    tip: "Clear All Data permanently removes saved app data, including friends and AI memory. Export a backup first if you may want your data later."
+  },
+  {
+    title: "Shortcuts and getting help",
+    text: "On a computer, use the shortcuts below to jump between dashboard cards. Reopen this guide anytime from Account → Help, visit the <a href=\"https://lumevine.runs-at.dev/faq/\" target=\"_blank\" rel=\"noopener noreferrer\">FAQ</a>, or <a href=\"https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=support.lumevine@gmail.com\" target=\"_blank\" rel=\"noopener noreferrer\">contact support</a>.",
+    tip: "You can reopen this guide anytime from Account → Help.",
     showShortcutList: true
-  },
-  {
-    title: "Contact Support",
-    text: "Need help or noticed something unusual? Contact <span class=\"support-email-highlight\">support.lumevine@gmail.com</span>.",
-    tip: "Tip: Include what happened and what you expected so we can help faster."
   }
 ];
 
 function getWelcomeGuideSteps() {
-  if (!IS_MOBILE_DEVICE) return WELCOME_GUIDE_STEPS;
-  return WELCOME_GUIDE_STEPS.filter((step) => !step.showShortcutList);
+  return WELCOME_GUIDE_STEPS;
 }
 
 function formatShortcutAwareText(text = "") {
@@ -4888,7 +4915,7 @@ async function ensureTosAccepted(userId) {
   }
 
   try {
-    const snap = await fsGetDoc(doc(db, "users", activeUserId, "settings", "onboarding"), 'onboarding');
+    const snap = await fsGetDoc(doc(db, "users", activeUserId, "settings", "onboarding"), 'onboarding', { silentPermissionDenied: true });
     const data = snap.exists ? (snap.data || {}) : {};
     const accepted = data.tosAccepted === true;
     const acceptedVersion = String(data.tosVersion || "").trim();
@@ -4935,7 +4962,7 @@ async function maybeShowWelcomeGuide(userId) {
   welcomeGuideUserId = activeUserId;
 
   try {
-    const snap = await fsGetDoc(doc(db, "users", activeUserId, "settings", "onboarding"), 'onboarding');
+    const snap = await fsGetDoc(doc(db, "users", activeUserId, "settings", "onboarding"), 'onboarding', { silentPermissionDenied: true });
     const data = snap.exists ? (snap.data || {}) : {};
     
     // Defensive: check if data is actually an object
@@ -4945,7 +4972,8 @@ async function maybeShowWelcomeGuide(userId) {
       return;
     }
     
-    if (!data.welcomeGuideCompleted) {
+    const savedGuideVersion = Number(data.welcomeGuideVersion) || 0;
+    if (!data.welcomeGuideCompleted || savedGuideVersion < WELCOME_GUIDE_VERSION) {
       const weeklySnap = await fsGetDoc(doc(db, "users", activeUserId, "settings", "weeklyTargets"), 'weeklyTargets');
 
       if (!weeklySnap.exists) {
@@ -5360,6 +5388,9 @@ function isLocalhostGoogleAuthBlocked() {
 async function handleGoogleAuth() {
   const error = document.getElementById("signInError");
   error.style.display = "none";
+  const googleProgressMessage = authMode === "signup"
+    ? "Hang on, signing up with Google..."
+    : "Hang on, signing in with Google...";
 
   if (window.location.protocol === "file:" || isLocalhostGoogleAuthBlocked()) {
     clearPendingRequestLoginAlertFlag();
@@ -5372,9 +5403,7 @@ async function handleGoogleAuth() {
 
   try {
     showAuthModalError(
-      authMode === "signup"
-        ? "Hang on, signing up with Google..."
-        : "Hang on, signing in with Google...",
+      googleProgressMessage,
       "auth_progress",
       "#9fd0ff"
     );
@@ -5395,7 +5424,7 @@ async function handleGoogleAuth() {
       ? "This domain is not authorized for sign-in. Ask the app administrator to authorize '" + currentHost + "', then reload."
       : (err.message || "Google authentication failed.");
   } finally {
-    clearAuthProgressMessage();
+    if (error.innerText === googleProgressMessage) hideAuthModalError();
   }
 }
 
@@ -7734,7 +7763,7 @@ async function upsertUserDirectoryProfile(user, options = {}) {
 
   let existingProfileData = {};
   try {
-    const existingProfileRes = await fsGetDoc(doc(db, "users", user.uid, "settings", "profile"), 'profile');
+    const existingProfileRes = await fsGetDoc(doc(db, "users", user.uid, "settings", "profile"), 'profile', { silentPermissionDenied: true });
     if (existingProfileRes.exists) {
       existingProfileData = existingProfileRes.data || {};
     }
@@ -7750,7 +7779,7 @@ async function upsertUserDirectoryProfile(user, options = {}) {
       const usernameByUidSnap = await fsGetDocs(query(
         collection(db, "usernameDirectory"),
         where("uid", "==", user.uid)
-      ));
+      ), null, { silentPermissionDenied: true });
       const firstMatch = [...(usernameByUidSnap?.docs || [])]
         .sort((left, right) => String(left.id || "").localeCompare(String(right.id || "")))[0];
       if (firstMatch) {
@@ -10143,6 +10172,7 @@ let bedtimeSettings = {
 };
 let bedtimeInputTouchedSinceSync = false;
 let bedtimeAllowUnchangedResubmit = false;
+let bedtimeSubmitting = false;
 let aiChatSubmitting = false;
 let aiAbuseStrikeCount = 0;
 let aiAbuseCooldownUntilMs = 0;
@@ -11198,6 +11228,9 @@ function getSeriesWithPersistedFallback(metricName, computedSeries, weekRange) {
 function renderInsightMetricView(payload) {
   if (insightMetricTitle) insightMetricTitle.innerText = payload.title;
   if (insightMetricLabel) insightMetricLabel.innerText = payload.label;
+  if (insightTaskTopLabel) insightTaskTopLabel.innerText = payload.progressLabel;
+  if (insightTaskProgress) insightTaskProgress.hidden = false;
+  if (insightTaskTopBar) setInsightBar(insightTaskTopBar, payload.progressPercent);
   if (insightAxisLayer && insightBarLayer && insightBarLabelLayer && insightLineGraph) {
     const seriesPayload = payload.series && !Array.isArray(payload.series)
       ? payload.series
@@ -12031,61 +12064,73 @@ function generateAdaptiveQuests(todayKey = getTodayKey()) {
   selected.forEach((quest) => habitQuests.push(quest));
 }
 
-function renderQuestWeekStreak(animatedDateKey = "") {
-  if (!questWeekStreakLabels || !questWeekStreakCircles) return;
+function renderQuestWeekStreak() {
+  if (!questWeekStreakDays) return;
 
   const weekDates = getQuestWeekDatesSundayStart();
   const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const completedSet = new Set((questCompletedDateKeys || []).filter(Boolean));
+  const todayKey = getTodayKey();
 
-  questWeekStreakLabels.innerHTML = "";
-  questWeekStreakCircles.innerHTML = "";
+  questWeekStreakDays.innerHTML = "";
 
   weekDates.forEach((date, index) => {
     const key = dateToKey(date);
 
-    const label = document.createElement("span");
+    const label = document.createElement("div");
     label.className = "challenge-streak-day";
-    label.innerText = labels[index] || "";
-    questWeekStreakLabels.appendChild(label);
-
+    if (key === todayKey) label.classList.add("today");
+    const weekday = document.createElement("span");
+    weekday.className = "challenge-streak-weekday";
+    weekday.innerText = labels[index] || "";
+    label.appendChild(weekday);
     const circle = document.createElement("span");
     circle.className = "challenge-streak-circle";
+    circle.setAttribute("aria-label", `${labels[index]} ${date.getUTCDate()}${key === todayKey ? ", today" : ""}${completedSet.has(key) ? ", progress completed" : ""}`);
+    circle.title = `${labels[index]}, ${date.toLocaleDateString(undefined, { month: "long", day: "numeric", timeZone: "UTC" })}${key === todayKey ? " (Today)" : ""}`;
+    if (key === todayKey) circle.classList.add("today");
+    const dateLabel = document.createElement("span");
+    dateLabel.className = "challenge-streak-circle-date";
+    dateLabel.innerText = String(date.getUTCDate());
+    circle.appendChild(dateLabel);
     if (completedSet.has(key)) {
       circle.classList.add("filled");
-      const fire = document.createElement("span");
-      fire.className = "challenge-streak-fire";
-      fire.innerText = "🔥";
-      circle.appendChild(fire);
-      if (animatedDateKey && key === animatedDateKey) {
-        circle.classList.add("fire-fill");
-      }
     }
-    questWeekStreakCircles.appendChild(circle);
+    label.appendChild(circle);
+    if (key === todayKey) {
+      const todayLabel = document.createElement("span");
+      todayLabel.className = "challenge-streak-today";
+      todayLabel.innerText = "Today";
+      label.appendChild(todayLabel);
+    }
+    questWeekStreakDays.appendChild(label);
   });
 }
 
-function renderHabitQuestUI(animatedDateKey = "") {
-  if (questXpEl) questXpEl.innerText = `Progress ${questXp}/100`;
-  updateQuestRecoveryBonusUI();
+function renderHabitQuestUI() {
   const progressPercent = Math.max(0, Math.min(100, questXp));
+  if (questXpEl) questXpEl.innerText = `Progress ${progressPercent}/100`;
+  updateQuestRecoveryBonusUI();
   if (questStreakEl) questStreakEl.innerText = questStreakCount > 0
-    ? `🔥 ${questStreakCount}-day streak`
-    : `${habitQuests.filter((entry) => entry.completed).length} of ${habitQuests.length || 4} steps today`;
-  if (questProgressFill) questProgressFill.style.width = `${progressPercent}%`;
+    ? `Current streak: ${questStreakCount} ${questStreakCount === 1 ? "day" : "days"}`
+    : `${habitQuests.filter((entry) => entry.completed).length} of ${habitQuests.length || 4} steps completed today`;
+  if (questProgressFill) {
+    questProgressFill.style.width = `${progressPercent}%`;
+    questProgressFill.parentElement?.setAttribute("aria-valuenow", String(progressPercent));
+  }
   if (questShieldEl) {
     questShieldEl.innerText = questShieldAvailable
-      ? "Streak support: Available — one missed day won’t affect your streak; two missed days in a row reset it at 00:00 GMT."
+      ? "Streak support is available if you need a missed day."
       : questShieldLastUsedDateKey === getTodayKey()
-        ? "Streak support: One missed day is protected. Missing two days in a row resets your streak at 00:00 GMT."
-        : "Streak support is earned at 100 progress. It protects one missed day; two missed days in a row reset your streak at 00:00 GMT.";
+        ? "You used your one-day streak support. Take the time you need."
+        : "Streak support is not active yet. Complete today's progress to earn one protected missed day.";
   }
   if (questProgressHintEl) {
     questProgressHintEl.innerText = progressPercent >= 100
-      ? "You reached 100 progress today. Enjoy the momentum you created."
-      : `${progressPercent}% today • Add another step only if it feels helpful.`;
+      ? "That’s enough for today. You can leave the rest for another time."
+      : "Try another small step only if it feels helpful.";
   }
-  renderQuestWeekStreak(animatedDateKey);
+  renderQuestWeekStreak();
 
   if (!questListEl) return;
   questListEl.innerHTML = "";
@@ -12116,13 +12161,13 @@ function renderHabitQuestUI(animatedDateKey = "") {
 function updateQuestRecoveryBonusUI() {
   if (!questRecoveryBonusEl) return;
   if (questRecoveryBonusClaimed && questRecoveryBonusDateKey === getTodayKey()) {
-    questRecoveryBonusEl.innerText = "A little extra progress has been added for today.";
+    questRecoveryBonusEl.innerText = "Your optional check-in has been counted toward today's progress.";
     questRecoveryBonusEl.classList.add("is-earned");
   } else if (burnoutRadarWarningActive) {
-    questRecoveryBonusEl.innerText = "A little extra progress is available through a water check-in or a completed task, if you would like.";
+    questRecoveryBonusEl.innerText = "Optional: a water check-in or completed task can count toward today's progress, if you like.";
     questRecoveryBonusEl.classList.remove("is-earned");
   } else {
-    questRecoveryBonusEl.innerText = "A little extra progress may be available through a water check-in or a completed task.";
+    questRecoveryBonusEl.innerText = "Optional: a water check-in or completed task can count toward today's progress.";
     questRecoveryBonusEl.classList.remove("is-earned");
   }
 }
@@ -12171,7 +12216,7 @@ async function awardBurnoutRecoveryBonus(userId, warningWasActive) {
   if (reachedMilestone) {
     markQuestProgressMilestone(todayKey);
   }
-  renderHabitQuestUI(reachedMilestone ? todayKey : "");
+  renderHabitQuestUI();
   try {
     await saveHabitQuestState(userId);
     showToast("A little extra progress has been added to your Habit Journey.");
@@ -12184,8 +12229,7 @@ function markQuestProgressMilestone(todayKey = getTodayKey()) {
   if (questCompletedDateKeys.includes(todayKey)) return false;
   questCompletedDateKeys.push(todayKey);
   questShieldAvailable = true;
-  const streakAdvanced = awardQuestStreakForToday(todayKey);
-  if (streakAdvanced) triggerQuestStreakCelebration();
+  awardQuestStreakForToday(todayKey);
   while (questCompletedDateKeys.length > 7) questCompletedDateKeys.shift();
   return true;
 }
@@ -12242,15 +12286,6 @@ function awardQuestStreakForToday(todayKey = getTodayKey()) {
   }
   questLastStreakDateKey = todayKey;
   return true;
-}
-
-function triggerQuestStreakCelebration() {
-  if (questStreakEl) {
-    questStreakEl.classList.remove("streak-pop");
-    void questStreakEl.offsetWidth;
-    questStreakEl.classList.add("streak-pop");
-    setTimeout(() => questStreakEl.classList.remove("streak-pop"), 700);
-  }
 }
 
 async function loadHabitQuest(userId) {
@@ -12497,7 +12532,7 @@ async function completeHabitQuest(index) {
   if (reachedMilestone) {
     markQuestProgressMilestone(getTodayKey());
   }
-  renderHabitQuestUI(reachedMilestone ? getTodayKey() : "");
+  renderHabitQuestUI();
 
   await saveHabitQuestState(user.uid);
   updateInsights();
@@ -14884,6 +14919,12 @@ function updateInsights() {
   const totalTasks = taskEntries.length;
   const doneTasks = taskEntries.filter((entry) => !!entry.completed).length;
   const taskCompletion = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const todayKey = getTodayKey();
+  const todayTasks = taskEntries.filter((entry) => dateToKey(entry.time) === todayKey);
+  const doneTodayTasks = todayTasks.filter((entry) => !!entry.completed).length;
+  const todayTaskCompletion = todayTasks.length
+    ? Math.round((doneTodayTasks / todayTasks.length) * 100)
+    : 0;
 
   const avgSleep = sleepHistory.length
     ? sleepHistory.reduce((a, b) => a + b, 0) / sleepHistory.length
@@ -14894,13 +14935,6 @@ function updateInsights() {
   const waterPercent = waterGoal > 0
     ? Math.min(100, Math.round((todayWaterTotal / waterGoal) * 100))
     : 0;
-
-  if (insightTaskTopLabel) {
-    insightTaskTopLabel.innerText = `Tasks completed ${doneTasks}/${totalTasks}`;
-  }
-  if (insightTaskTopBar) {
-    setInsightBar(insightTaskTopBar, taskCompletion);
-  }
 
   const weekRange = getCurrentWeekRangeKeys();
   const taskSeries = getSeriesWithPersistedFallback("tasks", getInsightSeries("tasks"), weekRange);
@@ -14957,12 +14991,18 @@ function updateInsights() {
       title: "Task Rhythm",
       label: bestProductivityLabel,
       percent: taskCompletion,
+      progressLabel: todayTasks.length
+        ? `Today's tasks: ${doneTodayTasks}/${todayTasks.length} completed`
+        : "No tasks added today",
+      progressPercent: todayTaskCompletion,
       series: taskSeries
     },
     {
       title: "Sleep Trend",
       label: weeklySleepLabel,
       percent: sleepPercent,
+      progressLabel: `This week's average: ${weeklySleepAvg.toFixed(1)}/8 hrs`,
+      progressPercent: Math.min(100, Math.round((weeklySleepAvg / 8) * 100)),
       series: sleepSeries
     },
     {
@@ -14971,12 +15011,20 @@ function updateInsights() {
         ? `Today’s hydration: ${todayWaterTotal}/${waterGoal} glasses (${waterPercent}% of goal)`
         : "Today’s hydration: no goal set yet",
       percent: waterPercent,
+      progressLabel: waterGoal > 0
+        ? `Today's water: ${todayWaterTotal}/${waterGoal} glasses`
+        : "Set a water goal to track today's progress",
+      progressPercent: waterPercent,
       series: waterSeries
     },
     {
       title: "Mood Trend",
       label: moodChangeLabel,
       percent: moodPercent,
+      progressLabel: hasWeeklyMoodLogs
+        ? `This week's mood average: ${weeklyMoodAvgScore.toFixed(1)}/3`
+        : "No mood check-ins this week",
+      progressPercent: moodPercent,
       series: moodSeries
     }
   ];
@@ -16256,10 +16304,10 @@ function boundedLevenshteinDistance(a, b, maxDistance) {
 
 function fuzzyCorrectAiToken(token) {
   const lower = String(token || "").toLowerCase();
-  if (!lower || lower.length < 3 || lower.length > 24) return "";
+  if (!lower || lower.length < 6 || lower.length > 24) return "";
   if (/\d/.test(lower)) return "";
 
-  const maxDistance = lower.length <= 4 ? 1 : 2;
+  const maxDistance = 1;
   let bestMatch = "";
   let bestDistance = maxDistance + 1;
 
@@ -16330,7 +16378,14 @@ function normalizeTyposForAi(text) {
 
   return String(text || "").replace(/\b[a-z]{3,}\b/gi, (token) => {
     const lower = token.toLowerCase();
+    if (AI_TYPO_PRESERVED_CONVERSATION_WORDS.has(lower)) return token;
     const deStretched = lower.replace(/([a-z])\1{2,}/g, "$1$1");
+    if (AI_TYPO_PRESERVED_CONVERSATION_WORDS.has(deStretched)) {
+      return applyTokenCasePattern(token, deStretched);
+    }
+    if (deStretched !== lower && AI_TYPO_FUZZY_KEYWORDS.includes(deStretched)) {
+      return applyTokenCasePattern(token, deStretched);
+    }
 
     // Preserve gratitude intent tokens; never fuzzy-map these to task/productivity words.
     if (/^(?:thank|thanks+|thankyou|thx|ty|tysm|appreciate)$/.test(lower)) {
@@ -16585,6 +16640,72 @@ function normalizeLocalIntentText(input) {
     .replace(/[!?.,;:]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+const AI_TYPO_PRESERVED_CONVERSATION_WORDS = new Set([
+  "good", "well", "fine", "great", "okay", "ok", "alright",
+  "amazing", "awesome", "fantastic", "happy", "positive", "better",
+  "bad", "rough", "awful", "terrible", "sad", "low", "stressed",
+  "anxious", "overwhelmed", "busy", "tired", "meh", "things", "everything",
+  "sounds", "rather"
+]);
+
+function isGreetingMessage(input) {
+  return /^(?:hi|hello|hey|yo|hola|hiya|howdy)\b/.test(normalizeLocalIntentText(input));
+}
+
+function assistantQuestionInvitesCheckIn(question) {
+  const text = normalizeLocalIntentText(question);
+  return /\bhow\s+(?:have you been|have things been|are you (?:doing|feeling)|are things|is your day going|was your day|did your day go|has your day been|is everything going)\b|\bhow['’]s\s+(?:your (?:day|week|weekend)|everything|it|life)\b|\bwhat(?:['’]s|\s+is)\s+(?:new|up)\s+with you\b/i.test(text);
+}
+
+function assistantQuestionInvitesOpenSharing(question) {
+  const text = normalizeLocalIntentText(question);
+  return /\bwhat happened next\b|\btell me more\b|\bwhat(?:['’]s|\s+is)\s+on your mind\b|\bwhat would you like to talk about\b|\bwhere do you want to take this\b|\bwhat(?:['’]s|\s+has)\s+been going well\b|\bwhat part\b|\bhow did that make you feel\b|\btalk it out\b|\bkeep it light\b|\bresume\b[\s\S]{0,40}\badjust\b|\badjust\b[\s\S]{0,40}\bresume\b|\b(?:reminder|remind me|set reminders?)\b/i.test(text);
+}
+
+function getAssistantQuestionConfirmation(input) {
+  const answer = normalizeLocalIntentText(input);
+  const positive = /^(?:yes|yeah|yep|yup|sure|okay|ok|please do|do it|go ahead|go for it|absolutely|definitely|sounds good|sounds great|that sounds good|that would be great|that['’]d be great|works for me|let['’]s do that|i would|i['’]d love to|why not|sure thing)(?: please| thanks)?$/;
+  const positiveWithTime = /^(?:yes|yeah|yep|yup|sure|okay|ok)\s+(?:at|around|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?$/;
+  const negative = /^(?:no|nope|nah|not now|not right now|maybe later|maybe another time|not really|rather not|i['’]d rather not|i don['’]t think so|no thanks|no thank you)$/;
+  if (positive.test(answer) || positiveWithTime.test(answer)) return "yes";
+  if (negative.test(answer)) return "no";
+  return "";
+}
+
+function buildOpenSharingReply(input, question = "") {
+  const text = normalizeLocalIntentText(input);
+  const prompt = normalizeLocalIntentText(question);
+  if (/\btalk it out\b[\s\S]{0,36}\bkeep it light\b/.test(prompt)) {
+    if (/\bkeep it light\b/.test(text)) {
+      return "Sure—we can keep it light. Want a joke, a weird fact, or a random question?";
+    }
+    if (/\btalk it out\b/.test(text)) {
+      return "Of course. What’s been on your mind?";
+    }
+  }
+  if (/\bresume\b[\s\S]{0,40}\badjust\b|\badjust\b[\s\S]{0,40}\bresume\b/.test(prompt)) {
+    if (/\bresume\b|\bcontinue\b/.test(text)) {
+      return "Okay. Pick up with the next routine activity that still fits your day.";
+    }
+    if (/\badjust\b|\bchange\b/.test(text)) {
+      return "Sure. Which part of the routine would you like to change?";
+    }
+  }
+  if (/\b(?:reminder|remind me|set reminders?)\b/.test(prompt)) {
+    return /\b(?:at|around|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b|\b\d{1,2}:\d{2}\b/i.test(text)
+      ? "What should I remind you about?"
+      : "What time would you like the reminder?";
+  }
+  if (/\b(?:fired|lost my job|breakup|broke up|accident|hospital|passed away|died|argument|fight|failed|rejected)\b/.test(text)
+    || /\b(?:bad|rough|awful|terrible|sad|stressed|anxious|overwhelmed|scared|lonely|frustrated|disappointed|worried)\b/.test(text)) {
+    return "That sounds like a lot to deal with. What part of it is weighing on you most?";
+  }
+  if (/\b(?:promoted|passed|won|celebrat|excited|great|good news|happy|proud|succeeded)\b/.test(text)) {
+    return "That sounds like a meaningful moment. What part of it feels best to you?";
+  }
+  return "Thanks for sharing that with me. What feels most important about it to you?";
 }
 
 const LOCAL_INTENT_TEMPLATES = {
@@ -17265,7 +17386,7 @@ const AI_CASUAL_POSITIVE_POOL = [
 ];
 const AI_CASUAL_NEUTRAL_POOL = [
   "Got it. Tell me more.",
-  "I’m listening. What happened next?",
+  "Got it. What would you like to talk about?",
   "Okay, I’m with you. What’s on your mind?",
   "Fair enough. Where do you want to take this?",
   "I hear you. Want to talk it out or keep it light?"
@@ -19985,24 +20106,37 @@ async function buildSmartAiResponse(input, user) {
   const checkInAnswer = normalizeLocalIntentText(normalizedInput);
   const checkInContainsAction = /\b(?:add|log|save|set|delete|clear|complete|completed|finish|finished|create|remind|water|task|routine|mood|sleep|gratitude|schedule)\b/.test(checkInAnswer);
   const checkInWords = checkInAnswer
-    .replace(/\b(?:i am|i m|doing|feeling|really|pretty|very|so|just|today|thanks?|thank you|and|but)\b/g, " ")
+    .replace(/\b(?:i['’]m|i am|i m|i feel|i have been|i['’]ve been|doing|feeling|really|pretty|very|so|just|today|thanks?|thank you|and|but|bro|bruh|man|you|too|tbh|tho|though)\b/g, " ")
     .split(/\s+/)
     .filter(Boolean);
   const positiveCheckInWords = new Set([
     "nice", "good", "great", "fine", "okay", "ok", "alright",
-    "well", "amazing", "awesome", "fantastic", "happy", "positive", "better"
+    "well", "amazing", "awesome", "fantastic", "happy", "positive", "better",
+    "all", "sounds", "been"
   ]);
-  const isPositiveCheckInAnswer = checkInWords.length > 0
-    && checkInWords.every((word) => positiveCheckInWords.has(word));
-  const isLowCheckInAnswer = /\b(?:bad|rough|awful|terrible|sad|low|stressed|anxious|overwhelmed)\b/.test(checkInAnswer)
-    || /\bnot\s+(?:good|great|fine|okay|ok|well|happy)\b/.test(checkInAnswer);
-  const previousQuestionInvitesCheckIn = /\b(?:how\s+(?:have|are|is)|how['’]s|what['’]s\s+your|how\s+do\s+you\s+feel|how\s+has\s+your)\b[\s\S]{0,48}\b(?:been|going|day|feeling|doing)\b/i
-    .test(aiSessionState.lastAssistantQuestion);
+  const isPositiveCheckInAnswer = (checkInWords.length > 0
+    && checkInWords.every((word) => positiveCheckInWords.has(word)))
+    || /\bnot\s+(?:too\s+)?bad\b/.test(checkInAnswer);
+  const isLowCheckInAnswer = (
+    /\b(?:bad|rough|awful|terrible|sad|low|stressed|anxious|overwhelmed)\b/.test(checkInAnswer)
+    && !/\bnot\s+(?:too\s+)?bad\b/.test(checkInAnswer)
+  ) || /\bnot\s+(?:(?:too|so)\s+)?(?:good|great|fine|okay|ok|well|happy)\b/.test(checkInAnswer);
+  const previousQuestionInvitesCheckIn = assistantQuestionInvitesCheckIn(aiSessionState.lastAssistantQuestion);
+  const asksAboutUserInReturn = /\b(?:how about you|what about you|and you)\b/.test(checkInAnswer);
   const isCheckInFollowUp = (aiSessionState.awaitingCheckIn || previousQuestionInvitesCheckIn)
+    && !isGreetingMessage(normalizedInput)
     && !checkInContainsAction
     && !!checkInAnswer;
   if (isCheckInFollowUp) {
     aiSessionState.awaitingCheckIn = false;
+    if (asksAboutUserInReturn) {
+      aiSessionState.lastIntent = "smalltalk-health";
+      aiSessionState.lastAdvice = [];
+      return {
+        response: "I’m here and ready to chat—thanks for asking. What’s on your mind?",
+        isHtml: false
+      };
+    }
     if (isPositiveCheckInAnswer) {
       aiSessionState.lastIntent = "smalltalk-health";
       aiSessionState.lastAdvice = [];
@@ -20027,9 +20161,11 @@ async function buildSmartAiResponse(input, user) {
     if (!isLowCheckInAnswer && checkInAnswer) {
       aiSessionState.lastIntent = "smalltalk-followup";
       aiSessionState.lastAdvice = [];
+      const neutralReply = /\bbusy\b/.test(checkInAnswer)
+        ? "Sounds like you’ve had a full plate. Is it manageable, or has it been a lot?"
+        : "Thanks for sharing. Want to tell me a bit more, or switch topics?";
       return {
-        response: pickNonRepeatingVariant(AI_CASUAL_NEUTRAL_REPLIES, "casual_neutral")
-          || "Got it. Tell me more.",
+        response: neutralReply,
         isHtml: false
       };
     }
@@ -20093,6 +20229,20 @@ async function buildSmartAiResponse(input, user) {
   const priorityBoard = buildPriorityBoard(snapshot, trendSignals);
   const sleepMoodInsight = buildSleepMoodPatternInsight(30);
   const behaviorPatterns = getBehaviorPatternMemory(35);
+
+  if (
+    intent.key === "fallback"
+    && assistantQuestionInvitesOpenSharing(aiSessionState.lastAssistantQuestion)
+    && !isGreetingMessage(normalizedInput)
+    && !checkInContainsAction
+  ) {
+    aiSessionState.lastIntent = "smalltalk-followup";
+    aiSessionState.lastAdvice = [];
+    return {
+      response: buildOpenSharingReply(normalizedInput, aiSessionState.lastAssistantQuestion),
+      isHtml: false
+    };
+  }
 
   if (intent.key === "bored") {
     aiSessionState.lastIntent = "bored";
@@ -20181,11 +20331,10 @@ async function buildSmartAiResponse(input, user) {
   const coachingMoves = buildActionCoaching(snapshot);
   const deepPlan = buildDeepPlan(snapshot);
 
-  const confirmation = msg.match(/^(?:yes|yeah|yep|yup|sure|okay|ok|please do|do it|go ahead|no|nope|nah|not now)$/i);
+  const confirmation = getAssistantQuestionConfirmation(normalizedInput);
   if (confirmation && aiSessionState.lastAssistantQuestion) {
-    const answer = confirmation[0].toLowerCase();
-    const isYes = /^(?:yes|yeah|yep|yup|sure|okay|ok|please do|do it|go ahead)$/.test(answer);
-    const previousQuestion = aiSessionState.lastAssistantQuestion.toLowerCase();
+    const isYes = confirmation === "yes";
+    const previousQuestion = normalizeLocalIntentText(aiSessionState.lastAssistantQuestion);
     aiSessionState.lastAssistantQuestion = "";
     if (!isYes) {
       aiSessionState.lastIntent = "confirmation-no";
@@ -20198,6 +20347,32 @@ async function buildSmartAiResponse(input, user) {
         response: `<b>Here’s a simple plan:</b><br>1) ${escapeHtml(deepPlan[0])}<br>2) ${escapeHtml(deepPlan[1])}<br>3) ${escapeHtml(deepPlan[2])}<br>4) ${escapeHtml(deepPlan[3])}`,
         isHtml: true
       };
+    }
+    if (/\bshort(?:er|en|er answer)?\b|\bkeep it brief\b|\bmore concise\b/.test(previousQuestion)) {
+      aiSessionState.lastIntent = "confirmation-yes";
+      return { response: "Absolutely—I’ll keep it concise from here.", isHtml: false };
+    }
+    if (/\b(?:reminder|remind me|set reminders?)\b/.test(previousQuestion)) {
+      aiSessionState.lastIntent = "confirmation-yes";
+      const time = msg.match(/\b(?:at|around|by)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i);
+      return {
+        response: time
+          ? `Sure. What should I remind you about at ${time[1]}?`
+          : "Sure. What should I remind you about, and when?",
+        isHtml: false
+      };
+    }
+    if (/\b(?:joke|game|weird fact|random challenge|mini game)\b/.test(previousQuestion)) {
+      aiSessionState.lastIntent = "confirmation-yes";
+      return { response: "Sure—pick one: a joke, a mini game, a weird fact, or a random challenge.", isHtml: false };
+    }
+    if (/\b(?:chat|brainstorm|talk it out|keep it light|hang out)\b/.test(previousQuestion)) {
+      aiSessionState.lastIntent = "confirmation-yes";
+      return { response: "Sure. What would you like to talk about?", isHtml: false };
+    }
+    if (/\b(?:continue|keep going|go deeper|expand|more detail)\b/.test(previousQuestion)) {
+      aiSessionState.lastIntent = "confirmation-yes";
+      return { response: "Sure—which part would you like me to expand on?", isHtml: false };
     }
     aiSessionState.lastIntent = "confirmation-yes";
     return { response: "Sure. What would you like me to do?", isHtml: false };
@@ -20227,6 +20402,7 @@ async function buildSmartAiResponse(input, user) {
 
     if (casualResult) {
       aiSessionState.lastIntent = casualResult.lastIntent || intent.key || "casual";
+      aiSessionState.awaitingCheckIn = aiSessionState.lastIntent === "greeting";
       aiSessionState.lastAdvice = Array.isArray(casualResult.advice) && casualResult.advice.length
         ? casualResult.advice
         : coachingMoves.slice(0, 3);
@@ -21368,7 +21544,7 @@ async function loadAiChats(userId) {
       aiSessionState.lastUserMessage = lastPair.user;
       const lastIntent = classifyIntent(lastPair.user);
       aiSessionState.lastIntent = lastIntent.key;
-      aiSessionState.awaitingCheckIn = lastIntent.key === "greeting";
+      aiSessionState.awaitingCheckIn = false;
       rememberAssistantQuestion(lastPair.ai, lastPair.aiResponseIsHtml);
     }
     const storedProfileVersion = Number(memorySnapshot.data()?.profileVersion) || 0;
@@ -21450,13 +21626,11 @@ async function clearAiChats(options = {}) {
     aiSessionState.conversationSummary = "";
     aiSessionState.topicHistory.length = 0;
     aiSessionState.memoryPairs.length = 0;
-    resetAiUserProfile();
     setAiClearButtonState(false);
 
     const finalizeDelete = async () => {
       try {
         await Promise.all(docsToDelete.map((entry) => deleteDoc(entry.ref)));
-        await deleteDoc(doc(db, "users", user.uid, "settings", "aiMemory"));
       } catch (err) {
         notifyFirestoreError(err);
       }
@@ -22155,6 +22329,7 @@ async function addTask(options = {}){
   renderTaskList();
   updateInsights();
   updateWellnessScore();
+  showToast("Saving task...", { duration: 600000 });
 
   let taskSaved = false;
   try {
@@ -22401,6 +22576,7 @@ async function saveMood() {
   renderMoodLog({ id: optimisticMoodId, mood: moodValue, time: optimisticMoodTime }, { animate: true });
   updateInsights();
   updateDashboardFocus();
+  showToast("Saving mood check-in...", { duration: 600000 });
 
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
@@ -22443,6 +22619,22 @@ async function saveMood() {
       await rollbackDailyQuota(user.uid, "moodCount");
       notifyFirestoreError(err);
     }
+  } catch (err) {
+    const optimisticMoodIndex = moodEntryIds.indexOf(optimisticMoodId);
+    if (optimisticMoodIndex >= 0) {
+      moodHistory.splice(optimisticMoodIndex, 1);
+      moodEntryIds.splice(optimisticMoodIndex, 1);
+      moodDates.splice(optimisticMoodIndex, 1);
+    }
+    Array.from(moodLogs?.querySelectorAll(".mood-item") || [])
+      .find((row) => row.dataset.moodId === optimisticMoodId)
+      ?.remove();
+    if (!moodLogs?.querySelector(".mood-item")) {
+      setEmptyState(moodLogs, getRandomEmptyMessage("mood", "No mood logs yet — one check-in is enough to start."));
+    }
+    updateInsights();
+    updateDashboardFocus();
+    notifyFirestoreError(err);
   } finally {
     moodSubmitting = false;
     updateMoodLimitUI();
@@ -22476,28 +22668,31 @@ function updateWaterClearButtonState() {
 
 async function setWaterGoal(){
   const user = auth.currentUser;
-  if (user?.uid) {
-    await ensureServerClockCurrent(user.uid);
-  }
-  waterGoal = +waterGoalInput.value || 0;
-  updateWaterProgress();
-
-  if (waterGoal > 0) {
-    await appAlert(`Water goal set to ${waterGoal} glasses.`, { title: "Water goal updated" });
-  } else {
-    await appAlert("Water goal cleared.", { title: "Water goal updated" });
-  }
+  const previousGoal = waterGoal;
+  const previousInputValue = waterGoalInput.value;
+  const nextGoal = +waterGoalInput.value || 0;
+  waterGoal = nextGoal;
   waterGoalInput.value = "";
-
-  if (!user) return;
+  updateWaterProgress();
+  showToast(nextGoal > 0 ? `Setting water goal to ${nextGoal} glasses...` : "Clearing water goal...", { duration: 600000 });
+  if (!user?.uid) {
+    showToast(nextGoal > 0 ? `Water goal set to ${nextGoal} glasses.` : "Water goal cleared.");
+    return;
+  }
   try {
+    await ensureServerClockCurrent(user.uid);
     const todayKey = getTodayKey();
     await fsSetDoc(doc(db, "users", user.uid, "settings", "water"), {
-      goal: waterGoal,
+      goal: nextGoal,
       goalDateKey: todayKey,
       lastResetDateKey: todayKey
     }, 'water', { merge: true });
+    showToast(nextGoal > 0 ? `Water goal set to ${nextGoal} glasses.` : "Water goal cleared.");
+    await appAlert(nextGoal > 0 ? `Water goal set to ${nextGoal} glasses.` : "Water goal cleared.", { title: "Water goal updated" });
   } catch (err) {
+    waterGoal = previousGoal;
+    waterGoalInput.value = previousInputValue;
+    updateWaterProgress();
     notifyFirestoreError(err);
   }
 }
@@ -22595,22 +22790,33 @@ async function saveWater() {
   if (waterTrackBtn) waterTrackBtn.disabled = true;
   waterInput.value = "";
 
-  const previousTodayWater = (() => {
-    return getTodayWater();
-  })();
+  const previousTodayWater = getTodayWater();
+  const optimisticWaterTime = getServerNowDate();
+  waterHistory.push(v);
+  waterDates.push(optimisticWaterTime);
+  updateWaterProgress();
+  showToast("Saving water check-in...", { duration: 600000 });
   let waterLogSaved = false;
+  const rollbackOptimisticWater = () => {
+    const optimisticIndex = waterDates.indexOf(optimisticWaterTime);
+    if (optimisticIndex >= 0) {
+      waterDates.splice(optimisticIndex, 1);
+      waterHistory.splice(optimisticIndex, 1);
+    }
+    updateWaterProgress();
+  };
 
   try {
     await ensureDailyUsageCurrent(user.uid, { skipReminderRefresh: true });
 
     const quotaResult = await reserveDailyQuota(user.uid, "waterCount", WATER_DAILY_LIMIT);
     if (!quotaResult.ok) {
+      rollbackOptimisticWater();
       if (!waterInput.value) waterInput.value = rawWater;
       showToast(buildDailyLimitCountdownMessage(`You’ve reached today’s water log limit (${WATER_DAILY_LIMIT}/day)`));
       updateWaterLimitUI();
       return;
     }
-    waterHistory.push(v);
 
     try {
       await addDoc(collection(db, "users", user.uid, "waterIntake"), {
@@ -22618,11 +22824,10 @@ async function saveWater() {
         time: serverTimestamp()
       });
       waterLogSaved = true;
-      waterDates.push(getServerNowDate());
       updateWaterProgress();
 
       const target = Number(waterGoal) || 0;
-      if (target > 0 && previousTodayWater < target && v >= target) {
+      if (target > 0 && previousTodayWater < target && previousTodayWater + v >= target) {
         await appAlert("Water goal complete!", { title: "Nice work" });
       }
 
@@ -22635,7 +22840,7 @@ async function saveWater() {
       updateWaterLimitUI();
     } catch (err) {
       if (!waterLogSaved) {
-        waterHistory.pop();
+        rollbackOptimisticWater();
         if (!waterInput.value) waterInput.value = rawWater;
         await rollbackDailyQuota(user.uid, "waterCount");
       }
@@ -22645,7 +22850,10 @@ async function saveWater() {
       await awardBurnoutRecoveryBonus(user.uid, recoveryBonusEligible);
     }
   } catch (err) {
-    if (!waterLogSaved && !waterInput.value) waterInput.value = rawWater;
+    if (!waterLogSaved) {
+      rollbackOptimisticWater();
+      if (!waterInput.value) waterInput.value = rawWater;
+    }
     notifyFirestoreError(err);
   } finally {
     waterSubmitting = false;
@@ -22856,6 +23064,12 @@ function clearBedtimeAlreadySetMessage() {
 function updateBedtimeSetButtonState() {
   if (!bedtimeSetBtn) return;
 
+  if (bedtimeSubmitting) {
+    bedtimeSetBtn.disabled = true;
+    bedtimeSetBtn.title = "Saving bedtime reminder.";
+    return;
+  }
+
   const timeText = String(bedtimeTimeInput?.value || "").trim();
   const currentParsed = parseBedtimeInput(timeText);
 
@@ -23035,6 +23249,9 @@ async function setBedtimeReminder(timeOverride = "", meridiemOverride = "") {
     showToast("Please sign in first.");
     return { ok: false, message: "Please sign in first." };
   }
+  if (bedtimeSubmitting) {
+    return { ok: false, message: "Bed time reminder is already being saved." };
+  }
 
   const timeText = String(timeOverride || bedtimeTimeInput?.value || "").trim();
   const parsed = parseBedtimeInput(timeText, meridiemOverride || "");
@@ -23046,6 +23263,23 @@ async function setBedtimeReminder(timeOverride = "", meridiemOverride = "") {
 
   setBedtimeInputError("");
 
+  const previousSettings = { ...bedtimeSettings };
+  const previousTriggeredKey = bedtimeReminderLastTriggeredKey;
+  const previousInputTouched = bedtimeInputTouchedSinceSync;
+  const previousAllowUnchangedResubmit = bedtimeAllowUnchangedResubmit;
+  bedtimeSubmitting = true;
+  bedtimeSettings = {
+    timeText: parsed.formattedTime,
+    enabled: true
+  };
+  if (bedtimeTimeInput) bedtimeTimeInput.value = "";
+  bedtimeReminderLastTriggeredKey = "";
+  bedtimeInputTouchedSinceSync = false;
+  bedtimeAllowUnchangedResubmit = false;
+  scheduleBedtimeReminder();
+  updateBedtimeSetButtonState();
+  showToast(`Bed time set for ${parsed.label}.`);
+
   try {
     await fsSetDoc(doc(db, "users", user.uid, "settings", "sleep"), {
       bedtimeEnabled: true,
@@ -23056,24 +23290,25 @@ async function setBedtimeReminder(timeOverride = "", meridiemOverride = "") {
       updatedAtMs: Date.now()
     }, 'sleep', { merge: true });
 
-    bedtimeSettings = {
-      timeText: parsed.formattedTime,
-      enabled: true
-    };
-
-    if (bedtimeTimeInput) bedtimeTimeInput.value = "";
-    bedtimeReminderLastTriggeredKey = "";
-    bedtimeInputTouchedSinceSync = false;
-    bedtimeAllowUnchangedResubmit = false;
-    scheduleBedtimeReminder();
-    updateBedtimeSetButtonState();
-
-    await appAlert(`Bed time set for ${parsed.label}.`, { title: "Bed time reminder set" });
     return { ok: true, label: parsed.label };
   } catch (err) {
+    if (String(auth.currentUser?.uid || "") === user.uid) {
+      bedtimeSettings = previousSettings;
+      bedtimeReminderLastTriggeredKey = previousTriggeredKey;
+      bedtimeInputTouchedSinceSync = previousInputTouched;
+      bedtimeAllowUnchangedResubmit = previousAllowUnchangedResubmit;
+      clearBedtimeReminderSchedule();
+      scheduleBedtimeReminder();
+      if (bedtimeTimeInput && !bedtimeTimeInput.value) {
+        bedtimeTimeInput.value = timeText;
+      }
+    }
     notifyFirestoreError(err);
-    updateBedtimeSetButtonState();
+    showToast("Could not save bed time right now.");
     return { ok: false, message: "Could not save bed time right now." };
+  } finally {
+    bedtimeSubmitting = false;
+    updateBedtimeSetButtonState();
   }
 }
 
@@ -23147,6 +23382,7 @@ async function saveSleep(){
   sleepResult.innerText = `${hours} hrs 💤`;
   updateInsights();
   updateDashboardFocus();
+  showToast("Saving sleep check-in...", { duration: 600000 });
   let sleepLogSaved = false;
 
   try {
@@ -23183,7 +23419,15 @@ async function saveSleep(){
       notifyFirestoreError(err);
     }
   } catch (err) {
-    if (!sleepLogSaved && !sleepInput.value) sleepInput.value = rawSleep;
+    if (!sleepLogSaved) {
+      sleepHistory.splice(optimisticSleepIndex, 1);
+      sleepDates.splice(optimisticSleepIndex, 1);
+      if (!sleepInput.value) sleepInput.value = rawSleep;
+      const latestTodaySleep = getTodaySleep();
+      sleepResult.innerText = latestTodaySleep ? `${latestTodaySleep} hrs 💤` : "";
+      updateInsights();
+      updateDashboardFocus();
+    }
     notifyFirestoreError(err);
   } finally {
     sleepSubmitting = false;
@@ -24193,6 +24437,7 @@ async function saveGratitude(){
   renderGratitude(optimisticGratitude);
   updateInsights();
   gratitudeInput.value = "";
+  showToast("Saving gratitude note...", { duration: 600000 });
 
   try {
     await ensureDailyUsageCurrent(user.uid);

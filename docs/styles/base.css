@@ -703,6 +703,27 @@ html,body{
   opacity:.96;
 }
 
+#welcomeGuideModal .welcome-guide-body a,
+#welcomeGuideModal .welcome-guide-body .support-email-highlight{
+  color:#b9e3ff;
+  font-weight:700;
+  text-decoration:underline;
+  text-decoration-thickness:1px;
+  text-underline-offset:3px;
+}
+
+#welcomeGuideModal .welcome-guide-body a:hover,
+#welcomeGuideModal .welcome-guide-body a:focus-visible{
+  color:#fff;
+  text-decoration-thickness:2px;
+}
+
+#welcomeGuideModal .welcome-guide-body a:focus-visible{
+  outline:2px solid #b9e3ff;
+  outline-offset:3px;
+  border-radius:2px;
+}
+
 .welcome-guide-tip{
   margin-top:10px;
   font-size:13px;

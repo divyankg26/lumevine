@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="/favicon.png">
 <title id="appPageTitle">Lumevine - Sign In</title>
+<meta name="description" content="Lumevine is a personal wellness app for tracking mood, sleep, water, habits, and routines, with gentle insights to help you build a rhythm that works for you.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
@@ -111,12 +112,12 @@
   <div class="welcome-guide-card">
     <div class="welcome-guide-top">
       <h2 class="welcome-guide-title">Welcome to Lumevine ✨</h2>
-      <p id="guideStepCounter" class="welcome-guide-step">Step 1/5</p>
+      <p id="guideStepCounter" class="welcome-guide-step">Step 1/8</p>
     </div>
     <div class="welcome-guide-body">
-      <h3 id="guideStepTitle">Your Dashboard</h3>
-      <p id="guideStepText">Track habits, mood, hydration, sleep, and productivity from one place.</p>
-      <div id="guideStepTip" class="welcome-guide-tip">Tip: Complete logs daily to unlock better insights.</div>
+      <h3 id="guideStepTitle">Start with today</h3>
+      <p id="guideStepText">Today’s Focus brings together a few helpful check-ins and suggests one small next step.</p>
+      <div id="guideStepTip" class="welcome-guide-tip">Day progress is a snapshot, not a score.</div>
     </div>
     <div id="guideDots" class="welcome-guide-dots"></div>
     <div class="welcome-guide-actions">
@@ -279,7 +280,7 @@
       <div class="export-actions" style="margin-bottom:8px;">
         <button id="helpWelcomeGuideBtn" type="button" onclick="openWelcomeGuideFromHelp()">View Welcome Guide</button>
       </div>
-      <p class="export-note" style="margin-top:0;text-align:left;">Need a quick walkthrough? Open the Welcome Guide to see how the dashboard, limits, and key features work.</p>
+      <p class="export-note" style="margin-top:0;text-align:left;">Need a quick walkthrough? Explore check-ins, routines, AI memory, patterns, friends, and account data controls.</p>
     </div>
 
     <div class="account-transfer-box">
@@ -494,7 +495,7 @@
 </div>
 
 <div class="dashboard">
-<div class="dashboard-loading" role="status" aria-live="polite">Loading...</div>
+<div class="dashboard-loading" role="status" aria-live="polite"><span id="dashboardLoadingMessage">Loading...</span></div>
 
 <!-- Today's Focus -->
 <section class="card dashboard-focus-card" aria-labelledby="todayFocusTitle">
@@ -799,18 +800,18 @@
 <div class="card quest-card scroll-card inner-scroll-card" id="questCard">
 <h2>🎮 Habit Journey</h2>
 <div class="card-scroll-body quest-scroll-body">
-<p class="micro-tip">Move through these at your own pace; each small step adds to your journey.</p>
+<p class="micro-tip">Choose what feels manageable today. There is no need to do everything.</p>
 <div class="quest-top">
   <div id="questXp" class="quest-stat">Progress 0/100</div>
 </div>
-<p id="questRecoveryBonus" class="soft-note quest-recovery-bonus" aria-live="polite">A little extra progress may be available through a water check-in or a completed task.</p>
+<div class="quest-progress" role="progressbar" aria-label="Today's progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="questProgressFill" class="quest-progress-fill"></div></div>
+<p id="questRecoveryBonus" class="soft-note quest-recovery-bonus" aria-live="polite">Optional: a water check-in or completed task can count toward today's progress.</p>
 <div id="questStreak" class="quest-stat">A new journey begins</div>
 <div id="questWeekStreak" class="challenge-streak">
-  <div id="questWeekStreakLabels" class="challenge-streak-labels"></div>
-  <div id="questWeekStreakCircles" class="challenge-streak-circles"></div>
+  <span class="challenge-streak-caption">This week</span>
+  <div id="questWeekStreakDays" class="challenge-streak-days"></div>
 </div>
-<div class="quest-progress"><div id="questProgressFill" class="quest-progress-fill"></div></div>
-<p id="questShield" class="burnout-sub">Streak support: Resting</p>
+<p id="questShield" class="burnout-sub">Streak support is not active yet. Complete today's progress to earn one protected missed day.</p>
 <p id="questProgressHint" class="soft-note">Today’s progress is here as an invitation, not a requirement.</p>
 <ul id="questList" class="quest-list"></ul>
 </div>
@@ -837,8 +838,8 @@
 <h2>📈 Patterns &amp; Progress</h2>
 <p class="micro-tip">These are clues, not grades. A few check-ins over time can help patterns take shape.</p>
 
-<div class="insight-task-top">
-  <small id="insightTaskTopLabel" class="insight-task-label">Tasks completed 0/0</small>
+<div id="insightTaskProgress" class="insight-task-top">
+  <small id="insightTaskTopLabel" class="insight-task-label">Today's tasks: 0/0 completed</small>
   <div class="insight-bar"><div id="insightTaskTopBar" class="insight-fill"></div></div>
 </div>
 
