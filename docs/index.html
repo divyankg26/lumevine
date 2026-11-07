@@ -237,7 +237,7 @@
       <div class="export-actions" style="margin-bottom:8px;">
         <button id="addFriendsBtn" onclick="startAddFriendRequest()">Add Friends</button>
       </div>
-      <p class="export-note">Send a friend request by username, then compare progress and motivate each other.</p>
+      <p class="export-note">Send a friend request by username to see each other’s check-ins for today.</p>
       <div id="friendRequestsList" class="friends-list-box"></div>
     </div>
 
@@ -373,7 +373,7 @@
 </div>
 
 <div id="bedtimeReminderModal" onclick="closeBedtimeReminderModal(event)">
-  <div class="import-transfer-card" onclick="event.stopPropagation()">
+  <div class="import-transfer-card bedtime-reminder-card" onclick="event.stopPropagation()">
     <h3>Bed Time Reminder</h3>
     <p class="import-transfer-note">It is around your scheduled bedtime. If it feels right, take a moment to wind down.</p>
     <div id="bedtimeReminderPreview" class="friends-list-box"></div>

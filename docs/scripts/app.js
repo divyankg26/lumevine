@@ -4166,7 +4166,7 @@ const WELCOME_GUIDE_STEPS = [
   {
     title: "Connect with friends, if you like",
     text: "Open Account → Friends → Add Friends and send a request using a username. You can review sent requests, respond to incoming requests, and see your current friends there.",
-    tip: "After connecting, friend reflections may appear on relevant cards. Connecting is optional."
+    tip: "Add friends to see each other's check-ins for today. Connecting is optional."
   },
   {
     title: "Make the app yours and manage data",
@@ -6556,18 +6556,14 @@ function calculateWellnessScoreFromMetrics(metrics = {}) {
   const waterToday = Math.max(0, Number(metrics?.waterToday) || 0);
   const sleepToday = Math.max(0, Number(metrics?.sleepToday) || 0);
   const moodToday = String(metrics?.moodToday || "");
-  const avgMoodScore = Math.max(0, Number(metrics?.avgMoodScore) || 0);
-  const totalTasksLogged = Math.max(0, Number(metrics?.totalTasksLogged) || 0);
-  const completedTasks = Math.max(0, Number(metrics?.completedTasks) || 0);
+  const tasksToday = Math.max(0, Number(metrics?.tasksToday) || 0);
   const gratitudeToday = Math.max(0, Number(metrics?.gratitudeToday) || 0);
   const dailyChallengeCompletedToday = Math.max(0, Number(metrics?.dailyChallengeCompletedToday) || 0);
 
   const hasSignal = waterToday > 0
     || sleepToday > 0
     || !!moodToday
-    || avgMoodScore > 0
-    || totalTasksLogged > 0
-    || completedTasks > 0
+    || tasksToday > 0
     || gratitudeToday > 0
     || dailyChallengeCompletedToday > 0;
   if (!hasSignal) return null;
@@ -6575,15 +6571,10 @@ function calculateWellnessScoreFromMetrics(metrics = {}) {
   const waterPoints = Math.round(Math.min(1, waterToday / 8) * 30);
   const sleepPoints = Math.round(Math.min(1, sleepToday / 8) * 25);
 
-  let moodFactor = 0;
-  if (moodToday) moodFactor = Number(getMoodStateMeta(moodToday).wellnessFactor) || 0;
-  else moodFactor = getMoodWellnessFactorFromScore(avgMoodScore);
+  const moodFactor = Number(getMoodStateMeta(moodToday).wellnessFactor) || 0;
   const moodPoints = Math.round(moodFactor * 20);
 
-  const safeTotalTasks = Math.max(0, totalTasksLogged);
-  const safeCompletedTasks = Math.min(safeTotalTasks, Math.max(0, completedTasks));
-  const taskRatio = safeTotalTasks ? (safeCompletedTasks / safeTotalTasks) : 0;
-  const taskPoints = Math.round(taskRatio * 15);
+  const taskPoints = tasksToday > 0 ? 15 : 0;
 
   const gratitudePoints = gratitudeToday > 0 ? 10 : 0;
   const challengePoints = dailyChallengeCompletedToday > 0 ? 10 : 0;
@@ -6608,23 +6599,10 @@ function buildUserSocialProfileSnapshot(user = auth.currentUser) {
     || username;
   const uid = String(activeUser?.uid || "").trim();
 
-  const maps = buildPatternMetricMaps(14);
-  const dayKeys = maps.dayKeys || [];
-  const sleepValues = dayKeys.map((key) => Number(maps.sleepByDay.get(key)) || 0).filter((value) => value > 0);
-  const moodValues = dayKeys.map((key) => Number(maps.moodByDay.get(key)) || 0).filter((value) => value > 0);
-  const waterValues = dayKeys.map((key) => Number(maps.waterByDay.get(key)) || 0);
-  const taskValues = dayKeys.map((key) => Number(maps.tasksDoneByDay.get(key)) || 0);
-
-  const avgSleepHours = Number(safeAvg(sleepValues).toFixed(1));
-  const avgMoodScore = Number(safeAvg(moodValues).toFixed(2));
-  const avgWaterDaily = Number(safeAvg(waterValues).toFixed(1));
-  const avgTasksCompletedDaily = Number(safeAvg(taskValues).toFixed(1));
-  const totalTasksLogged = taskEntries.length;
-  const completedTasks = taskEntries.filter((entry) => !!entry.completed).length;
+  const maps = buildPatternMetricMaps(1);
   const todayKey = getTodayKey();
   const tasksToday = Number(maps.tasksDoneByDay.get(todayKey)) || 0;
   const sleepToday = Number(getTodaySleep()) || Number(maps.sleepByDay.get(todayKey)) || 0;
-  const avgMoodToday = Number((Number(maps.moodByDay.get(todayKey)) || getTodayMoodAverageScore() || 0).toFixed(2));
   const waterToday = getTodayWater();
   const gratitudeToday = getTodayGratitudeCount();
   const dailyChallengeCompletedToday = dailyChallengeCompleted ? 1 : 0;
@@ -6638,22 +6616,13 @@ function buildUserSocialProfileSnapshot(user = auth.currentUser) {
     username,
     displayName,
     metrics: {
-      totalTasksLogged,
-      completedTasks,
       tasksToday,
       waterToday,
       sleepToday,
       moodToday,
-      avgMoodToday,
       gratitudeToday,
       dailyChallengeCompletedToday,
-      wellnessScoreToday,
-      avgWaterDaily,
-      avgSleepHours,
-      avgMoodScore,
-      avgMoodLabel: getMoodLabelFromScore(avgMoodScore),
-      avgTasksCompletedDaily,
-      sampleDays: dayKeys.length
+      wellnessScoreToday
     },
     generatedAtMs: Date.now()
   };
@@ -6664,28 +6633,28 @@ function buildFriendMotivationLine(friendProfile, myProfile) {
   const friendMetrics = friendProfile?.metrics || {};
   const myMetrics = myProfile?.metrics || {};
 
-  const friendMood = Number(friendMetrics.avgMoodScore) || 0;
-  const myMood = Number(myMetrics.avgMoodScore) || 0;
-  const friendSleep = Number(friendMetrics.avgSleepHours) || 0;
-  const mySleep = Number(myMetrics.avgSleepHours) || 0;
-  const friendWater = Number(friendMetrics.avgWaterDaily) || 0;
-  const myWater = Number(myMetrics.avgWaterDaily) || 0;
-  const friendTasks = Number(friendMetrics.avgTasksCompletedDaily) || 0;
-  const myTasks = Number(myMetrics.avgTasksCompletedDaily) || 0;
+  const friendMood = moodToScore(String(friendMetrics.moodToday || ""));
+  const myMood = moodToScore(String(myMetrics.moodToday || ""));
+  const friendSleep = Number(friendMetrics.sleepToday) || 0;
+  const mySleep = Number(myMetrics.sleepToday) || 0;
+  const friendWater = Number(friendMetrics.waterToday) || 0;
+  const myWater = Number(myMetrics.waterToday) || 0;
+  const friendTasksToday = Number(friendMetrics.tasksToday) || 0;
+  const myTasksToday = Number(myMetrics.tasksToday) || 0;
 
   if (friendMood > 0 || myMood > 0) {
-    return `Mood check-ins can be different for everyone. You noted ${myMetrics.avgMoodLabel || "no mood yet"}; ${friendName} noted ${friendMetrics.avgMoodLabel || "no mood yet"}.`;
+    return `Today, you felt ${myMood > 0 ? getMoodLabelFromScore(myMood) : "nothing logged"}; ${friendName} felt ${friendMood > 0 ? getMoodLabelFromScore(friendMood) : "nothing logged"}.`;
   }
   if (friendSleep > 0 || mySleep > 0) {
-    return `Sleep check-ins are a personal snapshot: you averaged ${mySleep.toFixed(1)} hours and ${friendName} averaged ${friendSleep.toFixed(1)} hours.`;
+    return `Today, you logged ${mySleep.toFixed(1)} hours of sleep; ${friendName} logged ${friendSleep.toFixed(1)} hours.`;
   }
   if (friendWater > 0 || myWater > 0) {
-    return `Hydration looks different for everyone: you logged ${myWater.toFixed(1)} cups/day and ${friendName} logged ${friendWater.toFixed(1)} cups/day.`;
+    return `Today, you drank ${myWater} cups of water; ${friendName} drank ${friendWater} cups.`;
   }
-  if (friendTasks > 0 || myTasks > 0) {
-    return `Your task rhythms are personal: you completed about ${myTasks.toFixed(1)} tasks/day and ${friendName} completed about ${friendTasks.toFixed(1)}.`;
+  if (friendTasksToday > 0 || myTasksToday > 0) {
+    return `Today, you completed ${myTasksToday} tasks; ${friendName} completed ${friendTasksToday}.`;
   }
-  return `Shared check-ins with ${friendName} will appear here when you both have a little data.`;
+  return `No check-ins with ${friendName} yet today.`;
 }
 
 function pickBestFriendMetric(profileRows, metricKey, todayMetricKey = "") {
@@ -6733,24 +6702,24 @@ function buildNumericFriendComparisonText({
   noDataMessage = "no comparison data yet"
 }) {
   const compareFriends = Array.isArray(friends) ? friends : [];
-  const friendNames = compareFriends.map((entry) => entry.name);
-  const header = `Shared check-in with ${friendNames.join(", ")}`;
   const allValues = [Number(myValue) || 0, ...compareFriends.map((entry) => Number(entry.value) || 0)];
   const hasAnyData = allValues.some((value) => value > 0);
   if (!hasAnyData) {
-    return `${header}: ${noDataMessage}. Everyone’s pace is personal.`;
+    return `${noDataMessage}.`;
   }
 
-  const formatValue = (value) => {
+  const formatCount = (value, labels) => {
     const safe = Number(value) || 0;
-    return digits <= 0 ? `${Math.round(safe)}` : safe.toFixed(digits);
+    const formattedValue = digits <= 0 ? `${Math.round(safe)}` : safe.toFixed(digits);
+    const label = safe === 1 ? labels.one : labels.other;
+    return `${formattedValue} ${label}`;
   };
 
-  const mySafeValue = Number(myValue) || 0;
-  const friendSummary = compareFriends
-    .map((entry) => `${entry.name} ${formatValue(entry.value)}`)
-    .join("; ");
-  return `${header}: You ${formatValue(mySafeValue)} ${unit}; ${friendSummary} ${unit}. This is just a snapshot—everyone’s rhythm is different.`;
+  const summaries = [
+    `You: ${formatCount(myValue, unit)}`,
+    ...compareFriends.map((entry) => `${entry.name}: ${formatCount(entry.value, unit)}`)
+  ];
+  return `Today — ${summaries.join(" · ")}.`;
 }
 
 function renderFriendMetricCardInsights() {
@@ -6768,13 +6737,13 @@ function renderFriendMetricCardInsights() {
   }
 
   if (!Array.isArray(friendInsightProfiles) || !friendInsightProfiles.length) {
-    if (taskFriendInsight) taskFriendInsight.innerText = "Shared task reflections can appear here if you choose to connect with a friend.";
-    if (waterFriendInsight) waterFriendInsight.innerText = "Shared hydration reflections can appear here if you choose to connect with a friend.";
-    if (sleepFriendInsight) sleepFriendInsight.innerText = "Shared sleep reflections can appear here if you choose to connect with a friend.";
-    if (moodFriendInsight) moodFriendInsight.innerText = "Shared mood reflections can appear here if you choose to connect with a friend.";
-    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Shared gratitude reflections can appear here if you choose to connect with a friend.";
-    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Shared moments can appear here if you choose to connect with a friend.";
-    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Shared wellness reflections can appear here if you choose to connect with a friend.";
+    if (taskFriendInsight) taskFriendInsight.innerText = "Add a friend to compare today's task check-ins.";
+    if (waterFriendInsight) waterFriendInsight.innerText = "Add a friend to compare today's water check-ins.";
+    if (sleepFriendInsight) sleepFriendInsight.innerText = "Add a friend to compare today's sleep check-ins.";
+    if (moodFriendInsight) moodFriendInsight.innerText = "Add a friend to compare today's mood check-ins.";
+    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Add a friend to compare today's gratitude notes.";
+    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Add a friend to compare today's challenge check-ins.";
+    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Add a friend to compare today's wellness scores.";
     return;
   }
 
@@ -6783,64 +6752,50 @@ function renderFriendMetricCardInsights() {
 
   const compareProfiles = getComparisonFriendProfiles(friendInsightProfiles, MAX_FRIENDS);
   if (!compareProfiles.length) {
-    if (taskFriendInsight) taskFriendInsight.innerText = "Shared task reflections can appear here if you choose to connect with a friend.";
-    if (waterFriendInsight) waterFriendInsight.innerText = "Shared hydration reflections can appear here if you choose to connect with a friend.";
-    if (sleepFriendInsight) sleepFriendInsight.innerText = "Shared sleep reflections can appear here if you choose to connect with a friend.";
-    if (moodFriendInsight) moodFriendInsight.innerText = "Shared mood reflections can appear here if you choose to connect with a friend.";
-    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Shared gratitude reflections can appear here if you choose to connect with a friend.";
-    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Shared moments can appear here if you choose to connect with a friend.";
-    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Shared wellness reflections can appear here if you choose to connect with a friend.";
+    if (taskFriendInsight) taskFriendInsight.innerText = "Add a friend to compare today's task check-ins.";
+    if (waterFriendInsight) waterFriendInsight.innerText = "Add a friend to compare today's water check-ins.";
+    if (sleepFriendInsight) sleepFriendInsight.innerText = "Add a friend to compare today's sleep check-ins.";
+    if (moodFriendInsight) moodFriendInsight.innerText = "Add a friend to compare today's mood check-ins.";
+    if (gratitudeFriendInsight) gratitudeFriendInsight.innerText = "Add a friend to compare today's gratitude notes.";
+    if (dailyChallengeFriendInsight) dailyChallengeFriendInsight.innerText = "Add a friend to compare today's challenge check-ins.";
+    if (wellnessFriendInsight) wellnessFriendInsight.innerText = "Add a friend to compare today's wellness scores.";
     return;
   }
 
   const friendNames = compareProfiles.map((profile) => getFriendDisplayName(profile, "Friend"));
-  const header = `Shared check-in with ${friendNames.join(", ")}`;
-
   if (taskFriendInsight) {
     const myToday = Number(myMetrics.tasksToday) || 0;
-    const hasFriendToday = compareProfiles.some((profile) => (Number(profile?.metrics?.tasksToday) || 0) > 0);
-    const useToday = myToday > 0 || hasFriendToday;
-    const taskUnit = useToday ? "tasks today" : "tasks/day";
     const taskFriends = compareProfiles.map((profile, index) => ({
       name: friendNames[index],
-      value: useToday
-        ? (Number(profile?.metrics?.tasksToday) || 0)
-        : (Number(profile?.metrics?.avgTasksCompletedDaily) || 0)
+      value: Number(profile?.metrics?.tasksToday) || 0
     }));
-    const myValue = useToday ? myToday : (Number(myMetrics.avgTasksCompletedDaily) || 0);
     taskFriendInsight.innerText = buildNumericFriendComparisonText({
       friends: taskFriends,
-      myValue,
-      unit: taskUnit,
-      digits: 1,
-      noDataMessage: "There are no task check-ins to show yet"
+      myValue: myToday,
+      unit: { one: "task", other: "tasks" },
+      digits: 0,
+      noDataMessage: "No task check-ins yet today"
     });
   }
 
   if (waterFriendInsight) {
     const myToday = Number(myMetrics.waterToday) || 0;
-    const hasFriendToday = compareProfiles.some((profile) => (Number(profile?.metrics?.waterToday) || 0) > 0);
-    const useToday = myToday > 0 || hasFriendToday;
-    const waterUnit = useToday ? "cups today" : "cups/day";
     const waterFriends = compareProfiles.map((profile, index) => ({
       name: friendNames[index],
-      value: useToday
-        ? (Number(profile?.metrics?.waterToday) || 0)
-        : (Number(profile?.metrics?.avgWaterDaily) || 0)
+      value: Number(profile?.metrics?.waterToday) || 0
     }));
-    const myValue = useToday ? myToday : (Number(myMetrics.avgWaterDaily) || 0);
     waterFriendInsight.innerText = buildNumericFriendComparisonText({
       friends: waterFriends,
-      myValue,
-      unit: waterUnit,
-      digits: 1,
-      noDataMessage: "There are no hydration check-ins to show yet"
+      myValue: myToday,
+      unit: { one: "cup of water", other: "cups of water" },
+      digits: 0,
+      noDataMessage: "No water check-ins yet today"
     });
   }
 
   if (sleepFriendInsight) {
     const myToday = Number(myMetrics.sleepToday) || 0;
-    const sleepUnit = "h today";
+    const sleepUnit = { one: "hour of sleep", other: "hours of sleep" };
     const sleepFriends = compareProfiles.map((profile, index) => ({
       name: friendNames[index],
       value: Number(profile?.metrics?.sleepToday) || 0
@@ -6851,43 +6806,32 @@ function renderFriendMetricCardInsights() {
       myValue,
       unit: sleepUnit,
       digits: 1,
-      noDataMessage: "There are no sleep check-ins to show yet"
+      noDataMessage: "No sleep check-ins yet today"
     });
   }
 
   if (moodFriendInsight) {
-    const scoreFromMetrics = (metrics) => {
-      const directAverage = Number(metrics?.avgMoodToday);
-      if (directAverage > 0) return directAverage;
-      const moodSignal = moodToScore(String(metrics?.moodToday || ""));
-      return moodSignal > 0 ? moodSignal : 0;
-    };
+    const scoreFromMetrics = (metrics) => moodToScore(String(metrics?.moodToday || ""));
 
     const moodRows = compareProfiles.map((profile, index) => ({
       name: friendNames[index],
       value: scoreFromMetrics(profile?.metrics || {})
     }));
 
-    const myMoodAverageToday = Number(myMetrics.avgMoodToday) || 0;
-    const myMoodFromLabel = moodToScore(String(myMetrics.moodToday || ""));
-    const myValue = myMoodAverageToday > 0
-      ? myMoodAverageToday
-      : (myMoodFromLabel > 0 ? myMoodFromLabel : getTodayMoodAverageScore());
+    const myValue = scoreFromMetrics(myMetrics);
 
     const availableMoodRows = moodRows.filter((entry) => (Number(entry.value) || 0) > 0);
     if (!availableMoodRows.length && !(Number(myValue) > 0)) {
-      moodFriendInsight.innerText = `${header}: No mood check-ins to show yet. Every mood is welcome, and there is no need to compare.`;
+      moodFriendInsight.innerText = "No mood check-ins yet today. Every mood is welcome.";
     } else {
       const myMoodLabel = Number(myValue) > 0 ? getMoodLabelFromScore(myValue) : "Not logged";
-      const yourMoodLine = Number(myValue) > 0
-        ? `Your check-in: ${myMoodLabel}`
-        : "Your check-in: not logged";
+      const yourMoodLine = `You: ${myMoodLabel}`;
 
       const friendSummary = availableMoodRows.length
-        ? availableMoodRows.map((entry) => `${entry.name}: ${getMoodLabelFromScore(entry.value)}`).join("; ")
-        : "No friend mood check-ins yet";
+        ? moodRows.map((entry) => `${entry.name}: ${Number(entry.value) > 0 ? getMoodLabelFromScore(entry.value) : "not logged"}`).join(" · ")
+        : "No mood check-ins from friends yet today";
 
-      moodFriendInsight.innerText = `${header}: ${yourMoodLine}; ${friendSummary}. Every mood is valid.`;
+      moodFriendInsight.innerText = `Today — ${yourMoodLine} · ${friendSummary}.`;
     }
   }
 
@@ -6901,13 +6845,13 @@ function renderFriendMetricCardInsights() {
     const hasAnyData = allCounts.some((value) => value > 0);
 
     if (!hasAnyData) {
-      gratitudeFriendInsight.innerText = `${header}: No gratitude notes to show yet. Add one only if it feels right.`;
+      gratitudeFriendInsight.innerText = "No gratitude notes today. Add one only if you want to.";
     } else {
       const friendSummary = gratitudeRows
-        .map((entry) => `${entry.name} wrote ${entry.count} gratitude note${entry.count === 1 ? "" : "s"} today`)
-        .join("; ");
+        .map((entry) => `${entry.name}: ${entry.count} note${entry.count === 1 ? "" : "s"}`)
+        .join(" · ");
 
-      gratitudeFriendInsight.innerText = `${header}: You wrote ${myCount} gratitude note${myCount === 1 ? "" : "s"} today; ${friendSummary}. Share only when it feels comfortable.`;
+      gratitudeFriendInsight.innerText = `Today — You: ${myCount} note${myCount === 1 ? "" : "s"} · ${friendSummary}.`;
     }
   }
 
@@ -6918,9 +6862,9 @@ function renderFriendMetricCardInsights() {
       completed: (Number(profile?.metrics?.dailyChallengeCompletedToday) || 0) > 0
     }));
     const friendStatuses = challengeRows
-      .map((entry) => `${entry.name}: ${entry.completed ? "Done if it felt right" : "Not logged"}`)
-      .join("; ");
-    dailyChallengeFriendInsight.innerText = `${header}: You: ${myCompleted ? "Done if it felt right" : "Not logged"}; ${friendStatuses}. Everyone’s day is different.`;
+      .map((entry) => `${entry.name}: ${entry.completed ? "completed" : "not completed"}`)
+      .join(" · ");
+    dailyChallengeFriendInsight.innerText = `Today's challenge — You: ${myCompleted ? "completed" : "not completed"} · ${friendStatuses}.`;
   }
 
   if (wellnessFriendInsight) {
@@ -6943,7 +6887,7 @@ function renderFriendMetricCardInsights() {
 
     const availableWellnessFriends = wellnessFriendsWithSync.filter((entry) => Number.isFinite(entry.value));
     if (!availableWellnessFriends.length) {
-      wellnessFriendInsight.innerText = "Wellness benchmark sync in progress. Friends need to open the app once to share live wellness metrics.";
+      wellnessFriendInsight.innerText = "Today's wellness scores will appear after your friends open the app.";
       return;
     }
 
@@ -6956,14 +6900,14 @@ function renderFriendMetricCardInsights() {
     let comparisonText = buildNumericFriendComparisonText({
       friends: availableWellnessFriends,
       myValue,
-      unit: "wellness score today",
+      unit: { one: "wellness point", other: "wellness points" },
       digits: 0,
       noDataMessage: "There are no wellness check-ins to show yet"
     });
 
     const pendingSyncCount = wellnessFriendsWithSync.length - availableWellnessFriends.length;
     if (pendingSyncCount > 0) {
-      comparisonText += ` ${pendingSyncCount} friend${pendingSyncCount === 1 ? "" : "s"} pending live sync.`;
+      comparisonText += ` Waiting for ${pendingSyncCount} friend${pendingSyncCount === 1 ? "" : "s"} to open the app.`;
     }
 
     wellnessFriendInsight.innerText = comparisonText;
@@ -7025,7 +6969,7 @@ function renderFriendRequests(rows) {
 function renderFriendsInsights(rows, myProfile) {
   if (!friendsInsightsList) return;
   if (!rows.length) {
-    friendsInsightsList.innerHTML = `<div class="friend-row"><small>No friends linked yet. Send a request to start shared progress.</small></div>`;
+    friendsInsightsList.innerHTML = `<div class="friend-row"><small>No friends yet. Add a friend to see each other's check-ins for today.</small></div>`;
     return;
   }
 
@@ -7039,9 +6983,6 @@ function renderFriendsInsights(rows, myProfile) {
       email: profile.email || entry.friendEmail,
       name: profile.name || entry.friendName
     }, "Friend"));
-    const moodLabel = escapeHtml(String(metrics.avgMoodLabel || getMoodLabelFromScore(metrics.avgMoodScore)));
-    const moodTodayAverage = Number(metrics.avgMoodToday) || moodToScore(metrics.moodToday);
-    const moodTodayAverageText = moodTodayAverage > 0 ? getMoodLabelFromScore(moodTodayAverage) : "Not logged";
     const latestMoodMeta = getMoodStateMeta(metrics.moodToday);
     const latestMoodText = escapeHtml(latestMoodMeta.logged ? latestMoodMeta.label : "Not logged");
     const motivation = escapeHtml(buildFriendMotivationLine(profile, myProfile));
@@ -7050,11 +6991,8 @@ function renderFriendsInsights(rows, myProfile) {
     row.className = "friend-row";
     row.innerHTML = `
       <strong>${friendName}</strong>
-      <small>Tasks logged: ${Number(metrics.totalTasksLogged) || 0} • Avg tasks/day: ${(Number(metrics.avgTasksCompletedDaily) || 0).toFixed(1)}</small>
-      <small>Water avg: ${(Number(metrics.avgWaterDaily) || 0).toFixed(1)} cups/day • Sleep avg: ${(Number(metrics.avgSleepHours) || 0).toFixed(1)}h</small>
-      <small>Mood avg: ${moodLabel}</small>
-      <small>Average mood of the day: ${moodTodayAverageText}</small>
-      <small>Latest mood today: ${latestMoodText}</small>
+      <small>Tasks today: ${Number(metrics.tasksToday) || 0} • Water today: ${Number(metrics.waterToday) || 0} cups</small>
+      <small>Sleep today: ${(Number(metrics.sleepToday) || 0).toFixed(1)}h • Mood today: ${latestMoodText}</small>
       <small>${motivation}</small>
     `;
     friendsInsightsList.appendChild(row);
@@ -8139,18 +8077,13 @@ async function loadFriendsInsights(userId) {
     const profileFreshnessMs = (profile) => Number(profile?.generatedAtMs) || 0;
     const profileSignalScore = (profile) => {
       const metrics = profile?.metrics || {};
-      return (Number(metrics.totalTasksLogged) || 0)
-        + (Number(metrics.tasksToday) || 0)
+      return (Number(metrics.tasksToday) || 0)
         + (Number(metrics.waterToday) || 0)
         + (Number(metrics.sleepToday) || 0)
         + (Number(metrics.gratitudeToday) || 0)
         + (Number(metrics.dailyChallengeCompletedToday) || 0)
         + (Number(metrics.wellnessScoreToday) || 0)
-        + (Number(metrics.avgWaterDaily) || 0)
-        + (Number(metrics.avgSleepHours) || 0)
-        + (Number(metrics.avgMoodToday) || 0)
-        + (Number(metrics.avgMoodScore) || 0)
-        + (Number(metrics.avgTasksCompletedDaily) || 0);
+        + (moodToScore(String(metrics.moodToday || "")) || 0);
     };
     const pickBetterSharedProfile = (currentProfile, candidateProfile) => {
       const current = currentProfile && typeof currentProfile === "object" ? currentProfile : null;
@@ -8276,8 +8209,6 @@ async function loadFriendsInsights(userId) {
               displayName: normalizeDisplayNameValue(sharedProfileRaw.displayName || sharedProfileRaw.name),
               name: String(sharedProfileRaw.name || "").trim(),
               metrics: {
-                totalTasksLogged: Number(sharedMetricsRaw.totalTasksLogged) || 0,
-                completedTasks: Number(sharedMetricsRaw.completedTasks) || 0,
                 tasksToday: Number(sharedMetricsRaw.tasksToday) || 0,
                 waterToday: Number(sharedMetricsRaw.waterToday) || 0,
                 sleepToday: Number(sharedMetricsRaw.sleepToday) || 0,
@@ -8287,13 +8218,6 @@ async function loadFriendsInsights(userId) {
                 ...(Object.prototype.hasOwnProperty.call(sharedMetricsRaw, "wellnessScoreToday")
                   ? { wellnessScoreToday: Number(sharedMetricsRaw.wellnessScoreToday) || 0 }
                   : {}),
-                avgWaterDaily: Number(sharedMetricsRaw.avgWaterDaily) || 0,
-                avgSleepHours: Number(sharedMetricsRaw.avgSleepHours) || 0,
-                avgMoodToday: Number(sharedMetricsRaw.avgMoodToday) || 0,
-                avgMoodScore: Number(sharedMetricsRaw.avgMoodScore) || 0,
-                avgMoodLabel: String(sharedMetricsRaw.avgMoodLabel || "Not enough data"),
-                avgTasksCompletedDaily: Number(sharedMetricsRaw.avgTasksCompletedDaily) || 0,
-                sampleDays: Number(sharedMetricsRaw.sampleDays) || 0
               },
               generatedAtMs: Number(sharedProfileRaw.generatedAtMs) || Date.now()
             }
@@ -8604,19 +8528,12 @@ async function loadFriendsInsights(userId) {
           username: resolvedFriendUsername,
           displayName: resolvedFriendDisplayName,
           metrics: {
-            totalTasksLogged: 0,
-            avgTasksCompletedDaily: 0,
             tasksToday: 0,
-            avgWaterDaily: 0,
             waterToday: 0,
-            avgSleepHours: 0,
             sleepToday: 0,
             moodToday: "",
             gratitudeToday: 0,
             dailyChallengeCompletedToday: 0,
-            avgMoodToday: 0,
-            avgMoodScore: 0,
-            avgMoodLabel: "Not enough data"
           }
         };
       } else {
@@ -9166,21 +9083,12 @@ async function respondToFriendRequest(requestEntry, action) {
           displayName: friendDisplayName,
           name: friendName,
           metrics: {
-            totalTasksLogged: 0,
-            completedTasks: 0,
             tasksToday: 0,
             waterToday: 0,
             sleepToday: 0,
             moodToday: "",
             gratitudeToday: 0,
-            dailyChallengeCompletedToday: 0,
-            avgMoodToday: 0,
-            avgWaterDaily: 0,
-            avgSleepHours: 0,
-            avgMoodScore: 0,
-            avgMoodLabel: "Not enough data",
-            avgTasksCompletedDaily: 0,
-            sampleDays: 0
+            dailyChallengeCompletedToday: 0
           },
           generatedAtMs: Date.now()
         };
@@ -10165,6 +10073,7 @@ let activePendingToastShownAtMs = 0;
 let pendingAiClearOperation = null;
 let pendingWaterClearOperation = null;
 let bedtimeReminderTimeoutId = null;
+let bedtimeReminderTargetAtMs = 0;
 let bedtimeReminderLastTriggeredKey = "";
 let bedtimeSettings = {
   timeText: "",
@@ -12164,10 +12073,10 @@ function updateQuestRecoveryBonusUI() {
     questRecoveryBonusEl.innerText = "Your optional check-in has been counted toward today's progress.";
     questRecoveryBonusEl.classList.add("is-earned");
   } else if (burnoutRadarWarningActive) {
-    questRecoveryBonusEl.innerText = "Optional: a water check-in or completed task can count toward today's progress, if you like.";
+    questRecoveryBonusEl.innerText = "Optional: A water check-in or completed task can count toward today's progress, if you like.";
     questRecoveryBonusEl.classList.remove("is-earned");
   } else {
-    questRecoveryBonusEl.innerText = "Optional: a water check-in or completed task can count toward today's progress.";
+    questRecoveryBonusEl.innerText = "Optional: A water check-in or completed task can count toward today's progress.";
     questRecoveryBonusEl.classList.remove("is-earned");
   }
 }
@@ -12772,22 +12681,13 @@ async function syncSocialProfileToFriendQueue(user, socialProfile) {
       name: String(socialProfile.name || "")
     }, "User"),
     metrics: {
-      totalTasksLogged: Number(socialProfile?.metrics?.totalTasksLogged) || 0,
-      completedTasks: Number(socialProfile?.metrics?.completedTasks) || 0,
       tasksToday: Number(socialProfile?.metrics?.tasksToday) || 0,
       waterToday: Number(socialProfile?.metrics?.waterToday) || 0,
       sleepToday: Number(socialProfile?.metrics?.sleepToday) || 0,
       moodToday: String(socialProfile?.metrics?.moodToday || ""),
       gratitudeToday: Number(socialProfile?.metrics?.gratitudeToday) || 0,
       dailyChallengeCompletedToday: Number(socialProfile?.metrics?.dailyChallengeCompletedToday) || 0,
-      wellnessScoreToday: Number(socialProfile?.metrics?.wellnessScoreToday) || 0,
-      avgWaterDaily: Number(socialProfile?.metrics?.avgWaterDaily) || 0,
-      avgSleepHours: Number(socialProfile?.metrics?.avgSleepHours) || 0,
-      avgMoodToday: Number(socialProfile?.metrics?.avgMoodToday) || 0,
-      avgMoodScore: Number(socialProfile?.metrics?.avgMoodScore) || 0,
-      avgMoodLabel: String(socialProfile?.metrics?.avgMoodLabel || "Not enough data"),
-      avgTasksCompletedDaily: Number(socialProfile?.metrics?.avgTasksCompletedDaily) || 0,
-      sampleDays: Number(socialProfile?.metrics?.sampleDays) || 0
+      wellnessScoreToday: Number(socialProfile?.metrics?.wellnessScoreToday) || 0
     },
     generatedAtMs: Number(socialProfile.generatedAtMs) || Date.now(),
     updatedAtMs: Date.now()
@@ -12852,22 +12752,13 @@ async function syncSocialProfileToFriendsMirror(user, socialProfile) {
       name: String(socialProfile.name || "")
     }, "User"),
     metrics: {
-      totalTasksLogged: Number(socialProfile?.metrics?.totalTasksLogged) || 0,
-      completedTasks: Number(socialProfile?.metrics?.completedTasks) || 0,
       tasksToday: Number(socialProfile?.metrics?.tasksToday) || 0,
       waterToday: Number(socialProfile?.metrics?.waterToday) || 0,
       sleepToday: Number(socialProfile?.metrics?.sleepToday) || 0,
       moodToday: String(socialProfile?.metrics?.moodToday || ""),
       gratitudeToday: Number(socialProfile?.metrics?.gratitudeToday) || 0,
       dailyChallengeCompletedToday: Number(socialProfile?.metrics?.dailyChallengeCompletedToday) || 0,
-      wellnessScoreToday: Number(socialProfile?.metrics?.wellnessScoreToday) || 0,
-      avgWaterDaily: Number(socialProfile?.metrics?.avgWaterDaily) || 0,
-      avgSleepHours: Number(socialProfile?.metrics?.avgSleepHours) || 0,
-      avgMoodToday: Number(socialProfile?.metrics?.avgMoodToday) || 0,
-      avgMoodScore: Number(socialProfile?.metrics?.avgMoodScore) || 0,
-      avgMoodLabel: String(socialProfile?.metrics?.avgMoodLabel || "Not enough data"),
-      avgTasksCompletedDaily: Number(socialProfile?.metrics?.avgTasksCompletedDaily) || 0,
-      sampleDays: Number(socialProfile?.metrics?.sampleDays) || 0
+      wellnessScoreToday: Number(socialProfile?.metrics?.wellnessScoreToday) || 0
     },
     generatedAtMs: Number(socialProfile.generatedAtMs) || Date.now(),
     updatedAtMs: Date.now()
@@ -23139,6 +23030,29 @@ function clearBedtimeReminderSchedule() {
     clearTimeout(bedtimeReminderTimeoutId);
     bedtimeReminderTimeoutId = null;
   }
+  bedtimeReminderTargetAtMs = 0;
+}
+
+function triggerBedtimeReminderIfDue() {
+  if (!bedtimeSettings?.enabled || !bedtimeReminderTargetAtMs) return false;
+  if (getServerNowDate().getTime() < bedtimeReminderTargetAtMs) return false;
+
+  const parsed = parseBedtimeInput(bedtimeSettings.timeText);
+  if (!parsed.ok) {
+    clearBedtimeReminderSchedule();
+    return false;
+  }
+  const triggerKey = `${dateToKey(new Date(bedtimeReminderTargetAtMs)) || "today"}_${parsed.label}`;
+  if (bedtimeReminderLastTriggeredKey === triggerKey) {
+    clearBedtimeReminderSchedule();
+    return false;
+  }
+
+  bedtimeReminderLastTriggeredKey = triggerKey;
+  clearBedtimeReminderSchedule();
+  openBedtimeReminderModal();
+  void autoClearBedtimeAfterReminderTrigger(auth.currentUser?.uid || "");
+  return true;
 }
 
 async function autoClearBedtimeAfterReminderTrigger(userId = "") {
@@ -23181,17 +23095,23 @@ function scheduleBedtimeReminder() {
     target.setDate(target.getDate() + 1);
   }
 
-  const delayMs = Math.max(1000, target.getTime() - now.getTime());
+  bedtimeReminderTargetAtMs = target.getTime();
+  const delayMs = Math.max(1000, bedtimeReminderTargetAtMs - now.getTime());
   bedtimeReminderTimeoutId = setTimeout(() => {
     bedtimeReminderTimeoutId = null;
-    const triggerKey = `${dateToKey(getServerNowDate()) || "today"}_${parsed.label}`;
-    if (bedtimeReminderLastTriggeredKey !== triggerKey) {
-      bedtimeReminderLastTriggeredKey = triggerKey;
-      openBedtimeReminderModal();
-      void autoClearBedtimeAfterReminderTrigger(auth.currentUser?.uid || "");
-    }
+    if (!triggerBedtimeReminderIfDue()) scheduleBedtimeReminder();
   }, delayMs);
 }
+
+function reconcileBedtimeReminderOnReturn() {
+  if (document.visibilityState === "hidden" && !document.hasFocus()) return;
+  if (triggerBedtimeReminderIfDue()) return;
+  if (bedtimeSettings?.enabled && !bedtimeReminderTimeoutId) scheduleBedtimeReminder();
+}
+
+document.addEventListener("visibilitychange", reconcileBedtimeReminderOnReturn);
+window.addEventListener("focus", reconcileBedtimeReminderOnReturn);
+window.addEventListener("pageshow", reconcileBedtimeReminderOnReturn);
 
 async function loadBedtimeSettings(userId) {
   bedtimeSettings = { timeText: "", enabled: false };
