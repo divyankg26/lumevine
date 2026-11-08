@@ -1,7 +1,9 @@
 # Release Notes:
 
-- Capitalized “A” in the optional check-in message.
+- Cleaner console: Silenced routine Firestore success logs and removed duplicate Firestore error output.
 
-- Friend comparisons now use today’s whole-number counts across metrics, not averages. Reworded the summaries and empty states to be clearer.
+- Account dialogs stay put: Canceling or dismissing nested dialogs—such as Sign Out, Import, and Add Friend—no longer closes the Account panel.
 
-- Fixed bedtime reminders so they can appear when another popup or app section is open, and restored the popup’s original width.
+- Google sign-in cancellation: Removed the lingering “Hang on, signing in/up with Google…” message when the Google popup is closed.
+
+- Clearer AI memory summaries: Fixed first-person rephrasing, so “I missed my routine” is shown as “You missed your routine.”
