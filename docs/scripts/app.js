@@ -531,7 +531,7 @@ function handleFirestoreError(err, operationCode, context = {}) {
   if (category.isCritical && context.userId) {
     // Notify user of critical errors - these need attention
     const msg = 'A critical error occurred. Please try again or contact support.';
-    notifyFirestoreError(msg);
+    notifyFirestoreError(msg, true);
   }
   
   return category;
@@ -547,10 +547,10 @@ function structuredLog(level, code, message, meta = {}){
       message: String(message || ""),
       meta
     };
-    // Keep logs readable in console but structured for ingestion if needed
+    if (entry.level === 'info') return;
+
     if (entry.level === 'error') console.error('LOG', entry);
     else if (entry.level === 'warn') console.warn('LOG', entry);
-    else console.log('LOG', entry);
   } catch (_) {}
 }
 
@@ -567,8 +567,7 @@ async function fsGetDoc(ref, schemaName = null, options = {}){
       throw err;
     }
     structuredLog('error', 'fs.get.error', err?.message || String(err), meta);
-    try { console.error('FS GET ERROR', meta); } catch (_) {}
-    notifyFirestoreError(err);
+    notifyFirestoreError(err, true);
     throw err;
   }
 }
@@ -584,7 +583,7 @@ async function fsGetDocs(q, schemaName = null, options = {}){
       throw err;
     }
     structuredLog('error', 'fs.getDocs.error', err?.message || String(err));
-    notifyFirestoreError(err);
+    notifyFirestoreError(err, true);
     throw err;
   }
 }
@@ -600,17 +599,13 @@ async function fsSetDoc(ref, data, schemaName = null, options = {}){
     structuredLog('info', 'fs.set', 'write', { path: ref.path, schema: schemaName, uid: auth.currentUser?.uid || null });
     return res;
   } catch(err){
-    const meta = { path: ref?.path, schema: schemaName, data, uid: auth.currentUser?.uid || null };
+    const meta = { path: ref?.path, schema: schemaName, uid: auth.currentUser?.uid || null };
     if (silentPermissionDenied && isFirestorePermissionDeniedError(err)) {
       return null;
     }
-    structuredLog('error', 'fs.set.error', err?.message || String(err), meta);
-    if (String(err?.code || "").toLowerCase().includes('permission-denied')) {
-      structuredLog('warn', 'fs.set.permission_denied', 'Permission denied on client write', meta);
-    }
     const stack = (new Error()).stack;
-    try { console.error('FS SET ERROR', { ...meta, stack }); } catch (_) {}
-    notifyFirestoreError(err);
+    structuredLog('error', 'fs.set.error', err?.message || String(err), { ...meta, stack });
+    notifyFirestoreError(err, true);
     throw err;
   }
 }
@@ -622,7 +617,7 @@ async function fsUpdateDoc(ref, data, schemaName = null){
     return res;
   } catch(err){
     structuredLog('error', 'fs.update.error', err?.message || String(err), { path: ref?.path, schema: schemaName, data });
-    notifyFirestoreError(err);
+    notifyFirestoreError(err, true);
     throw err;
   }
 }
@@ -636,7 +631,7 @@ async function fsRunTransaction(dbInstance, updateFn){
     return result;
   } catch(err){
     structuredLog('error', 'fs.tx.error', err?.message || String(err));
-    notifyFirestoreError(err);
+    notifyFirestoreError(err, true);
     throw err;
   }
 }
@@ -653,7 +648,7 @@ async function fsDeleteDoc(ref, options = {}){
       return null;
     }
     structuredLog('error', 'fs.delete.error', err?.message || String(err), { path: ref?.path });
-    notifyFirestoreError(err);
+    notifyFirestoreError(err, true);
     throw err;
   }
 }
@@ -2026,8 +2021,33 @@ async function loadAccountIdentityFromProfile(user) {
     : "");
 }
 
+const ACCOUNT_MODAL_LAYER_SELECTOR = [
+  ".app-dialog-modal",
+  "#aiProfileEditorModal",
+  "#dailyRoutineEditorModal",
+  "#dailyRoutineCustomActivityModal",
+  "#dailyRoutineStartTimeModal",
+  "#dailyRoutineDeleteModal",
+  "#reportRedirectConfirmModal",
+  "#importTransferModal",
+  "#addFriendModal",
+  "#reverseFriendRequestModal",
+  "#bedtimeReminderModal",
+  "#themeSetupModal",
+  "#welcomeGuideModal",
+  "#tosModal",
+  "#wellnessScoreInfoModal",
+  "#signInModal",
+  "#googleIdentityModal"
+].join(",");
+
+function isAccountModalInteraction(target) {
+  return target instanceof Element && !!target.closest(ACCOUNT_MODAL_LAYER_SELECTOR);
+}
+
 document.addEventListener("click", (event) => {
   if (!accountPanel || !accountBtn) return;
+  if (isAccountModalInteraction(event.target)) return;
   const clickedInside = accountPanel.contains(event.target) || accountBtn.contains(event.target);
   if (!clickedInside) closeAccountPanel();
 });
@@ -2046,6 +2066,7 @@ window.addEventListener("keydown", handleArrowKeyScroll, { capture: true });
 document.addEventListener("keydown", (event) => {
   handleArrowKeyScroll(event);
   if (event.key !== "Escape") return;
+  if (event.defaultPrevented || isAccountModalInteraction(event.target)) return;
   closeAccountPanel();
   closeAddFriendModal();
   if (welcomeGuideModal && welcomeGuideModal.style.display === "flex") {
@@ -5388,9 +5409,7 @@ function isLocalhostGoogleAuthBlocked() {
 async function handleGoogleAuth() {
   const error = document.getElementById("signInError");
   error.style.display = "none";
-  const googleProgressMessage = authMode === "signup"
-    ? "Hang on, signing up with Google..."
-    : "Hang on, signing in with Google...";
+  if (authModalErrorKind === "auth_progress") hideAuthModalError();
 
   if (window.location.protocol === "file:" || isLocalhostGoogleAuthBlocked()) {
     clearPendingRequestLoginAlertFlag();
@@ -5402,15 +5421,9 @@ async function handleGoogleAuth() {
   }
 
   try {
-    showAuthModalError(
-      googleProgressMessage,
-      "auth_progress",
-      "#9fd0ff"
-    );
     markPendingRequestLoginAlertForNextSessionStart();
     await signInWithPopup(auth, googleProvider);
   } catch (err) {
-    clearAuthProgressMessage();
     clearPendingRequestLoginAlertFlag();
     const errCode = String(err?.code || "").toLowerCase();
     if (errCode === "auth/popup-closed-by-user" || errCode === "auth/cancelled-popup-request") {
@@ -5423,8 +5436,6 @@ async function handleGoogleAuth() {
     error.innerText = isUnauthorizedDomain
       ? "This domain is not authorized for sign-in. Ask the app administrator to authorize '" + currentHost + "', then reload."
       : (err.message || "Google authentication failed.");
-  } finally {
-    if (error.innerText === googleProgressMessage) hideAuthModalError();
   }
 }
 
@@ -9695,7 +9706,7 @@ function getAiUserProfileSnapshot() {
 }
 
 function rephraseAiProfileValueForUser(value) {
-  return String(value || "").replace(
+  const addressedToUser = String(value || "").replace(
     /(^|[.!?;]\s*)(I\s+am|I’m|I'm|Im|I\s+have|I’ve|I've|Ive|I\s+had|I\s+will|I’ll|I'll|Ill|I\s+can(?:not)?|I\s+can't|I\s+cannot|I\s+don't|I\s+do\s+not|I\s+like|I\s+love|I\s+prefer|I\s+enjoy|I\s+work|I\s+study|I\s+live|I\s+want|I\s+need|I\s+keep|I\s+often|I\s+struggle(?:\s+to|\s+with)?|I\s+missed|I\s+managed|I\s+improved|I\s+completed|I\s+succeeded)\b/gi,
     (match, boundary, phrase) => {
       const normalized = phrase.toLowerCase().replace(/[’']/g, "'");
@@ -9737,6 +9748,9 @@ function rephraseAiProfileValueForUser(value) {
       };
       return `${boundary}${replacements[normalized] || phrase}`;
     }
+  );
+  return addressedToUser.replace(/\bmy\b/gi, (pronoun) =>
+    pronoun[0] === pronoun[0].toUpperCase() ? "Your" : "your"
   );
 }
 
@@ -10659,8 +10673,8 @@ function updateClearDataButtonState() {
   clearDataBtn.title = hasData ? "" : "No data to clear";
 }
 
-function notifyFirestoreError(err) {
-  console.error("Firestore operation failed:", err);
+function notifyFirestoreError(err, alreadyLogged = false) {
+  if (!alreadyLogged) console.error("Firestore operation failed:", err);
   const authUser = auth?.currentUser || null;
   if (!authUser && isFirestorePermissionDeniedError(err)) {
     // Ignore post-signout auth races that surface as permission-denied.
