@@ -4,8 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Meet Lumevine, a personal wellness app for understanding your habits, reflecting on well-being, and building healthier routines at your own pace.">
-  <title>About Us | Lumevine</title>
+  <meta name="description" content="Learn about Lumevine’s approach to personal wellness: gentle check-ins, flexible routines, and reflections that support your pace without judgment.">
+  <link rel="canonical" href="https://lumevine.runs-at.dev/about/">
+  <title>About | Lumevine</title>
 
   <style>
     :root {
@@ -95,6 +96,14 @@
       background: rgba(255,255,255,.08);
     }
 
+    .site-page-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+      font-size: .9rem;
+    }
+
     footer {
       margin-top: 28px;
       color: #aeb8cc;
@@ -110,8 +119,12 @@
 
 <body>
   <main>
+    <nav class="site-page-nav" aria-label="Main navigation">
+      <a href="https://lumevine.runs-at.dev/">Lumevine</a>
+      <a href="https://lumevine.runs-at.dev/app/">Open the app</a>
+    </nav>
     <p class="eyebrow">Lumevine · Our Story</p>
-    <h1>About Us</h1>
+    <h1>About Lumevine</h1>
     <p class="updated">A calmer, data-aware place to understand your day.</p>
 
     <div class="intro">
@@ -130,8 +143,9 @@
     <h2>1. Who We Are</h2>
     <p>
       Lumevine brings everyday wellness activities into one place. Today’s Focus
-      uses available mood, sleep, hydration, and task information to suggest a
-      relevant next step instead of showing every feature with equal weight.
+      offers optional ideas based mainly on your mood check-in and whether your
+      task list feels heavy. A missing log or unfinished water goal is not
+      treated as proof that something is wrong.
     </p>
     <p>
       Our goal is to provide a thoughtful digital space where you can check in,
@@ -162,8 +176,8 @@
     <ul>
       <li>
         <strong>Today’s Focus:</strong>
-        See one primary check-in, a compact read of today’s signals, and
-        adaptive priorities based on what you have actually logged.
+        Get an optional suggestion shaped mainly by your mood check-in and
+        task load, without treating missing logs as problems.
       </li>
       <li>
         <strong>Daily Routine:</strong>
@@ -231,7 +245,7 @@
     <p>
       For details about information collection, storage,
       use, and your available choices, please read our
-      <a href="https://lumevine.runs-at.dev/privacy-policy">
+      <a href="https://lumevine.runs-at.dev/privacy/">
         Privacy Policy
       </a>.
     </p>
@@ -267,7 +281,11 @@
     <footer>
       © <span id="year"></span> Lumevine. All rights reserved.
       <p>
-        <a href="https://lumevine.runs-at.dev/privacy-policy">
+        <a href="https://lumevine.runs-at.dev/">Home</a>
+        ·
+        <a href="https://lumevine.runs-at.dev/app/">Open the app</a>
+        ·
+        <a href="https://lumevine.runs-at.dev/privacy/">
           Privacy Policy
         </a>
         ·

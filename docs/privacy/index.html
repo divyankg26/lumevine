@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Read the Lumevine Privacy Policy to learn how your account information and wellness data are collected, used, stored, and managed.">
+  <link rel="canonical" href="https://lumevine.runs-at.dev/privacy/">
   <title>Privacy Policy | Lumevine</title>
   <style>
     :root {
@@ -80,13 +81,24 @@
       color: #aeb8cc;
       font-size: .85rem;
     }
+    .site-page-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+      font-size: .9rem;
+    }
   </style>
 </head>
 <body>
   <main>
+    <nav class="site-page-nav" aria-label="Main navigation">
+      <a href="https://lumevine.runs-at.dev/">Lumevine</a>
+      <a href="https://lumevine.runs-at.dev/app/">Open the app</a>
+    </nav>
     <p class="eyebrow">Lumevine · Privacy</p>
     <h1>Privacy Policy</h1>
-    <p class="updated">Effective date: October 15, 2026</p>
+    <p class="updated">Effective date: November 14, 2026</p>
 
     <div class="intro">
       <p>
@@ -142,6 +154,19 @@
       information. The AI Companion is not a medical professional and does not
       provide medical diagnosis or treatment.
     </p>
+    <p>
+      <strong>Which AI provider processes conversations?</strong> Lumevine's AI
+      Companion currently uses rules-based logic built into the app. It does not
+      send your messages to an external generative-AI provider to generate
+      responses.
+    </p>
+    <p>
+      <strong>Are conversations used to train AI models?</strong> No. Lumevine
+      does not use your AI Companion conversations to train AI models or send
+      them to an AI model provider for training. Conversation history may be
+      stored in Firebase with your account so the app can display it and provide
+      chat features.
+    </p>
 
     <h2>5. When information is shared</h2>
     <p>
@@ -180,6 +205,28 @@
       to protect information. No method of storage or transmission can be
       guaranteed to be completely secure.
     </p>
+    <p>
+      <strong>How do Firebase security rules work?</strong> Firebase Security
+      Rules are backend controls that determine who can read or change cloud
+      data. Lumevine's intended access model is to scope private account and
+      wellness records to their owner, while allowing limited profile,
+      request, and connection data for friend features. This is a plain-language
+      overview, not the deployed rule definitions or a path-by-path guarantee.
+    </p>
+    <p>
+      <strong>Is the database encrypted at rest?</strong> Google Cloud states
+      that customer data stored in its services is encrypted at rest by default.
+      This applies to cloud-stored data, not browser storage on your device.
+      Learn more in
+      <a href="https://cloud.google.com/docs/security/encryption/default-encryption" target="_blank" rel="noopener noreferrer">Google Cloud's encryption overview</a>.
+    </p>
+    <p>
+      <strong>Has Lumevine had an independent security audit?</strong> We have
+      not confirmed whether Lumevine itself has undergone an independent
+      security audit, and we do not have a Lumevine audit report to share.
+      Firebase or Google compliance assessments are separate and do not
+      constitute an audit of Lumevine.
+    </p>
 
     <h2>8. Children</h2>
     <p>
@@ -203,6 +250,14 @@
       than the one where you live. Privacy protections may differ between
       locations.
     </p>
+    <p>
+      <strong>Where are the Firebase servers?</strong> Cloud Firestore databases
+      are provisioned in a selected regional or multi-region location. We do
+      not have a verified record of the location selected for Lumevine's
+      Firebase database, so we cannot name a specific country or promise that
+      data stays in one country. See
+      <a href="https://firebase.google.com/docs/firestore/locations" target="_blank" rel="noopener noreferrer">Firebase's explanation of Firestore locations</a>.
+    </p>
 
     <h2>11. Changes to this policy</h2>
     <p>
@@ -219,7 +274,7 @@
       </p>
     </div>
 
-    <footer>© 2026 Lumevine</footer>
+    <footer>© 2026 Lumevine · <a href="https://lumevine.runs-at.dev/about/">About</a> · <a href="https://lumevine.runs-at.dev/faq/">Help center</a></footer>
   </main>
 </body>
 </html>

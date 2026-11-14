@@ -1091,6 +1091,9 @@ const LUMEVINE_THEMES = {
 const DEFAULT_THEME = "burgundy";
 let themeSetupUserId = "";
 let themeSetupResolve = null;
+let themeSetupPromise = null;
+let themeSelectionInProgress = false;
+let themeSelectionRevision = 0;
 
 function normalizeTheme(theme) {
   const normalized = String(theme || "").trim().toLowerCase();
@@ -1140,6 +1143,7 @@ function showThemeToast(message) {
 
 function revealDashboardForSetupOverlay() {
   if (!dashboard) return;
+  dashboard.classList.add("preload-shell");
   dashboard.style.display = "grid";
   setInitialLoadingStates();
   updateClearDataButtonState();
@@ -1152,6 +1156,7 @@ function canPreviewInitialThemeOnDesktop() {
 
 function previewInitialTheme(theme) {
   if (!canPreviewInitialThemeOnDesktop()) return;
+  if (themeSelectionInProgress) return;
   if (!themeSetupResolve || themeSetupModal?.style?.display !== "flex") return;
   const normalized = normalizeTheme(theme);
   if (!normalized) return;
@@ -1177,11 +1182,22 @@ function closeThemeSetupModal(event, force = false) {
 
 async function selectTheme(theme, options = {}) {
   const normalized = normalizeTheme(theme);
-  if (!normalized) return false;
-  const userId = String(options.userId || auth.currentUser?.uid || themeSetupUserId || "").trim();
+  if (!normalized || themeSelectionInProgress) return false;
+  const isSetupSelection = themeSetupModal?.style?.display === "flex";
+  const userId = String(
+    options.userId
+      || (isSetupSelection ? themeSetupUserId : "")
+      || auth.currentUser?.uid
+      || ""
+  ).trim();
   if (!userId) return false;
+
+  themeSelectionInProgress = true;
+  themeSelectionRevision += 1;
+  const choiceContainer = isSetupSelection ? themeSetupOptions : accountThemeOptions;
+  const choices = Array.from(choiceContainer?.querySelectorAll(".theme-choice") || []);
+  choices.forEach((choice) => { choice.disabled = true; });
   applyTheme(normalized, userId);
-  if (!options.silent) showThemeToast(`${LUMEVINE_THEMES[normalized].label} theme applied.`);
   try {
     const activeProviderIds = Array.isArray(auth.currentUser?.providerData)
       ? auth.currentUser.providerData.map((entry) => String(entry?.providerId || "").trim().toLowerCase())
@@ -1191,36 +1207,39 @@ async function selectTheme(theme, options = {}) {
       googleIdentitySetupCompleted: activeProviderIds.includes("google.com"),
       updatedAt: serverTimestamp()
     }, "profile", { merge: true });
-    if (!options.silent) showThemeToast(`${LUMEVINE_THEMES[normalized].label} theme applied.`);
-    if (themeSetupResolve) {
-      const resolve = themeSetupResolve;
-      themeSetupResolve = null;
-      themeSetupModal.style.display = "none";
-      resolve(true);
-    }
-    return true;
   } catch (err) {
     structuredLog("warn", "theme.save", err?.message || String(err), { userId, theme: normalized });
     if (!options.silent) showThemeToast("Theme applied on this device, but could not sync to your account.");
-    if (themeSetupResolve) {
+    return true;
+  } finally {
+    if (auth.currentUser?.uid === userId || themeSetupUserId === userId) {
+      applyTheme(normalized, userId);
+    }
+    choices.forEach((choice) => { choice.disabled = false; });
+    themeSelectionInProgress = false;
+    if (isSetupSelection && themeSetupResolve) {
       const resolve = themeSetupResolve;
       themeSetupResolve = null;
+      themeSetupPromise = null;
       themeSetupModal.style.display = "none";
       resolve(true);
     }
-    return true;
   }
+  if (!options.silent) showThemeToast(`${LUMEVINE_THEMES[normalized].label} theme applied.`);
+  return true;
 }
 
 function openThemeSetupModal(userId = "") {
   if (!themeSetupModal) return Promise.resolve(false);
+  if (themeSetupPromise) return themeSetupPromise;
   themeSetupUserId = String(userId || auth.currentUser?.uid || "").trim();
   revealDashboardForSetupOverlay();
   themeSetupModal.style.display = "flex";
   ensureAppBackGuardState("theme-setup", true);
-  return new Promise((resolve) => {
+  themeSetupPromise = new Promise((resolve) => {
     themeSetupResolve = resolve;
   });
+  return themeSetupPromise;
 }
 
 function bindThemeChoiceEvents(container, options = {}) {
@@ -1237,7 +1256,10 @@ function bindThemeChoiceEvents(container, options = {}) {
   container?.addEventListener("click", (event) => {
     const choice = event.target.closest(".theme-choice");
     if (!choice) return;
-    void selectTheme(choice.dataset.theme, { userId: auth.currentUser?.uid || themeSetupUserId });
+    const userId = container === themeSetupOptions
+      ? themeSetupUserId
+      : auth.currentUser?.uid || themeSetupUserId;
+    void selectTheme(choice.dataset.theme, { userId });
   });
 }
 
@@ -2667,6 +2689,8 @@ try {
         hideSplash();
       } else {
         hideSplash();
+        authenticatedSessionInitializationUserId = "";
+        authenticatedSessionInitializationPromise = null;
         if (lastAuthenticatedUserId) {
           lastAuthenticatedUserId = "";
           authenticatedShellReadyAtMs = 0;
@@ -2675,8 +2699,8 @@ try {
           // During TOS-gate race conditions, keep auth modal hidden and preserve dashboard shell.
           if (signInModal) signInModal.style.display = "none";
           if (dashboard) {
-            dashboard.style.display = "grid";
             dashboard.classList.add("preload-shell");
+            dashboard.style.display = "grid";
           }
           setPageTitle("dashboard");
           return;
@@ -2723,7 +2747,7 @@ try {
         signInModal.style.display = "flex";
         setPageTitle("signin");
         dashboard.style.display = "none";
-        dashboard.classList.remove("preload-shell");
+        dashboard.classList.add("preload-shell");
         accountBtn.style.display = "none";
         moodLogs.innerHTML = "";
         chat.innerHTML = "";
@@ -2780,9 +2804,9 @@ try {
         if (progressMilestones) progressMilestones.innerHTML = "";
         if (questXpEl) questXpEl.innerText = "Progress 0/100";
         updateQuestRecoveryBonusUI();
-        if (questStreakEl) questStreakEl.innerText = "A new journey begins";
+        if (questStreakEl) questStreakEl.innerText = "Your pace is welcome";
         if (questProgressFill) questProgressFill.style.width = "0%";
-        if (questShieldEl) questShieldEl.innerText = "Streak support is not active yet. Complete today's progress to earn one protected missed day.";
+        if (questShieldEl) questShieldEl.innerText = "Streaks are optional. You can pause anytime.";
         if (questListEl) questListEl.innerHTML = "";
         closeWelcomeGuide();
         welcomeGuideStepIndex = 0;
@@ -2850,7 +2874,7 @@ try {
     signInModal.style.display = "flex";
     setPageTitle("signin");
     dashboard.style.display = "none";
-    dashboard.classList.remove("preload-shell");
+    dashboard.classList.add("preload-shell");
     accountBtn.style.display = "none";
     setAiClearButtonState(false);
     startExportCooldown(0);
@@ -3522,6 +3546,8 @@ async function ensureGoogleIdentitySetupIfNeeded(user) {
 
 const DASHBOARD_CARD_LOAD_TIMEOUT_MS = 5000;
 let dashboardCardLoadTimeoutId = null;
+let authenticatedSessionInitializationUserId = "";
+let authenticatedSessionInitializationPromise = null;
 
 function clearDashboardCardLoadTimeout() {
   if (dashboardCardLoadTimeoutId) {
@@ -3531,34 +3557,13 @@ function clearDashboardCardLoadTimeout() {
   }
 }
 
-function forceCardContainerLoad(containerEl, itemSelector, emptyMessage) {
-  if (!containerEl) return;
-  clearStatusState(containerEl);
-  if (!containerEl.querySelector(itemSelector)) {
-    setEmptyState(containerEl, emptyMessage);
-  }
-}
-
-function forceDashboardCardLoad(sessionUserId) {
+function showDashboardStillLoading(sessionUserId) {
   const activeUser = auth.currentUser;
   if (!activeUser?.uid || activeUser.uid !== sessionUserId) return;
-
-  dashboard.style.display = "grid";
-  dashboard.classList.remove("preload-shell");
-
-  forceCardContainerLoad(chat, ".chat-message", getRandomEmptyMessage("chat", "Your conversation space is here whenever you would like to talk."));
-  if (chat?.querySelector(".chat-message")) scrollChatToLatest();
-  forceCardContainerLoad(reminders, ".item-row", getRandomEmptyMessage("reminders", "No reminders here yet. Add one if something would be useful to remember."));
-  forceCardContainerLoad(taskList, ".item-row", getRandomEmptyMessage("tasks", "Your list is clear for now. Add a task whenever you are ready."));
-  forceCardContainerLoad(moodLogs, ".mood-item", getRandomEmptyMessage("mood", "No mood notes yet. Check in whenever you feel ready."));
-  forceCardContainerLoad(gratitudeLogs, ".item-row", getRandomEmptyMessage("gratitude", "No gratitude notes yet. Write one if something comes to mind."));
-  forceCardContainerLoad(questListEl, ".quest-item", getRandomEmptyMessage("quests", "Your next small steps will appear after a check-in."));
-
-  updateWeeklyReview();
-  refreshStartupFeatures();
-  renderFriendMetricCardInsights();
-  updateCrashPreventionUI();
-  updateClearDataButtonState();
+  dashboard?.classList.add("preload-shell");
+  if (dashboardLoadingMessage) {
+    dashboardLoadingMessage.textContent = "Your dashboard is taking a little longer. Cards will appear when their data is ready.";
+  }
 }
 
 function recoverAuthenticatedShell(user) {
@@ -3566,14 +3571,14 @@ function recoverAuthenticatedShell(user) {
   if (!activeUserId || auth.currentUser?.uid !== activeUserId) return;
   if (signInModal) signInModal.style.display = 'none';
   if (dashboard) {
+    dashboard.classList.add('preload-shell');
     dashboard.style.display = 'grid';
-    dashboard.classList.remove('preload-shell');
   }
   if (accountBtn) accountBtn.style.display = 'block';
   setPageTitle('dashboard');
   updateAccountPanel(user);
   setInitialLoadingStates();
-  forceDashboardCardLoad(activeUserId);
+  showDashboardStillLoading(activeUserId);
 }
 
 function recoverIfAuthenticatedShellIsStuck(reason, error) {
@@ -3597,7 +3602,27 @@ window.addEventListener('error', (event) => {
   recoverIfAuthenticatedShellIsStuck('startup.runtime_error', event.error || event.message);
 });
 
-async function initializeAuthenticatedSession(user) {
+function initializeAuthenticatedSession(user) {
+  const sessionUserId = String(user?.uid || "").trim();
+  if (!sessionUserId) return Promise.resolve();
+  if (
+    authenticatedSessionInitializationUserId === sessionUserId
+    && authenticatedSessionInitializationPromise
+  ) return authenticatedSessionInitializationPromise;
+
+  authenticatedSessionInitializationUserId = sessionUserId;
+  const initializationPromise = initializeAuthenticatedSessionCore(user);
+  const sessionReadyPromise = initializationPromise.then((result) => result?.dataReadyPromise);
+  authenticatedSessionInitializationPromise = sessionReadyPromise;
+  sessionReadyPromise.finally(() => {
+    if (authenticatedSessionInitializationPromise !== sessionReadyPromise) return;
+    authenticatedSessionInitializationUserId = "";
+    authenticatedSessionInitializationPromise = null;
+  }).catch(() => {});
+  return initializationPromise;
+}
+
+async function initializeAuthenticatedSessionCore(user) {
   const sessionUserId = String(user?.uid || "").trim();
   if (!sessionUserId) return;
   if (!isGoogleProviderUser(user) && !user.emailVerified) {
@@ -3613,8 +3638,8 @@ async function initializeAuthenticatedSession(user) {
   clearAuthProgressMessage();
 
   if (signInModal) signInModal.style.display = "none";
-  dashboard.style.display = "grid";
   dashboard.classList.add("preload-shell");
+  dashboard.style.display = "grid";
   accountBtn.style.display = "none";
 
   const tosAccepted = await ensureTosAccepted(sessionUserId);
@@ -3625,8 +3650,8 @@ async function initializeAuthenticatedSession(user) {
 
   await ensureThemeSelection(sessionUserId).catch((err) => structuredLog('warn', 'theme.setup', err?.message || String(err)));
 
-  dashboard.style.display = "grid";
   dashboard.classList.add("preload-shell");
+  dashboard.style.display = "grid";
   setPageTitle("dashboard");
   accountBtn.style.display = "block";
   authenticatedShellReadyAtMs = Date.now();
@@ -3652,7 +3677,7 @@ async function initializeAuthenticatedSession(user) {
     }
   })();
   clearDashboardCardLoadTimeout();
-  // Retry-based fallback: run force load periodically until success or max attempts
+  // Keep the loading shell in place if startup data takes longer than expected.
   (function scheduleDashboardCardFallback() {
     let attempts = 0;
     const maxAttempts = Math.max(1, Math.ceil(DASHBOARD_CARD_LOAD_TIMEOUT_MS / 1500));
@@ -3664,7 +3689,7 @@ async function initializeAuthenticatedSession(user) {
         return;
       }
       if (attempts >= maxAttempts) {
-        forceDashboardCardLoad(sessionUserId);
+        showDashboardStillLoading(sessionUserId);
         clearDashboardCardLoadTimeout();
       }
     }, 1500);
@@ -3672,7 +3697,8 @@ async function initializeAuthenticatedSession(user) {
 
   const activeUserAfterShell = auth.currentUser;
   if (!activeUserAfterShell?.uid || activeUserAfterShell.uid !== sessionUserId) {
-    dashboard.classList.remove("preload-shell");
+    dashboard.classList.add("preload-shell");
+    dashboard.style.display = "none";
     clearDashboardCardLoadTimeout();
     return;
   }
@@ -3712,7 +3738,8 @@ async function initializeAuthenticatedSession(user) {
     loadStartupUsageState(user.uid),
     loadDailyRoutine(user.uid),
     loadMusicSessions(user.uid),
-    loadBedtimeSettings(user.uid)
+    loadBedtimeSettings(user.uid),
+    loadFriendsInsights(user.uid)
   ];
   void Promise.allSettled(burnoutRadarDataLoadPromises).then((results) => {
     const activeUser = auth.currentUser;
@@ -3724,8 +3751,6 @@ async function initializeAuthenticatedSession(user) {
   friendRequestLoginAlertShown = false;
   loadFriendRequests(user.uid, shouldShowPendingRequestLoginAlert);
   loadSentFriendRequests(user.uid);
-  loadFriendsInsights(user.uid);
-  startFriendInsightsWatcher(user.uid);
   showPendingImportSecurityWarnings(user.uid);
   startDailyChallengeWatcher();
   scheduleDailyChallengeReset(user.uid);
@@ -3737,19 +3762,21 @@ async function initializeAuthenticatedSession(user) {
   scheduleWaterGoalReset(user.uid);
   scheduleSleepDailyReset(user.uid);
   scheduleMoodDailyReset(user.uid);
-  void Promise.allSettled(initialDataLoadPromises).then(async () => {
+  const dataReadyPromise = Promise.allSettled(initialDataLoadPromises).then(async () => {
     const activeUser = auth.currentUser;
     if (!activeUser?.uid || activeUser.uid !== user.uid) return;
+    await forceSyncFriendProfileFromLocalSnapshot(activeUser);
+    await loadFriendsInsights(activeUser.uid);
+    if (auth.currentUser?.uid !== user.uid) return;
     dashboard.classList.remove("preload-shell");
     scrollChatToLatest();
     updateCrashPreventionUI();
-    await forceSyncFriendProfileFromLocalSnapshot(activeUser);
-    await loadFriendsInsights(activeUser.uid);
-    updateCrashPreventionUI();
+    startFriendInsightsWatcher(activeUser.uid);
   }).finally(() => {
     clearDashboardCardLoadTimeout();
   }).catch((err) => structuredLog('warn', 'initialLoad.error', err?.message || String(err)));
   await maybeShowWelcomeGuide(user.uid).catch((err) => structuredLog('warn', 'welcome.guide', err?.message || String(err)));
+  return { dataReadyPromise };
 }
 
 async function submitGoogleIdentitySetup() {
@@ -4691,8 +4718,8 @@ function scrollCardToViewportCenterReliably(card, options = {}) {
   if (!target || typeof target.getBoundingClientRect !== "function") return;
 
   if (dashboard && dashboard.style.display === "none") {
+    if (!auth.currentUser?.uid || dashboard.classList.contains("preload-shell")) return;
     dashboard.style.display = "grid";
-    dashboard.classList.remove("preload-shell");
   }
 
   const repeats = Math.max(1, Number(options.repeats) || 5);
@@ -5017,11 +5044,18 @@ async function maybeShowWelcomeGuide(userId) {
 async function ensureThemeSelection(userId) {
   const activeUserId = String(userId || "").trim();
   if (!activeUserId) return;
+  const selectionRevision = themeSelectionRevision;
   const storedTheme = getStoredTheme(activeUserId);
-  if (storedTheme) applyTheme(storedTheme, activeUserId);
+  if (storedTheme && selectionRevision === themeSelectionRevision) {
+    applyTheme(storedTheme, activeUserId);
+  }
 
   try {
     const profileSnap = await fsGetDoc(doc(db, "users", activeUserId, "settings", "profile"), "profile");
+    if (
+      selectionRevision !== themeSelectionRevision
+      || (auth.currentUser?.uid && auth.currentUser.uid !== activeUserId)
+    ) return;
     const savedTheme = normalizeTheme(profileSnap.exists ? profileSnap.data?.theme : "");
     if (savedTheme) {
       applyTheme(savedTheme, activeUserId);
@@ -5031,6 +5065,10 @@ async function ensureThemeSelection(userId) {
     structuredLog("warn", "theme.read", err?.message || String(err), { userId: activeUserId });
   }
 
+  if (
+    selectionRevision !== themeSelectionRevision
+    || (auth.currentUser?.uid && auth.currentUser.uid !== activeUserId)
+  ) return;
   await openThemeSetupModal(activeUserId);
 }
 
@@ -5696,12 +5734,16 @@ function startAddFriendRequest() {
   }
 }
 
-function setReverseFriendRequestPromptBusy(isBusy) {
+function setReverseFriendRequestPromptBusy(isBusy, activeAction = "") {
   reverseFriendRequestPromptBusy = !!isBusy;
   if (!reverseFriendRequestPreview) return;
   const actionButtons = reverseFriendRequestPreview.querySelectorAll("button[data-reverse-request-action]");
   actionButtons.forEach((button) => {
+    const buttonAction = String(button.dataset.reverseRequestAction || "");
     button.disabled = !!isBusy;
+    button.textContent = isBusy && buttonAction === activeAction
+      ? (activeAction === "accept" ? "Accepting..." : "Declining...")
+      : (buttonAction === "accept" ? "Accept" : "Decline");
   });
 }
 
@@ -5734,8 +5776,7 @@ async function openReverseFriendRequestPrompt(requestEntry) {
     }, "Friend");
     const shouldAcceptNow = await appConfirm(`${fallbackSenderName} has already sent you a friend request. Accept it now?`);
     if (shouldAcceptNow) {
-      await respondToFriendRequest(entry, "accept");
-      return "accept";
+      return await respondToFriendRequest(entry, "accept") ? "accept" : "dismiss";
     }
     return "dismiss";
   }
@@ -5764,24 +5805,30 @@ async function openReverseFriendRequestPrompt(requestEntry) {
     actions.className = "friend-actions";
 
     const acceptBtn = document.createElement("button");
+    acceptBtn.type = "button";
     acceptBtn.innerText = "Accept";
     acceptBtn.setAttribute("data-reverse-request-action", "accept");
-    acceptBtn.onclick = async () => {
+    acceptBtn.onclick = async (event) => {
+      event.stopPropagation();
       if (reverseFriendRequestPromptBusy) return;
-      setReverseFriendRequestPromptBusy(true);
-      await respondToFriendRequest(entry, "accept");
-      closeReverseFriendRequestModal(null, true, "accept");
+      setReverseFriendRequestPromptBusy(true, "accept");
+      const succeeded = await respondToFriendRequest(entry, "accept");
+      if (succeeded) closeReverseFriendRequestModal(null, true, "accept");
+      else setReverseFriendRequestPromptBusy(false);
     };
 
     const declineBtn = document.createElement("button");
+    declineBtn.type = "button";
     declineBtn.className = "import-transfer-cancel";
     declineBtn.innerText = "Decline";
     declineBtn.setAttribute("data-reverse-request-action", "decline");
-    declineBtn.onclick = async () => {
+    declineBtn.onclick = async (event) => {
+      event.stopPropagation();
       if (reverseFriendRequestPromptBusy) return;
-      setReverseFriendRequestPromptBusy(true);
-      await respondToFriendRequest(entry, "decline");
-      closeReverseFriendRequestModal(null, true, "decline");
+      setReverseFriendRequestPromptBusy(true, "decline");
+      const succeeded = await respondToFriendRequest(entry, "decline");
+      if (succeeded) closeReverseFriendRequestModal(null, true, "decline");
+      else setReverseFriendRequestPromptBusy(false);
     };
 
     actions.append(acceptBtn, declineBtn);
@@ -6151,9 +6198,10 @@ async function claimUsernameWithFallback(options = {}) {
 
 async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
   const rawInput = String(usernameValue || "").trim();
+  const inputValidation = validateSignupUsername(rawInput);
+  if (!inputValidation.ok) return null;
   const rawWithoutAt = rawInput.startsWith("@") ? rawInput.slice(1).trim() : rawInput;
-  const usernameKey = normalizeUsernameForLookup(usernameValue);
-  const legacyDottedKey = rawWithoutAt.replace(/\s+/g, "").trim();
+  const usernameKey = inputValidation.normalized;
   const forceRefresh = !!options?.forceRefresh;
   const preferServer = !!options?.preferServer;
   if (!usernameKey) return null;
@@ -6169,7 +6217,10 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
     const uid = String(data.uid || "").trim();
     if (!uid) return null;
     const rawUsername = getCaseSensitiveUsernameInputValue(data.username || data.name || fallbackUsername);
-    const normalizedUsername = normalizeUsernameForLookup(data.username || data.name || fallbackUsername) || fallbackUsername;
+    const storedUsername = validateSignupUsername(rawUsername);
+    const normalizedUsername = storedUsername.ok
+      ? storedUsername.normalized
+      : (validateSignupUsername(fallbackUsername).normalized || fallbackUsername);
     const displayName = normalizeDisplayNameValue(data.displayName)
       || normalizeDisplayNameValue(data.name)
       || normalizedUsername;
@@ -6178,7 +6229,7 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
       email,
       name: normalizedUsername,
       username: normalizedUsername,
-      usernameExact: rawUsername || normalizedUsername,
+      usernameExact: storedUsername.ok ? rawUsername : normalizedUsername,
       displayName
     };
   };
@@ -6222,21 +6273,6 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
             if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
           }
         }
-      }
-    }
-
-    // Legacy compatibility: old usernames could contain dots in doc IDs.
-    if (!resolved && legacyDottedKey && legacyDottedKey !== usernameKey) {
-      try {
-        const legacyRef = doc(db, "usernameDirectory", legacyDottedKey);
-        const legacySnap = preferServer
-          ? await getDocWithFreshFallback(legacyRef)
-          : await getDoc(legacyRef);
-        if (legacySnap.exists()) {
-          resolved = buildResolved(legacySnap.data() || {}, usernameKey);
-        }
-      } catch (err) {
-        if (isFirestorePermissionDeniedError(err) && auth.currentUser?.uid) permissionDeniedSeen = true;
       }
     }
 
@@ -6336,9 +6372,13 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
           const email = String(data.email || docSnap.id || "").trim().toLowerCase();
           if (!uid) continue;
 
-          const nameKey = normalizeUsernameForLookup(data.name || "");
-          const emailLocalKey = normalizeUsernameForLookup(email.split("@")[0] || "");
-          if (nameKey !== usernameKey && emailLocalKey !== usernameKey) continue;
+          const storedUsername = getCaseSensitiveUsernameInputValue(data.username || data.name || "");
+          const storedUsernameValidation = validateSignupUsername(storedUsername);
+          const emailLocalValidation = validateSignupUsername(email.split("@")[0] || "");
+          if (
+            storedUsernameValidation.normalized !== usernameKey
+            && emailLocalValidation.normalized !== usernameKey
+          ) continue;
 
           resolved = {
             uid,
@@ -6364,10 +6404,11 @@ async function resolveUserDirectoryByUsername(usernameValue, options = {}) {
           : await getDocs(collection(db, "usernameDirectory"));
         for (const docSnap of allUsernameSnap.docs) {
           const data = docSnap.data() || {};
-          const candidateKey = normalizeUsernameForLookup(
-            data.username || data.name || docSnap.id
-          );
-          if (candidateKey !== usernameKey) continue;
+          const candidateKeys = [data.username, data.name, docSnap.id]
+            .map((candidate) => validateSignupUsername(candidate || ""))
+            .filter((candidate) => candidate.ok)
+            .map((candidate) => candidate.normalized);
+          if (!candidateKeys.includes(usernameKey)) continue;
           const candidate = buildResolved(data, usernameKey);
           if (candidate) {
             resolved = candidate;
@@ -6925,6 +6966,18 @@ function renderFriendMetricCardInsights() {
   }
 }
 
+function setFriendRequestRowBusy(row, isBusy, activeAction = "") {
+  if (!row) return;
+  row.setAttribute("aria-busy", String(isBusy));
+  row.querySelectorAll(".friend-actions button[data-friend-request-action]").forEach((button) => {
+    const buttonAction = String(button.dataset.friendRequestAction || "");
+    button.disabled = isBusy;
+    button.textContent = isBusy && buttonAction === activeAction
+      ? (activeAction === "accept" ? "Accepting..." : "Declining...")
+      : (buttonAction === "accept" ? "Accept" : "Decline");
+  });
+}
+
 function renderFriendRequests(rows) {
   const safeRows = Array.isArray(rows) ? rows : [];
 
@@ -6963,16 +7016,29 @@ function renderFriendRequests(rows) {
     actions.className = "friend-actions";
 
     const acceptBtn = document.createElement("button");
+    acceptBtn.type = "button";
     acceptBtn.innerText = "Accept";
-    acceptBtn.onclick = () => respondToFriendRequest(entry, "accept");
+    acceptBtn.dataset.friendRequestAction = "accept";
+    acceptBtn.onclick = (event) => {
+      event.stopPropagation();
+      void respondToFriendRequest(entry, "accept");
+    };
 
     const declineBtn = document.createElement("button");
+    declineBtn.type = "button";
     declineBtn.className = "import-transfer-cancel";
     declineBtn.innerText = "Decline";
-    declineBtn.onclick = () => respondToFriendRequest(entry, "decline");
+    declineBtn.dataset.friendRequestAction = "decline";
+    declineBtn.onclick = (event) => {
+      event.stopPropagation();
+      void respondToFriendRequest(entry, "decline");
+    };
 
     actions.append(acceptBtn, declineBtn);
     row.append(actions);
+    if (friendRequestActionsInFlight.has(row.dataset.requestKey)) {
+      setFriendRequestRowBusy(row, true);
+    }
     friendRequestsList.appendChild(row);
   });
 }
@@ -8611,18 +8677,13 @@ async function submitAddFriendRequest() {
 
   const targetUsernameInput = String(addFriendEmailInput?.value || "").trim();
   const targetUsernameValidation = validateSignupUsername(targetUsernameInput);
-  const legacyLookupValidation = /^[A-Za-z0-9._-]{1,20}$/.test(
-    targetUsernameInput.startsWith("@") ? targetUsernameInput.slice(1).trim() : targetUsernameInput
-  )
-    ? { ok: true, normalized: normalizeUsernameForLookup(targetUsernameInput) }
-    : targetUsernameValidation;
-  const targetUsernameKey = legacyLookupValidation.normalized;
+  const targetUsernameKey = targetUsernameValidation.normalized;
   const senderEmail = String(user.email || "").trim().toLowerCase();
   if (!targetUsernameInput) {
     setAddFriendError("Friend username is required.");
     return;
   }
-  if (!legacyLookupValidation.ok || !targetUsernameKey) {
+  if (!targetUsernameValidation.ok || !targetUsernameKey) {
     setAddFriendError("Enter a valid username (letters, numbers, underscores, dashes; 1-20 chars).");
     return;
   }
@@ -9009,15 +9070,14 @@ async function respondToFriendRequest(requestEntry, action) {
     ? fromUid
     : String(entry?.requestId || entry?.id || fromUid);
 
-  if (!user?.uid || !fromUid) return;
+  if (!user?.uid || !fromUid) return false;
   const actionKey = `${source}:${requestId}`;
-  if (friendRequestActionsInFlight.has(actionKey)) return;
+  if (friendRequestActionsInFlight.has(actionKey)) return false;
   friendRequestActionsInFlight.add(actionKey);
   const requestRow = Array.from(friendRequestsList?.querySelectorAll(".friend-row[data-request-key]") || [])
     .find((row) => row.dataset.requestKey === `${source}:${requestId}`);
-  requestRow?.remove();
-
   const accepted = action === "accept";
+  setFriendRequestRowBusy(requestRow, true, accepted ? "accept" : "decline");
   try {
     const requestRef = source === "queue"
       ? doc(db, "friendRequestsQueue", requestId)
@@ -9027,7 +9087,10 @@ async function respondToFriendRequest(requestEntry, action) {
     let requestData = entry || {};
     if (source !== "sentFeed") {
       const requestSnap = await getDoc(requestRef);
-      if (!requestSnap.exists()) return;
+      if (!requestSnap.exists()) {
+        await loadFriendRequests(user.uid);
+        return false;
+      }
       requestData = requestSnap.data() || {};
     }
 
@@ -9035,7 +9098,7 @@ async function respondToFriendRequest(requestEntry, action) {
       const currentFriendCount = await getActiveFriendCount(user.uid, user.email || "");
       if (currentFriendCount >= MAX_FRIENDS) {
         showToast(`Failed to accept. You have hit your friend list limit (${MAX_FRIENDS}).`);
-        return;
+        return false;
       }
 
       const senderEmailForLimitCheck = String(requestData.fromEmail || "").trim().toLowerCase();
@@ -9050,7 +9113,7 @@ async function respondToFriendRequest(requestEntry, action) {
         }
         senderUsernameForLimit = normalizeUsernameForLookup(senderUsernameForLimit) || "friend";
         showToast(`Failed to accept. @${senderUsernameForLimit} has hit their friend list limit (${MAX_FRIENDS}).`);
-        return;
+        return false;
       }
 
       const userEmail = String(user.email || "").trim().toLowerCase();
@@ -9209,7 +9272,7 @@ async function respondToFriendRequest(requestEntry, action) {
       respondedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       updatedAtMs: Date.now()
-    }, { merge: true }).catch(() => {});
+    }, { merge: true });
 
     await setDoc(doc(db, "users", user.uid, "friendRequestDecisions", fromUid), {
       fromUid,
@@ -9266,11 +9329,16 @@ async function respondToFriendRequest(requestEntry, action) {
     await loadSentFriendRequests(user.uid);
     await loadFriendsInsights(user.uid);
     showToast(accepted ? "Friend request accepted." : "Friend request declined.");
+    return true;
   } catch (err) {
     await loadFriendRequests(user.uid).catch(() => {});
     notifyFirestoreError(err);
+    return false;
   } finally {
     friendRequestActionsInFlight.delete(actionKey);
+    const currentRequestRow = Array.from(friendRequestsList?.querySelectorAll(".friend-row[data-request-key]") || [])
+      .find((row) => row.dataset.requestKey === `${source}:${requestId}`);
+    setFriendRequestRowBusy(currentRequestRow || requestRow, false);
   }
 }
 
@@ -9382,7 +9450,7 @@ const BURNOUT_RADAR_PLAN_POOLS = {
       steps: [
         "If you want, choose one task that feels most useful to focus on.",
         "Give yourself permission to leave optional tasks for later.",
-        "Try a brief pause, a drink of water, or a few comfortable breaths.",
+        "Try a brief pause, a few comfortable breaths, or a change of scene if that suits you.",
         "Jot down anything you would like to return to another time."
       ]
     },
@@ -9414,7 +9482,7 @@ const BURNOUT_RADAR_PLAN_POOLS = {
       steps: [
         "Pick one task you would like to make progress on.",
         "Try a short focus block with a clear stopping point.",
-        "Have a drink of water if you would like one.",
+        "Choose a small enjoyable activity or contact someone supportive if that feels useful.",
         "Consider saving one less-urgent task for later."
       ]
     },
@@ -9444,7 +9512,7 @@ const BURNOUT_RADAR_PLAN_POOLS = {
       reason: "Your recent check-ins suggest you may have room to keep a comfortable rhythm.",
       steps: [
         "Finish one useful task before adding another.",
-        "Drink water or stretch between work blocks.",
+        "Take a comfortable movement or screen break between work blocks, if useful.",
         "Leave one small recovery gap before bedtime."
       ]
     },
@@ -9453,7 +9521,7 @@ const BURNOUT_RADAR_PLAN_POOLS = {
       reason: "Your signals look stable. Keep the plan repeatable and calm.",
       steps: [
         "Do one visible task in a single focused block.",
-        "Check water and sleep basics before taking on extra work.",
+        "Check in with your energy and move or pause non-urgent work if needed.",
         "End with one clear next step for tomorrow."
       ]
     }
@@ -9472,9 +9540,9 @@ const BURNOUT_RECOVERY_FALLBACK_PLANS = [
   {
     label: "ground and move",
     steps: [
-      "Drink one glass of water before starting anything else.",
-      "Do a 5-minute stretch or walk to reset your body.",
-      "Pick the smallest task and finish it in 10 minutes."
+      "Notice whether you need rest, a quieter space, or support before adding another task.",
+      "If comfortable and accessible, try a short walk, stretch, or another gentle movement.",
+      "Choose one small next step or decide that a task can wait."
     ]
   },
   {
@@ -9489,7 +9557,7 @@ const BURNOUT_RECOVERY_FALLBACK_PLANS = [
     label: "lower pressure",
     steps: [
       "Remove one non-urgent task from today.",
-      "Take 6 slow breaths and relax your jaw.",
+      "If it feels comfortable, take a few slow breaths; stop if focusing on breathing feels worse.",
       "Do one tiny win and stop when it is done."
     ]
   }
@@ -10237,33 +10305,33 @@ const DAILY_ROUTINE_STARTER_POOL = [
   {
     id: "steady-start",
     entries: [
-      { startHour: 7.5, endHour: 8, label: "Start", action: "Wake up, drink water, and choose one priority." },
-      { startHour: 8.5, endHour: 9, label: "Gentle movement", action: "Stretch or take a short walk to wake up your body." },
-      { startHour: 9.5, endHour: 10.5, label: "Focus block", action: "Work on one important task without switching contexts." },
-      { startHour: 12.5, endHour: 13, label: "Meal break", action: "Pause for a meal and a few minutes away from screens." },
-      { startHour: 17.5, endHour: 18, label: "Reset", action: "Take a relaxed walk or do a short breathing break." },
-      { startHour: 21, endHour: 21.5, label: "Wind down", action: "Dim the lights and prepare one small thing for tomorrow." }
+      { startHour: 7.5, endHour: 8, label: "Easy start", action: "Start at a pace that suits you and notice what you need today." },
+      { startHour: 8.5, endHour: 9, label: "Gentle movement", action: "If it feels comfortable, walk, stretch, or choose another accessible movement." },
+      { startHour: 9.5, endHour: 10.5, label: "Focus block", action: "Work on one meaningful task, then decide whether to continue or pause." },
+      { startHour: 12.5, endHour: 13, label: "Meal break", action: "Take a meal break if it fits your routine, with a few minutes away from screens." },
+      { startHour: 17.5, endHour: 18, label: "Reset", action: "Choose a comfortable change of pace, such as a short walk, stretch, or quiet pause." },
+      { startHour: 21, endHour: 21.5, label: "Wind down", action: "Choose a calm wind-down that works for you; you can leave tomorrow's planning for later." }
     ]
   },
   {
     id: "balanced-day",
     entries: [
-      { startHour: 8, endHour: 8.5, label: "Morning check-in", action: "Drink water and pick a realistic goal for today." },
+      { startHour: 8, endHour: 8.5, label: "Morning check-in", action: "Notice your energy and choose one realistic priority, if that would help." },
       { startHour: 9, endHour: 10, label: "Priority work", action: "Give your most meaningful task a focused first block." },
-      { startHour: 11.5, endHour: 11.75, label: "Hydration break", action: "Refill your water and take a brief screen break." },
-      { startHour: 14, endHour: 14.5, label: "Movement", action: "Get outside or stretch at a comfortable pace." },
-      { startHour: 18, endHour: 18.25, label: "Daily review", action: "Notice one win and choose the next small step." },
-      { startHour: 21.5, endHour: 22, label: "Evening reset", action: "Slow down and make space for a steady night of sleep." }
+      { startHour: 11.5, endHour: 11.75, label: "Short pause", action: "Rest your eyes, move a little if comfortable, or take a quiet break." },
+      { startHour: 14, endHour: 14.5, label: "Movement", action: "If it feels comfortable, try a walk, stretch, or another accessible movement." },
+      { startHour: 18, endHour: 18.25, label: "Daily review", action: "Notice what helped today and what can wait until another time." },
+      { startHour: 21.5, endHour: 22, label: "Evening reset", action: "Choose a calm wind-down that works with your usual sleep schedule." }
     ]
   },
   {
     id: "gentle-momentum",
     entries: [
-      { startHour: 8.5, endHour: 9, label: "Easy start", action: "Start gently with water and a little natural light." },
+      { startHour: 8.5, endHour: 9, label: "Easy start", action: "Ease into the day with a calming activity that suits you." },
       { startHour: 9.5, endHour: 10, label: "Plan the day", action: "Write down one essential task and one optional task." },
       { startHour: 10.5, endHour: 11.25, label: "Focus sprint", action: "Work for 25 minutes, then take a short pause." },
-      { startHour: 13, endHour: 13.5, label: "Recharge", action: "Eat, hydrate, and give yourself a screen-free pause." },
-      { startHour: 16, endHour: 16.5, label: "Fresh-air break", action: "Step outside or move around at a comfortable pace." },
+      { startHour: 13, endHour: 13.5, label: "Recharge", action: "Take a screen-free pause, or have a meal if it fits your routine." },
+      { startHour: 16, endHour: 16.5, label: "Movement break", action: "If comfortable and accessible, take a short walk or stretch." },
       { startHour: 20.5, endHour: 21, label: "Close out", action: "Put away one thing and make tomorrow's start easier." }
     ]
   }
@@ -10279,7 +10347,7 @@ const DAILY_ROUTINE_ACTIVITY_ACTIONS = {
   study: "Study one topic in a focused block, then take a short break.",
   "deep work": "Work on one important task with notifications off.",
   "meal break": "Pause for a meal and a few minutes away from screens.",
-  "hydration break": "Refill your water and take a brief screen break.",
+  "hydration break": "Take a brief pause; drink if you are thirsty and it is right for you.",
   journaling: "Write a few lines about how the day is going.",
   "creative time": "Spend a little time making or practicing something you enjoy.",
   breakfast: "Have breakfast and ease into the day.",
@@ -11508,12 +11576,19 @@ function updateWeeklyReview() {
   if (hasEnoughCurrentDays(current.rescueDays) && current.rescues > previous.rescues) dropped.push("You used more reset checklists this week; notice whether anything would help you feel supported.");
 
   const actions = [];
-  if (current.sleepAvg < 7) actions.push("If it feels useful, try a gentle wind-down reminder before bed.");
-  if (weeklyTargets.waterGoal > 0 && current.waterDailyAvg < weeklyTargets.waterGoal) actions.push("Keep water nearby and check in when you feel thirsty, if that feels useful.");
-  if (current.taskCompletion < 0.7) actions.push("Try choosing one small priority at a time, if that feels manageable.");
-  if (current.moodScore < 2) actions.push("Make space for a mood check-in or a brief pause when it suits you.");
+  if (hasEnoughCurrentDays(current.sleepDays) && current.sleepAvg < previous.sleepAvg - 0.2) {
+    actions.push("Your sleep entries were lower than last week. If you want to support your sleep, consider a steady schedule or a quiet wind-down that suits you.");
+  }
+  if (weeklyTargets.waterGoal > 0 && current.waterDailyAvg < weeklyTargets.waterGoal) {
+    actions.push("If useful, review whether your optional water-tracker goal still fits; follow thirst and any fluid guidance from your healthcare professional.");
+  }
+  if (hasEnoughCurrentDays(current.taskDays) && current.taskCompletion < previous.taskCompletion - 0.08) {
+    actions.push("Your task pace shifted this week. If the list feels heavy, choose one small priority and let non-urgent tasks wait.");
+  }
+  if (hasEnoughCurrentDays(current.moodDays) && current.moodScore < 2) {
+    actions.push("Your mood check-ins were lower this week. Choose an enjoyable activity or supportive connection if either feels right.");
+  }
   if (current.rescues >= 3) actions.push("Consider adding a gentle pause to your day before you usually feel stretched.");
-  while (actions.length < 3) actions.push("Keep what is supporting you, and let the rest stay flexible.");
 
   const patternInsights = [];
   const behaviorPatterns = buildBehaviorPatternMemoryFromLocal(30);
@@ -11522,8 +11597,8 @@ function updateWeeklyReview() {
     const hydrationHigher = Number(behaviorPatterns.waterMood.highAvg) >= Number(behaviorPatterns.waterMood.lowAvg);
     patternInsights.push(
       hydrationHigher
-        ? "Mood check-ins tended to be higher on days with more water logged."
-        : "Mood check-ins tended to be higher on days with less water logged."
+        ? "In these entries, mood check-ins were a little higher on days with more water logged."
+        : "In these entries, mood check-ins were a little higher on days with less water logged."
     );
   } else {
     patternInsights.push("A few more days of mood and water notes may help this pattern take shape.");
@@ -11533,8 +11608,8 @@ function updateWeeklyReview() {
     const sleepHigher = Number(behaviorPatterns.sleepMood.highAvg) >= Number(behaviorPatterns.sleepMood.lowAvg);
     patternInsights.push(
       sleepHigher
-        ? "Mood check-ins tended to be higher on days with more sleep logged."
-        : "Mood check-ins tended to be higher on days with less sleep logged."
+        ? "In these entries, mood check-ins were a little higher on days with more sleep logged."
+        : "In these entries, mood check-ins were a little higher on days with less sleep logged."
     );
   } else {
     patternInsights.push("A few more days of mood and sleep notes may help this pattern take shape.");
@@ -12035,7 +12110,7 @@ function renderHabitQuestUI() {
   if (questXpEl) questXpEl.innerText = `Progress ${progressPercent}/100`;
   updateQuestRecoveryBonusUI();
   if (questStreakEl) questStreakEl.innerText = questStreakCount > 0
-    ? `Current streak: ${questStreakCount} ${questStreakCount === 1 ? "day" : "days"}`
+    ? `A rhythm of ${questStreakCount} ${questStreakCount === 1 ? "day" : "days"}`
     : `${habitQuests.filter((entry) => entry.completed).length} of ${habitQuests.length || 4} steps completed today`;
   if (questProgressFill) {
     questProgressFill.style.width = `${progressPercent}%`;
@@ -12043,10 +12118,10 @@ function renderHabitQuestUI() {
   }
   if (questShieldEl) {
     questShieldEl.innerText = questShieldAvailable
-      ? "Streak support is available if you need a missed day."
+      ? "A missed day is covered if you need it. You can pause anytime."
       : questShieldLastUsedDateKey === getTodayKey()
-        ? "You used your one-day streak support. Take the time you need."
-        : "Streak support is not active yet. Complete today's progress to earn one protected missed day.";
+        ? "Your break was covered. Your check-ins are still here."
+        : "Streaks are optional. Reach 100 progress for support with one missed day, or pause anytime.";
   }
   if (questProgressHintEl) {
     questProgressHintEl.innerText = progressPercent >= 100
@@ -14004,16 +14079,15 @@ function setWellnessScorePendingDisplay() {
   if (wellnessReassuranceEl) {
     wellnessReassuranceEl.innerText = "A check-in will give today’s reflection something to work with.";
   }
+  const suggestions = getEvidenceBasedWellbeingSuggestions();
   if (wellnessDoNowEl) {
-    wellnessDoNowEl.innerHTML = "<b>A GENTLE NEXT STEP:</b> Add a check-in whenever you feel ready.";
+    wellnessDoNowEl.innerHTML = `<b>A GENTLE NEXT STEP:</b> ${escapeHtml(suggestions[0].action)}`;
   }
   if (wellnessActionsEl) {
-    wellnessActionsEl.innerHTML = [
-      "Notice how you are feeling.",
-      "Have a glass of water if it sounds good.",
-      "Choose one task, or leave it for later.",
-      "Write a gratitude note if one comes to mind."
-    ].map((item) => `<li class="wellness-secondary-task">${escapeHtml(item)}</li>`).join("");
+    wellnessActionsEl.innerHTML = suggestions
+      .slice(1)
+      .map((item) => `<li class="wellness-secondary-task">${escapeHtml(item.action)}</li>`)
+      .join("");
   }
   return { score: null, category: "Not Yet Reflected", status: "Waiting", calculated: false };
 }
@@ -14048,21 +14122,173 @@ function closeWellnessScoreInfoModal(event) {
   if (wellnessScoreInfoModal) wellnessScoreInfoModal.style.display = "none";
 }
 
-function getWellnessSuggestionKey(entryOrText = "") {
-  const category = entryOrText && typeof entryOrText === "object"
-    ? String(entryOrText.category || "").trim().toLowerCase()
-    : "";
-  const text = String(
-    entryOrText && typeof entryOrText === "object" ? entryOrText.text || "" : entryOrText || ""
-  ).toLowerCase();
-  if (/\b(water|hydrate|hydration|glass|cups?|drink)\b/.test(text)) return "water";
-  if (/\b(gratitude|grateful|thankful)\b/.test(text)) return "gratitude";
-  if (/\b(sleep|bedtime|sleep window|wind[- ]down)\b/.test(text)) return "sleep";
-  if (/\b(task|pending|focus sprint|work block)\b/.test(text)) return "tasks";
-  if (/\b(mood|breath|breathing|rescue|calm|walk)\b/.test(text)) return "mood";
-  if (/\bchallenge\b/.test(text)) return "challenge";
-  if (category) return category;
-  return `text:${text.replace(/\s+/g, " ").trim()}`;
+function getEvidenceBasedWellbeingSuggestions({
+  moodLabel = "",
+  moodLogged = false,
+  emotion = "",
+  pendingTasks = 0
+} = {}) {
+  const normalize = (value) => String(value || "").trim().toLowerCase();
+  const currentEmotion = normalize(emotion);
+  const loggedMood = normalize(moodLabel);
+  const moodSignal = currentEmotion && currentEmotion !== "neutral"
+    ? currentEmotion
+    : moodLogged
+      ? loggedMood
+      : "";
+  const taskCount = Math.max(0, Number(pendingTasks) || 0);
+  let recommendations;
+
+  if (["stressed", "anxious", "angry", "overwhelmed"].includes(moodSignal)) {
+    recommendations = [
+      {
+        action: "If it feels comfortable, try a minute of slow, unforced breathing. Stop or switch approaches if focusing on your breath feels uncomfortable.",
+        state: "A moment to settle",
+        prompt: "Slow breathing is one relaxation technique that may bring on the body's relaxation response; it does not help everyone.",
+        type: ""
+      },
+      {
+        action: "If you can, step away from the immediate stressor briefly and decide what can wait.",
+        state: "Make a little room",
+        prompt: "Choosing what needs attention now and what can wait is one way to reduce overload.",
+        type: ""
+      },
+      {
+        action: "If a task is adding pressure, make its first step smaller and set a stopping point.",
+        state: "Keep the next step manageable",
+        prompt: "You do not need to finish everything to take a useful next step.",
+        type: ""
+      }
+    ];
+  } else if (["sad", "low", "lonely"].includes(moodSignal)) {
+    recommendations = [
+      {
+        action: "Choose one small enjoyable or meaningful activity, or send a low-pressure message to someone you trust.",
+        state: "Gentle support",
+        prompt: "Enjoyable activities and supportive social connection are among NIMH's general self-care suggestions.",
+        type: ""
+      },
+      {
+        action: "Make it easy to start: listen to one song, spend a few minutes on a hobby, or step outside if that suits you.",
+        state: "Keep it small",
+        prompt: "A small, personally enjoyable activity is an option, not something you have to complete.",
+        type: ""
+      },
+      {
+        action: "If tasks feel like too much, choose what can wait and leave one non-urgent thing for later.",
+        state: "Ease the load",
+        prompt: "It is okay to adjust your plans when you need more room.",
+        type: ""
+      }
+    ];
+  } else if (["drained", "tired"].includes(moodSignal)) {
+    recommendations = [
+      {
+        action: "If possible, take a short pause or move one non-urgent demand. If you need to continue, choose a small first step with a clear stopping point.",
+        state: "Make room to recover",
+        prompt: "You can respond to low energy by reducing the load rather than pushing through every task.",
+        type: ""
+      },
+      {
+        action: "Notice whether rest, a quieter setting, or a change of pace would fit your needs right now.",
+        state: "Check what would help",
+        prompt: "Your experience matters more than a generic target.",
+        type: ""
+      },
+      {
+        action: "If tiredness or sleep trouble keeps affecting daily life, consider discussing it with a healthcare professional.",
+        state: "Get support if needed",
+        prompt: "A wellness app cannot assess persistent sleep or health problems.",
+        type: ""
+      }
+    ];
+  } else if (["positive", "happy", "good", "great", "energized"].includes(moodSignal)) {
+    recommendations = [
+      {
+        action: "If you want, spend a few minutes on something you enjoy or share the moment with someone. You do not need to turn a good moment into more work.",
+        state: "Enjoy what is working",
+        prompt: "Enjoyable activities and supportive connection can be part of everyday self-care.",
+        type: ""
+      },
+      {
+        action: "Keep one part of your day that is already working, and leave room to rest.",
+        state: "Keep a comfortable rhythm",
+        prompt: "There is no need to add more just because you feel okay.",
+        type: ""
+      },
+      {
+        action: "If movement feels comfortable, choose a few minutes of walking, stretching, or another accessible activity.",
+        state: "Move if it fits",
+        prompt: "Small amounts of physical activity count; adapt it to what feels comfortable for you.",
+        type: ""
+      }
+    ];
+  } else if (taskCount >= 3) {
+    recommendations = [
+      {
+        action: "If your list feels heavy, choose what truly needs attention today and decide what can wait.",
+        state: "Make space in the list",
+        prompt: "Setting priorities and allowing non-urgent tasks to wait can reduce unnecessary pressure.",
+        type: "tasks"
+      },
+      {
+        action: "Pick one manageable first step, then pause and decide whether to continue.",
+        state: "One step is enough",
+        prompt: "A task list is a set of options, not a measure of your well-being.",
+        type: "tasks"
+      },
+      {
+        action: "If you have been sitting and movement feels comfortable, try a few minutes of walking, stretching, or another accessible movement.",
+        state: "Take a movement break",
+        prompt: "WHO notes that all physical activity counts and any amount is better than none.",
+        type: ""
+      }
+    ];
+  } else if (!moodLogged) {
+    recommendations = [
+      {
+        action: "Take a moment to notice your energy and tension, then choose what fits: rest, movement, connection, or one small practical step.",
+        state: "Start with what you need",
+        prompt: "Missing check-ins are not a problem; notice what would support you rather than chasing a score.",
+        type: "mood"
+      },
+      {
+        action: "If you have been sitting and movement feels comfortable, try a few minutes of walking, stretching, or another accessible movement.",
+        state: "Move if it fits",
+        prompt: "WHO notes that all physical activity counts and any amount is better than none.",
+        type: ""
+      },
+      {
+        action: "Choose a small enjoyable activity or reach out to someone supportive if connection would feel good.",
+        state: "Choose what feels supportive",
+        prompt: "Enjoyable activities and supportive connection are among NIMH's general self-care suggestions.",
+        type: ""
+      }
+    ];
+  } else {
+    recommendations = [
+      {
+        action: "If you have been sitting and movement feels comfortable, try a few minutes of walking, stretching, or another accessible movement.",
+        state: "Move if it fits",
+        prompt: "WHO notes that all physical activity counts and any amount is better than none.",
+        type: ""
+      },
+      {
+        action: "Choose a small enjoyable activity or reach out to someone supportive if connection would feel good.",
+        state: "A moment for enjoyment or connection",
+        prompt: "Enjoyable activities and supportive connection are among NIMH's general self-care suggestions.",
+        type: ""
+      },
+      {
+        action: "If an open task is weighing on you, choose one small next step or decide what can wait.",
+        state: "Keep it manageable",
+        prompt: "A task list is a set of options, not a measure of your well-being.",
+        type: taskCount ? "tasks" : ""
+      }
+    ];
+  }
+
+  return recommendations;
 }
 
 function focusDashboardCard(cardType) {
@@ -14072,128 +14298,6 @@ function focusDashboardCard(cardType) {
   if (!card) return;
   card.scrollIntoView({ behavior: "smooth", block: "center" });
   window.setTimeout(() => target?.focus(), 350);
-}
-
-const TODAY_FOCUS_COPY_POOL = {
-  moodMissing: [
-    { action: "Check in with how you feel, whenever you are ready.", state: "A moment to check in", prompt: "There is no mood check-in from today yet, so this is the clearest place to begin.", type: "mood" },
-    { action: "Give today a quick mood check-in.", state: "Start with your experience", prompt: "A mood check-in can help the rest of today’s picture feel more personal.", type: "mood" }
-  ],
-  stressed: [
-    { action: "Take one quiet minute before your next task.", state: "Make room to soften", prompt: "You logged feeling stressed today. A brief pause may be more useful than adding another task.", type: "mood" },
-    { action: "Choose one gentle thing that could support you.", state: "Keep it gentle", prompt: "Your mood check-in suggests taking today one manageable step at a time.", type: "mood" }
-  ],
-  low: [
-    { action: "Choose one gentle thing that could support you.", state: "Keep it gentle", prompt: "You logged a low moment today. A small, supportive choice is enough for now.", type: "mood" },
-    { action: "Make space for something that feels comforting.", state: "Support, not pressure", prompt: "Your check-in points toward care and comfort rather than a longer list of demands.", type: "mood" }
-  ],
-  sleepMissing: [
-    { action: "Log sleep when you have a moment.", state: "Complete the picture", prompt: "Sleep is not logged for today yet, so adding it would make this reflection more personal.", type: "sleep" },
-    { action: "Notice how rested or tired you feel.", state: "Listen inward", prompt: "There is no sleep entry from today. You can add one later, or simply notice how your energy feels.", type: "sleep" }
-  ],
-  water: [
-    { action: "Have some water if it sounds good.", state: "A small reset", prompt: "Your saved water goal is not met yet. This is a gentle option, not a requirement.", type: "water" },
-    { action: "Check in with water when it feels useful.", state: "Keep it flexible", prompt: "Today’s water entry is below the goal you chose, so a small check-in may be useful.", type: "water" }
-  ],
-  tasks: [
-    { action: "Choose one manageable task to begin.", state: "One next step", prompt: "You have open tasks today. Picking one is enough; the whole list does not need to be finished now.", type: "tasks" },
-    { action: "Look at today’s tasks and choose what matters most.", state: "Choose your focus", prompt: "Your task list has an open item. Start with the one that would make today feel a little easier.", type: "tasks" }
-  ],
-  steady: [
-    { action: "Review what has helped your mood, energy, or focus today.", state: "Keep what is working", prompt: "Your available check-ins look steady, so use one thing that is already helping to shape the rest of the day.", type: "mood" },
-    { action: "Choose one activity that supports the rest of your day.", state: "Build from what is steady", prompt: "Your available check-ins do not show an urgent gap right now. A useful next step can come from what is already working.", type: "mood" }
-  ]
-};
-
-function chooseTodayFocusCopy(key, todayKey, signalSeed = "") {
-  const options = TODAY_FOCUS_COPY_POOL[key] || TODAY_FOCUS_COPY_POOL.steady;
-  const seed = `${todayKey}:${key}:${signalSeed}`;
-  let hash = 0;
-  for (let index = 0; index < seed.length; index += 1) hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
-  return options[hash % options.length];
-}
-
-const TODAY_PRIORITY_POOL = {
-  moodMissing: [
-    "Check in with how you feel, whenever you are ready.",
-    "Notice your mood before deciding what you need next.",
-    "Give yourself a quick mood check-in; you can keep it simple."
-  ],
-  stressed: [
-    "Make room for a brief pause before the next task.",
-    "Choose one calming or supportive thing, if it helps.",
-    "Keep the next step small while your energy feels stretched."
-  ],
-  low: [
-    "Choose one gentle thing that could make today a little easier.",
-    "Make space for comfort or connection, if either feels available.",
-    "Let the next step be supportive rather than demanding."
-  ],
-  sleepMissing: [
-    "Notice how rested or tired you feel.",
-    "Log sleep later if you want a fuller reflection.",
-    "Protect a little room for rest tonight, if that feels useful."
-  ],
-  sleepLight: [
-    "Make a little room for rest tonight.",
-    "Keep tonight’s wind-down simple and flexible.",
-    "Notice what helps your energy feel supported."
-  ],
-  water: [
-    "Check in with water if it feels useful.",
-    "Keep water nearby without turning it into a requirement.",
-    "Take a small drink when your body asks for it."
-  ],
-  tasks: [
-    "Choose one open task that would make today feel easier.",
-    "Give your attention to one manageable task.",
-    "Leave some tasks for later if they are not important today."
-  ],
-  steady: [
-    "Review what has helped your mood, energy, or focus today and carry one useful thing forward.",
-    "Use today’s steady check-ins to choose one activity that supports the rest of your day.",
-    "Your current check-ins look steady; protect the routine or activity that is working best today."
-  ]
-};
-
-function chooseTodayPriorities(todayKey, signalSeed, details) {
-  const priorities = [];
-  const addPoolItem = (poolKey) => {
-    const options = TODAY_PRIORITY_POOL[poolKey] || [];
-    if (!options.length) return;
-    const seed = `${todayKey}:${poolKey}:${signalSeed}`;
-    let hash = 0;
-    for (let index = 0; index < seed.length; index += 1) {
-      hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
-    }
-    const item = options[hash % options.length];
-    if (!priorities.includes(item)) priorities.push(item);
-  };
-  const addDataBasedSteadyPriority = () => {
-    const trackedSignals = [
-      details.moodLogged ? "mood" : "",
-      details.sleepLogged ? "sleep" : "",
-      details.hasWaterGoal ? "water" : "",
-      details.totalTasks > 0 ? "tasks" : ""
-    ].filter(Boolean);
-    if (trackedSignals.length >= 3) {
-      priorities.push(`Your ${trackedSignals.join(", ")} check-ins look steady; review which part of that rhythm helped most today.`);
-    } else if (trackedSignals.length) {
-      priorities.push(`Your ${trackedSignals.join(" and ")} check-in${trackedSignals.length > 1 ? "s are" : " is"} steady; carry one helpful part of it into the rest of today.`);
-    } else {
-      priorities.push("Start with a mood or energy check-in so today’s priorities can reflect what you actually need.");
-    }
-  };
-
-  if (!details.moodLogged) addPoolItem("moodMissing");
-  else if (details.moodLabel === "Stressed") addPoolItem("stressed");
-  else if (details.moodLabel === "Low") addPoolItem("low");
-  if (!details.sleepLogged) addPoolItem("sleepMissing");
-  else if (details.sleepHours > 0 && details.sleepHours < 7) addPoolItem("sleepLight");
-  if (details.hasWaterGoal && details.waterToday < details.waterGoal) addPoolItem("water");
-  if (details.pendingCount > 0) addPoolItem("tasks");
-  if (!priorities.length) addDataBasedSteadyPriority();
-  return priorities.slice(0, 3);
 }
 
 function getDayProgressDetails({ moodLogged, sleepLogged, hasWaterGoal, waterToday, waterGoalValue, totalTasks, doneTasks }) {
@@ -14300,55 +14404,30 @@ function updateDashboardFocus() {
   }
   if (todayFocusTasksEl) todayFocusTasksEl.innerText = `${taskCounts.doneTasks}/${taskCounts.totalTasks}`;
 
-  let copyKey = "steady";
-  if (moodMeta.logged && moodMeta.label === "Stressed") {
-    copyKey = "stressed";
-  } else if (moodMeta.logged && moodMeta.label === "Low") {
-    copyKey = "low";
-  } else if (!moodMeta.logged) {
-    copyKey = "moodMissing";
-  } else if (!sleepToday) {
-    copyKey = "sleepMissing";
-  } else if (hasWaterGoal && waterToday < effectiveWaterGoal) {
-    copyKey = "water";
-  } else if (pendingCount > 0) {
-    copyKey = "tasks";
-  }
-  const focusCopy = chooseTodayFocusCopy(
-    copyKey,
-    todayKey,
-    `${moodMeta.label}:${sleepToday}:${waterToday}:${pendingCount}:${taskCounts.doneTasks}`
-  );
+  const suggestions = getEvidenceBasedWellbeingSuggestions({
+    moodLabel: moodMeta.label,
+    moodLogged: moodMeta.logged,
+    pendingTasks: pendingCount
+  });
+  const focusCopy = suggestions[0];
 
   todayFocusActionEl.innerText = focusCopy.action;
   if (todayFocusStateEl) todayFocusStateEl.innerText = focusCopy.state;
   if (todayFocusPromptEl) todayFocusPromptEl.innerText = focusCopy.prompt;
   const button = todayFocusActionEl.closest(".dashboard-focus-checkin")?.querySelector(".dashboard-focus-button");
   if (button) {
-    button.innerText = focusCopy.type === "mood" ? "Check in with mood"
-      : focusCopy.type === "water" ? "Log some water"
-        : focusCopy.type === "sleep" ? "Log sleep"
-          : "View today’s tasks";
-    button.setAttribute("onclick", `focusDashboardCard('${focusCopy.type}')`);
+    button.hidden = !focusCopy.type;
+    if (focusCopy.type) {
+      button.innerText = focusCopy.type === "mood" ? "Open mood check-in" : "View today’s tasks";
+      button.setAttribute("onclick", `focusDashboardCard('${focusCopy.type}')`);
+    }
   }
 
   if (todayFocusPrioritiesEl) {
-    const priorities = chooseTodayPriorities(
-      todayKey,
-      `${moodMeta.label}:${sleepToday}:${waterToday}:${pendingCount}:${taskCounts.doneTasks}`,
-      {
-        moodLogged: moodMeta.logged,
-        moodLabel: moodMeta.label,
-        sleepLogged: sleepToday > 0,
-        sleepHours: Number(sleepToday) || 0,
-        hasWaterGoal,
-        waterToday,
-        waterGoal: effectiveWaterGoal,
-        pendingCount,
-        totalTasks: taskCounts.totalTasks
-      }
-    );
-    todayFocusPrioritiesEl.innerHTML = priorities.slice(0, 3).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    todayFocusPrioritiesEl.innerHTML = suggestions
+      .slice(1)
+      .map((item) => `<li>${escapeHtml(item.action)}</li>`)
+      .join("");
   }
 }
 
@@ -14357,7 +14436,6 @@ function updateWellnessScore() {
   const todayKey = getTodayKey();
   const waterToday = getTodayWater();
   const effectiveWaterGoal = waterGoal > 0 ? waterGoal : 8;
-  const hasCustomWaterGoal = waterGoal > 0;
   const waterRatio = Math.min(1, waterToday / effectiveWaterGoal);
   const waterPoints = Math.round(waterRatio * 30);
 
@@ -14390,32 +14468,6 @@ function updateWellnessScore() {
   const totalScore = Math.max(0, Math.min(100, waterPoints + sleepPoints + moodPoints + taskPoints + gratitudePoints + challengePoints + actionBoost));
   const hasScoreInputToday = hasWellnessScoreInputToday(todayKey);
 
-  const waterGap = Math.max(0, effectiveWaterGoal - waterToday);
-  const waterGapSeverity = waterGap > 0 ? Math.min(1, waterGap / Math.max(1, effectiveWaterGoal)) : 0;
-  const sleepGapSeverity = sleepToday < 7 ? Math.min(1, (7 - sleepToday) / 7) : 0;
-  const taskGapSeverity = taskRatio < 0.7 ? Math.min(1, 0.7 - taskRatio) : 0;
-  const moodGapSeverity = !moodMeta.logged
-    ? 1
-    : moodMeta.label === "Angry"
-      ? 0.95
-      : moodMeta.label === "Stressed"
-        ? 0.85
-        : moodMeta.label === "Low"
-          ? 0.7
-          : moodMeta.label === "Neutral"
-            ? 0.2
-            : 0;
-  const gratitudeGapSeverity = hasGratitudeToday ? 0 : 0.45;
-  const challengeGapSeverity = dailyChallengeCompleted ? 0 : 0.5;
-  const biggestOtherGapSeverity = Math.max(
-    sleepGapSeverity,
-    taskGapSeverity,
-    moodGapSeverity,
-    gratitudeGapSeverity,
-    challengeGapSeverity
-  );
-  const waterIsBiggestGap = waterGapSeverity > 0 && waterGapSeverity >= biggestOtherGapSeverity;
-
   if (!hasScoreInputToday) {
     setWellnessScorePendingDisplay();
     return;
@@ -14430,144 +14482,21 @@ function updateWellnessScore() {
       "You only need one small check-in at a time; there is nothing to chase.";
   }
 
-  const rankedActions = [];
-  const addRankedAction = (text, urgency, ease, stateFit = 0, category = text) => {
-    const score = (Number(urgency) || 0) * 2 + (Number(ease) || 0) + (Number(stateFit) || 0);
-    rankedActions.push({
-      text,
-      category,
-      score,
-      urgency: Number(urgency) || 0
-    });
-  };
-
-  if (!moodMeta.logged) {
-    addRankedAction("Check in with how you feel, whenever you are ready.", 10, 10, 3, "mood");
-  } else if (moodMeta.label === "Angry") {
-    addRankedAction("Try a brief pause before moving to the next thing, if that feels helpful.", 10, 9, 4, "mood");
-  } else if (moodMeta.label === "Stressed") {
-    addRankedAction("A short breathing pause may feel supportive before your next task.", 9, 9, 4, "mood");
-  } else if (moodMeta.label === "Low") {
-    addRankedAction("A short walk or breathing pause may feel good, if you have the space.", 8, 7, 3, "mood");
-  } else if (moodMeta.label === "Neutral") {
-    addRankedAction("A quiet moment is here if you would like one.", 4, 9, 1, "mood");
-  }
-
-  if (waterRatio < 1) {
-    const remaining = Math.max(0, effectiveWaterGoal - waterToday);
-    if (hasCustomWaterGoal) {
-      addRankedAction(
-        `Your goal has ${remaining} glass${remaining === 1 ? "" : "es"} to go, if that feels right.`,
-        waterIsBiggestGap ? (waterToday === 0 ? 8 : remaining <= 2 ? 7 : 6) : 3,
-        waterIsBiggestGap ? (waterToday === 0 ? 10 : 7) : 8,
-        2,
-        "water"
-      );
-    } else {
-      addRankedAction(
-        waterToday === 0
-          ? "Have a glass of water if it sounds good."
-          : "Have another glass if it feels right.",
-        waterIsBiggestGap ? (waterToday === 0 ? 7 : 5) : 2,
-        waterIsBiggestGap ? (waterToday === 0 ? 10 : 7) : 8,
-        2,
-        "water"
-      );
-    }
-  }
-
-  if (sleepToday < 7) {
-    addRankedAction(
-      sleepToday > 0
-        ? "Make a little room for rest tonight, in whatever way is possible."
-        : "If it helps, choose a restful bedtime window that suits your evening.",
-      sleepToday <= 5 ? 8 : 6,
-      5,
-      1,
-      "sleep"
-    );
-  }
-
-  if (taskRatio < 0.7) {
-    const pendingCount = getTodayTaskEntries().filter((entry) => !entry.completed).length;
-    addRankedAction(
-      pendingCount > 0
-        ? "Choose one of today’s open tasks, if it feels manageable."
-        : "Add a small task only if it would help you feel more settled.",
-      pendingCount >= 5 ? 8 : 6,
-      7,
-      2,
-      "tasks"
-    );
-  }
-
-  if (!hasGratitudeToday) addRankedAction("Write a gratitude note if something comes to mind.", 5, 9, 1, "gratitude");
-  if (!dailyChallengeCompleted) addRankedAction("Try today’s invitation if it feels right.", 6, 6, 1, "challenge");
-
-  if (waterToday > 0 && moodMeta.logged && !hasGratitudeToday) {
-    addRankedAction("You can leave a gratitude note after your check-in, if you like.", 4, 9, 1, "gratitude");
-  }
-
-  if (moodMeta.logged && !dailyChallengeCompleted && taskRatio >= 0.7) {
-    addRankedAction("Today’s invitation is here if you would like to try it.", 5, 7, 1, "challenge");
-  }
-
-  if (!rankedActions.length) {
-    addRankedAction("Pause for a brief check-in whenever it suits you.", 6, 10, 2, "momentum");
-    addRankedAction("Return to one small task before your next break, if it feels manageable.", 5, 8, 1, "tasks");
-    addRankedAction("Have some water if you feel like it.", 4, 9, 1, "water");
-    addRankedAction("Write a gratitude note if something comes to mind.", 4, 9, 1, "gratitude");
-  }
-
-  rankedActions.sort((a, b) => b.score - a.score || b.urgency - a.urgency || a.text.localeCompare(b.text));
-
-  const uniqueActions = [];
-  const seenSuggestionKeys = new Set();
-  rankedActions.forEach((entry) => {
-    const key = getWellnessSuggestionKey(entry);
-    if (seenSuggestionKeys.has(key)) return;
-    seenSuggestionKeys.add(key);
-    uniqueActions.push({ text: entry.text, key });
+  const pendingCount = getTodayTaskEntries().filter((entry) => !entry.completed).length;
+  const suggestions = getEvidenceBasedWellbeingSuggestions({
+    moodLabel: moodMeta.label,
+    moodLogged: moodMeta.logged,
+    pendingTasks: pendingCount
   });
-
-  const fallbackActions = [
-    "Take a brief breathing pause, if it feels helpful.",
-    "Write a gratitude note if something comes to mind.",
-    "Have a glass of water if you feel like it.",
-    "Return to one small task when you have space.",
-    "Choose a restful bedtime window that suits you."
-  ];
-
-  const primaryAction = uniqueActions[0]?.text || "Pause for a brief check-in whenever it suits you.";
-  const secondaryActions = uniqueActions.slice(1, 6).map((entry) => entry.text);
-  const usedSuggestionKeys = new Set(uniqueActions.slice(0, 6).map((entry) => entry.key));
-
-  fallbackActions.forEach((fallback) => {
-    if (secondaryActions.length >= 5) return;
-    const key = getWellnessSuggestionKey(fallback);
-    if (usedSuggestionKeys.has(key)) return;
-    usedSuggestionKeys.add(key);
-    secondaryActions.push(fallback);
-  });
-
-  let fillerIndex = 0;
-  while (secondaryActions.length < 5) {
-    const filler = fillerIndex === 0
-      ? "Take another small moment for yourself, if you would like."
-      : `Choose another gentle check-in ${fillerIndex + 1}, if it feels useful.`;
-    const key = `filler:${fillerIndex}`;
-    fillerIndex += 1;
-    if (usedSuggestionKeys.has(key)) continue;
-    usedSuggestionKeys.add(key);
-    secondaryActions.push(filler);
-  }
-
   if (wellnessDoNowEl) {
-    wellnessDoNowEl.innerHTML = `<b>A GENTLE NEXT STEP:</b> ${escapeHtml(primaryAction)}`;
+    wellnessDoNowEl.innerHTML = `<b>A GENTLE NEXT STEP:</b> ${escapeHtml(suggestions[0].action)}`;
   }
-  wellnessActionsEl.innerHTML = secondaryActions
-    .map((item) => `<li class="wellness-secondary-task">${escapeHtml(item)}</li>`)
-    .join("");
+  if (wellnessActionsEl) {
+    wellnessActionsEl.innerHTML = suggestions
+      .slice(1)
+      .map((item) => `<li class="wellness-secondary-task">${escapeHtml(item.action)}</li>`)
+      .join("");
+  }
 }
 
 function getCrashRiskSnapshot() {
@@ -15023,6 +14952,51 @@ function normalizeDailyRoutineState(input) {
   };
 }
 
+function buildCurrentRoutineSuggestion(now = new Date()) {
+  const entries = Array.isArray(dailyRoutineState?.entries) ? dailyRoutineState.entries : [];
+  const currentMinute = now.getHours() * 60 + now.getMinutes();
+  const localTime = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const moodMeta = getMoodStateMeta(getTodayMood());
+  const pendingTasks = getTodayTaskEntries().filter((entry) => !entry?.completed).length;
+  const optionalWellbeingStep = getEvidenceBasedWellbeingSuggestions({
+    moodLabel: moodMeta.label,
+    moodLogged: moodMeta.logged,
+    pendingTasks
+  })[0].action;
+  const activeEntry = entries.find((entry) => {
+    const startMinute = Math.round(Number(entry.startHour) * 60);
+    const endMinute = Math.round(Number(entry.endHour) * 60);
+    return (currentMinute >= startMinute && currentMinute < Math.min(endMinute, 1440))
+      || (endMinute > 1440 && currentMinute < endMinute - 1440);
+  });
+
+  if (activeEntry) {
+    const action = String(activeEntry.action || "").trim();
+    const endTime = formatRoutineHour(activeEntry.endHour, "24");
+    const activity = action ? ` It suggests: ${action}` : "";
+    return `It’s ${localTime} where you are, and your routine has ${activeEntry.label} planned now${endTime ? ` until ${endTime}` : ""}.${activity} If that still fits, you could follow it; it’s also okay to adjust or take a break.`;
+  }
+
+  const nextEntry = entries
+    .map((entry) => ({
+      entry,
+      startMinute: Math.round(Number(entry.startHour) * 60)
+    }))
+    .filter((item) => item.startMinute > currentMinute)
+    .sort((left, right) => left.startMinute - right.startMinute)[0];
+
+  if (nextEntry) {
+    const startTime = formatRoutineHour(nextEntry.entry.startHour, "24");
+    return `It’s ${localTime} where you are. Your routine leaves this time open; the next planned activity is ${nextEntry.entry.label} today at ${startTime}. If you want a wellbeing step for the gap: ${optionalWellbeingStep} You can also leave the gap open—there’s no need to fill every minute.`;
+  }
+
+  if (entries.length) {
+    return `It’s ${localTime} where you are. Nothing else is scheduled in your routine today. If you want a wellbeing step: ${optionalWellbeingStep} It’s completely fine to rest or leave the rest of the day unplanned.`;
+  }
+
+  return `It’s ${localTime} where you are, and I don’t see a saved routine with something scheduled now. If a concrete wellbeing step would help: ${optionalWellbeingStep} You can also decide later—there’s no need to make a plan unless you want one.`;
+}
+
 async function loadDailyRoutine(userId) {
   dailyRoutineState = getDefaultDailyRoutineState();
   if (!userId) {
@@ -15073,7 +15047,7 @@ function renderDailyRoutine() {
     if (!entries.length) {
       dailyRoutineMeta.innerText = "Your routine is saved to your account and stays here after refresh.";
     } else if (dailyRoutineState.source === "personalized") {
-      dailyRoutineMeta.innerText = "Personalized using your recent task, mood, sleep, and hydration data.";
+      dailyRoutineMeta.innerText = "Personalized using your routine preferences, task history, mood check-ins, and sleep patterns.";
     } else if (dailyRoutineState.source === "starter") {
       dailyRoutineMeta.innerText = "A starter routine is ready while your check-in history is still growing. Shape or regenerate it whenever you like.";
     } else {
@@ -15259,18 +15233,13 @@ async function saveDailyRoutineStartTime(timeText) {
 function hasRoutineHistoryData() {
   return taskEntries.length > 0
     || moodDates.length > 0
-    || waterDates.length > 0
-    || sleepDates.length > 0
-    || gratitudeEntries.length > 0;
+    || sleepDates.length > 0;
 }
 
 function buildDataPersonalizedRoutine() {
   const snapshot = getWellnessSnapshot();
   const trends = buildTrendSignals();
-  const sleepNeedsProtection = (snapshot.sleepToday > 0 && snapshot.sleepToday < 7)
-    || trends.sleepDelta < -0.35;
-  const hydrationNeedsAttention = trends.waterDelta < -0.25
-    || (snapshot.hasWaterGoal && snapshot.waterToday < snapshot.todayGoal * 0.5);
+  const sleepNeedsProtection = trends.sleepDelta < -0.35;
   const moodNeedsReset = trends.moodDelta < -0.25
     || /\b(low|stressed|angry|sad|anxious|overwhelmed)\b/i.test(String(snapshot.moodToday || ""));
   const preferences = dailyRoutineState.preferences || {};
@@ -15291,57 +15260,48 @@ function buildDataPersonalizedRoutine() {
   };
 
   let cursor = startHour;
-  cursor = append(cursor, 0.5, "Wake up", "Get out of bed, open the curtains, and drink a glass of water.");
-  cursor = append(cursor, 0.5, "Get ready", "Wash up, get dressed, and make your bed.");
-  cursor = append(cursor, 0.5, "Breakfast", "Have breakfast and take a few minutes to get ready for the day.");
+  cursor = append(cursor, 0.5, "Easy start", "Ease into the day at a pace that suits you; notice what would help.");
+  cursor = append(cursor, 0.5, "Get ready", "Get ready in a way that feels comfortable for your day.");
+  cursor = append(cursor, 0.5, "Breakfast or quiet time", "Have breakfast if it fits your routine, or use this as unplanned time.");
 
   const pendingTasks = taskEntries
     .filter((entry) => !entry?.completed
       && dateToKey(entry?.time) === getTodayKey()
       && String(entry?.text || "").trim())
     .sort((left, right) => getTaskSortTimestamp(left) - getTaskSortTimestamp(right));
-  const taskBlockCount = Math.min(pendingTasks.length, 6);
+  const taskBlockCount = Math.min(pendingTasks.length, 3);
   if (pendingTasks.length) {
     cursor = Math.max(cursor, 9);
     for (let index = 0; index < taskBlockCount; index += 1) {
       const taskName = String(pendingTasks[index].text).trim().replace(/\s+/g, " ");
       cursor = append(
         cursor,
-        0.75,
-        `Task ${index + 1}: ${taskName.slice(0, 72)}`,
-        `Complete "${taskName.slice(0, 140)}". Focus on this task, then check it off in Productivity.`
+        0.5,
+        `Task focus: ${taskName.slice(0, 72)}`,
+        `Work on the first step of "${taskName.slice(0, 140)}", then decide whether to continue or pause.`
       );
-      if (index === 0 && hydrationNeedsAttention) {
-        cursor = append(cursor, 0.25, "Water break", "Refill your water and take a short screen break.");
-      } else if (index < taskBlockCount - 1 && (index + 1) % 2 === 0) {
-        cursor = append(cursor, 0.25, "Short break", "Stand up, stretch, and rest your eyes before the next task.");
+      if (index < taskBlockCount - 1) {
+        cursor = append(cursor, 0.25, "Pause", "Rest your eyes or choose a comfortable change of pace before deciding what comes next.");
       }
     }
 
     if (pendingTasks.length > taskBlockCount) {
-      const remainingNames = pendingTasks
-        .slice(taskBlockCount)
-        .map((entry) => String(entry.text).trim().replace(/\s+/g, " "))
-        .filter(Boolean);
       cursor = append(
         cursor,
-        1,
-        `${remainingNames.length} more task${remainingNames.length === 1 ? "" : "s"}`,
-        `Continue and complete: ${remainingNames.map((name) => `"${name.slice(0, 70)}"`).join(", ")}.`
+        0.5,
+        "Review the rest of the list",
+        "Choose what truly needs attention today and move non-urgent tasks to another time."
       );
     }
   } else {
     cursor = Math.max(cursor, 9);
-    cursor = append(cursor, 1, "Focus block", "Choose your most important task and work on it without distractions.");
+    cursor = append(cursor, 0.5, "Optional focus time", "If a task would help, choose one small first step; this block can also stay open.");
   }
 
   const lunchStart = Math.max(cursor + 0.25, 12.5);
-  cursor = append(lunchStart, 0.75, "Lunch", "Take a proper meal break away from your work if you can.");
-  if (hydrationNeedsAttention) {
-    cursor = append(cursor, 0.25, "Hydration check", "Have a glass of water and keep a refill nearby.");
-  }
+  cursor = append(lunchStart, 0.75, "Meal or rest break", "Take a meal or rest break if it fits your day; this time can stay flexible.");
   if (moodNeedsReset) {
-    cursor = append(cursor, 0.25, "Reset break", "Take a few slow breaths or step outside before returning to your day.");
+    cursor = append(cursor, 0.25, "Supportive pause", "Try a comfortable breathing pause, step away briefly, or reach out to someone supportive.");
   }
 
   const completedActivityTask = taskEntries
@@ -15355,17 +15315,17 @@ function buildDataPersonalizedRoutine() {
     ? completedActivityTask.slice(0, 60)
     : (trends.taskDelta < 0 || sleepNeedsProtection ? "Easy walk and stretch" : "Movement break"));
   const activityAction = completedActivityTask
-    ? `Repeat an activity you have completed before: ${completedActivityTask.slice(0, 100)}. Keep it comfortable.`
-    : "Take a walk or do a little stretching at a comfortable pace.";
+    ? `Repeat an activity you have completed before if you want to: ${completedActivityTask.slice(0, 100)}. Keep it comfortable.`
+    : "If comfortable and accessible, choose a short walk, gentle stretch, or another movement that suits you.";
   cursor = append(Math.max(cursor + 0.5, 15), 0.5, activityName, activityAction);
 
   if (pendingTasks.length) {
-    cursor = append(cursor + 0.5, 0.75, "Finish today's tasks", "Review your task list, finish any remaining items, and check them off as you go.");
+    cursor = append(cursor + 0.5, 0.5, "Choose what comes next", "Continue one task only if it still matters; otherwise, leave the rest for later.");
   } else {
     cursor = append(cursor + 0.5, 0.5, "Personal time", "Spend time on a hobby or something relaxing away from work.");
   }
-  cursor = append(Math.max(cursor + 0.5, 18), 0.75, "Dinner and unwind", "Have dinner and take some unhurried time to relax.");
-  cursor = append(cursor + 0.5, 0.25, "Plan tomorrow", "Pick tomorrow's first task and set out anything you will need.");
+  cursor = append(Math.max(cursor + 0.5, 18), 0.75, "Evening pause", "Make room for a meal, connection, or quiet time in whatever way fits your evening.");
+  cursor = append(cursor + 0.5, 0.25, "Close out", "If it would help, note one thing for tomorrow and let the rest wait.");
 
   let bedtimeHour = null;
   if (bedtimeSettings.enabled && bedtimeSettings.timeText) {
@@ -15378,8 +15338,8 @@ function buildDataPersonalizedRoutine() {
     0.75,
     "Wind down for bed",
     sleepNeedsProtection
-      ? "Start winding down early, dim the lights, and protect a full night of sleep."
-      : "Dim the lights, put screens away, and get ready for bed."
+      ? "Choose a calm wind-down that fits your usual sleep schedule; if sleep trouble persists, consider getting professional advice."
+      : "Choose a calm wind-down that fits your usual sleep schedule; this block is optional."
   );
 
   return {
@@ -15924,8 +15884,7 @@ if (dailyRoutineCustomInput) {
 
 function buildStartupReportFocusItems() {
   const snapshot = getWellnessSnapshot();
-  const trends = buildTrendSignals();
-  const board = buildPriorityBoard(snapshot, trends);
+  const board = buildPriorityBoard(snapshot);
   return board.slice(0, 3).map((entry) => entry.action);
 }
 
@@ -16562,6 +16521,29 @@ function isGreetingMessage(input) {
 function assistantQuestionInvitesCheckIn(question) {
   const text = normalizeLocalIntentText(question);
   return /\bhow\s+(?:have you been|have things been|are you (?:doing|feeling)|are things|is your day going|was your day|did your day go|has your day been|is everything going)\b|\bhow['’]s\s+(?:your (?:day|week|weekend)|everything|it|life)\b|\bwhat(?:['’]s|\s+is)\s+(?:new|up)\s+with you\b/i.test(text);
+}
+
+function isCurrentRoutineQuestion(input) {
+  const text = normalizeLocalIntentText(input);
+  const patterns = [
+    /\bwhat\s+(?:should|could)\s+i\s+(?:be\s+)?(?:doing|do)\s+(?:right\s+)?(?:now|currently|at\s+the\s+moment)\b/,
+    /\bwhat\s+(?:should|could)\s+i\s+(?:be\s+)?(?:doing|do)(?:\s+(?:today|next))?\s*$/,
+    /\bwhat\s+am\s+i\s+(?:supposed|meant)\s+to\s+(?:be\s+)?(?:doing|do)(?:\s+(?:right\s+)?(?:now|today|currently|at\s+the\s+moment))?\b/,
+    /\bwhat\s+do\s+i\s+need\s+to\s+do(?:\s+(?:right\s+)?(?:now|today|next|currently|at\s+the\s+moment))?\s*$/,
+    /\bwhat\s+do\s+you\s+think\s+i\s+should\s+(?:be\s+)?(?:doing|do)\s+(?:right\s+)?(?:now|currently|at\s+the\s+moment)\b/,
+    /\bwhat(?:['’]s|\s+is)\s+next\s*$/,
+    /\bwhat\s+now\s*$/,
+    /\bwhat(?:['’]s|\s+is)\s+(?:my\s+)?next\s+(?:routine\s+)?(?:activity|block|item|step|thing)\b/,
+    /\bwhat(?:['’]s|\s+is)\s+(?:next|coming\s+up)\s+in\s+my\s+(?:routine|schedule)\b/,
+    /\bwhat(?:['’]s|\s+is)\s+(?:on|in)\s+(?:my|the|today['’]s)\s+(?:daily\s+)?(?:routine|schedule|agenda)\b/,
+    /\bwhat(?:['’]s|\s+is)\s+(?:scheduled|planned)\s+(?:for\s+me\s+)?(?:now|right\s+now|today|currently|at\s+the\s+moment)\b/,
+    /\bdo\s+i\s+have\s+anything\s+(?:scheduled|planned)\s+(?:now|today|currently|at\s+the\s+moment)\b/,
+    /\bwhat\s+(?:should|can)\s+i\s+do\s+next\b/,
+    /\bwhat\s+am\s+i\s+doing\s+next\b/,
+    /\bwhat(?:['’]s|\s+is)\s+the\s+plan\s+for\s+(?:now|today)\b/,
+    /\bwhen\s+is\s+my\s+next\s+(?:routine\s+)?(?:activity|block)\b/
+  ];
+  return patterns.some((pattern) => pattern.test(text));
 }
 
 function assistantQuestionInvitesOpenSharing(question) {
@@ -17551,7 +17533,7 @@ const AI_DETAILED_EMOTION_RESPONSES_BASE = {
     "Energy is high, convert it now: {step}",
     "Perfect time to stack a win: {step}",
     "Use this motivation while it is hot: {step}",
-    "Keep the streak alive with: {step}",
+    "If keeping a rhythm feels good, you could try: {step}",
     "Strong state. Make it tangible: {step}",
     "Momentum move: {step}",
     "Capitalize on this energy: {step}",
@@ -17593,15 +17575,24 @@ const AI_DETAILED_EMOTION_RESPONSES = Object.fromEntries(
 );
 
 function buildEmotionSupportResponse(detailedEmotion, coachingMoves = [], options = {}) {
-  const safeEmotion = AI_DETAILED_EMOTION_RESPONSES[detailedEmotion]
-    ? detailedEmotion
-    : "neutral";
-  const topMove = String(coachingMoves?.[0] || "complete one 10-minute tiny win now");
-  const template = pickNonRepeatingVariant(AI_DETAILED_EMOTION_RESPONSES[safeEmotion], `emotion_${safeEmotion}`)
-    || `Start with this now: ${topMove}`;
-  const line = template.replaceAll("{step}", topMove);
-  if (options.short) return line;
-  return `${line} Reply "next" for the next step.`;
+  const supportedEmotions = new Set([
+    "angry", "anxious", "overwhelmed", "stressed", "sad", "drained", "positive"
+  ]);
+  const safeEmotion = supportedEmotions.has(detailedEmotion) ? detailedEmotion : "neutral";
+  const topMove = String(coachingMoves?.[0] || "Choose one small, comfortable action that fits what you need.");
+  const opening = {
+    angry: "That sounds frustrating.",
+    anxious: "That sounds unsettling.",
+    overwhelmed: "That sounds like a lot to hold at once.",
+    stressed: "I'm sorry things feel stressful right now.",
+    sad: "I'm sorry you're feeling low.",
+    drained: "It sounds like your energy is running low.",
+    positive: "I'm glad there's a good moment here.",
+    neutral: "One practical option, if it fits:"
+  }[safeEmotion];
+  const response = `${opening} ${topMove}`;
+  if (options.short) return response;
+  return `${response} You can skip it or tell me what kind of support would fit better.`;
 }
 
 function buildDeviceLocalDateReply() {
@@ -17826,13 +17817,7 @@ function parseCompareRequest(input) {
   return { left, right };
 }
 
-function buildComparisonResponse(left, right, snapshot) {
-  const remainingWater = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
-  const hydrationClause = snapshot.hasWaterGoal
-    ? (remainingWater > 0
-      ? `(${remainingWater} cup${remainingWater === 1 ? "" : "s"} left today)`
-      : "and maintain hydration")
-    : "and set a water goal when ready";
+function buildComparisonResponse(left, right) {
   return {
     summary: `If your priority is fast execution today, choose the option with lower setup friction right now.`,
     prosLeft: [
@@ -17845,7 +17830,7 @@ function buildComparisonResponse(left, right, snapshot) {
       `${right} can improve skill depth if sustained consistently.`,
       `${right} might align better if your energy is high right now.`
     ],
-    decisionRule: `Decision rule: pick the option you can start in <10 minutes, then hydrate ${hydrationClause}.`
+    decisionRule: "Decision rule: choose the option that fits your priorities and capacity today; it is okay to pause before deciding."
   };
 }
 
@@ -17911,9 +17896,7 @@ function buildCasualAiResponse(context) {
     mathResult
   } = context;
 
-  const waterLeft = Math.max(0, (Number(snapshot.todayGoal) || 0) - (Number(snapshot.waterToday) || 0));
   const pending = Number(snapshot.pendingTasks) || 0;
-  const hydration = buildHydrationPaceInsight(snapshot);
   const followupFromHistory = buildLocalFollowupResponse(input);
 
   if (mathResult) {
@@ -18006,21 +17989,21 @@ function buildCasualAiResponse(context) {
       return {
         lastIntent: key,
         advice: coachingMoves.slice(0, 3),
-        response: `Bored mode fix:<br>1) ${coachingMoves[0]}<br>2) ${coachingMoves[1]}<br>3) ${coachingMoves[2]}<br><br>Say "do step 1" and I got you.`,
+        response: `If you want a change of pace, here are a few options:<br>1) ${coachingMoves[0]}<br>2) ${coachingMoves[1]}<br>3) ${coachingMoves[2]}<br><br>Choose one, or we can just chat.`,
         isHtml: true
       };
     case "celebrate":
       return {
         lastIntent: key,
         advice: coachingMoves.slice(0, 2),
-        response: `let's gooo 🔥 keep it rolling with this: ${coachingMoves[0]}`,
+        response: `Nice! 🔥 Enjoy the moment. If you want, one gentle option is: ${coachingMoves[0]}`,
         isHtml: false
       };
     case "emotional-personal":
     case "stress":
       return {
         lastIntent: key,
-        advice: ["6 slow breaths", "one glass of water", "10-minute tiny win"],
+        advice: coachingMoves.slice(0, 3),
         response: buildEmotionSupportResponse(detectDetailedEmotionFromText(msg), coachingMoves, { short: true }),
         isHtml: false
       };
@@ -18031,35 +18014,32 @@ function buildCasualAiResponse(context) {
           : [];
         const sleepMoodLine = patternLines.length
           ? `<br>• ${escapeHtml(patternLines.join(" "))}`
-          : (sleepMoodInsight ? `<br>• pattern: mood tends to dip when sleep is under ${sleepMoodInsight.thresholdLabel}h` : "");
-      return {
-        lastIntent: key,
-        advice: priorityBoard.slice(0, 3).map((entry) => entry.action),
-        response: `Quick read:<br>• score ${snapshot.score}/100<br>• tasks ${snapshot.doneTasks}/${snapshot.totalTasks}<br>• water ${snapshot.waterToday}/${snapshot.todayGoal}<br>• hydration pace: ${escapeHtml(hydration.summary)}<br>• sleep ${snapshot.sleepToday || 0}h${sleepMoodLine}<br><br>Best move rn: ${priorityBoard[0].action}`,
-        isHtml: true
-      };
+          : (sleepMoodInsight ? `<br>• ${escapeHtml(sleepMoodInsight.summary)}` : "");
+        const waterSummary = snapshot.hasWaterGoal
+          ? `${snapshot.waterToday}/${snapshot.todayGoal} on your optional tracker goal`
+          : `${snapshot.waterToday} glasses logged; no goal set`;
+        const suggestions = priorityBoard.slice(0, 3).map((entry) => entry.action);
+        return {
+          lastIntent: key,
+          advice: suggestions,
+          response: `Quick reflection:<br>• App tracker score: ${snapshot.score}/100 (not a health assessment)<br>• Tasks: ${snapshot.doneTasks}/${snapshot.totalTasks}<br>• Water: ${escapeHtml(waterSummary)}<br>• Sleep logged today: ${snapshot.sleepToday || 0}h${sleepMoodLine}<br><br><b>Optional supports</b><br>1) ${escapeHtml(suggestions[0])}<br>2) ${escapeHtml(suggestions[1])}<br>3) ${escapeHtml(suggestions[2])}`,
+          isHtml: true
+        };
       }
     case "decision":
       return {
         lastIntent: key,
         advice: priorityBoard.slice(0, 3).map((entry) => entry.action),
-        response: `Honestly, do this first: ${priorityBoard[0].action}`,
+        response: `One option, if it fits: ${priorityBoard[0].action}`,
         isHtml: false
       };
     case "why": {
-      const firstPattern = Array.isArray(behaviorPatterns?.summaryLines) ? behaviorPatterns.summaryLines[0] : "";
-      const reasonBits = [];
-      if (firstPattern) reasonBits.push(firstPattern);
-      if (sleepMoodInsight) reasonBits.push(`mood tends to dip under ${sleepMoodInsight.thresholdLabel}h sleep`);
-      if (trendSignals.taskDelta < 0) reasonBits.push("tasks dipped recently");
-      if (trendSignals.sleepDelta < 0) reasonBits.push("sleep trend dipped");
-      if (trendSignals.waterDelta < 0) reasonBits.push("hydration slipped");
-      if (!reasonBits.length) reasonBits.push("your pattern is mostly stable");
+      const reasonBits = buildWhySummary(snapshot, trendSignals);
       return {
         lastIntent: key,
         advice: coachingMoves.slice(0, 1),
-        response: `Quick why: ${reasonBits.slice(0, 2).join(" + ")}. Best next move: ${coachingMoves[0]}`,
-        isHtml: false
+        response: `A gentle check-in reflection:<br>• ${reasonBits.map((line) => escapeHtml(line)).join("<br>• ")}<br><br>These are observations from your check-ins, not a diagnosis.`,
+        isHtml: true
       };
     }
     case "optimize":
@@ -18085,16 +18065,21 @@ function buildCasualAiResponse(context) {
           : (sleepMoodInsight ? ` Also, your logs suggest mood usually drops under ${sleepMoodInsight.thresholdLabel}h.` : "");
       return {
         lastIntent: key,
-        response: `Sleep analysis: keep low light 1 hour pre-bed, avoid doomscrolling in bed, and cut caffeine after 2 PM.${patternHint}`,
+        response: `For tonight, choose one sleep habit that fits: keep your usual sleep schedule, make your room quiet and relaxing, or put devices away at least 30 minutes before bed.${patternHint} If sleep problems keep affecting you, consider talking with a healthcare professional.`,
         isHtml: false
       };
       }
     case "water":
+      {
+        const waterStatus = snapshot.hasWaterGoal
+          ? `You logged ${snapshot.waterToday} toward your optional personal goal of ${snapshot.todayGoal}.`
+          : `You logged ${snapshot.waterToday} today and have not set a personal tracking goal.`;
       return {
         lastIntent: key,
-        response: `Hydration check 💧 ${hydration.summary} You are at ${snapshot.waterToday}/${snapshot.todayGoal}, left ${waterLeft}. Want me to set reminders?`,
+        response: `${waterStatus} The tracker is not a medical target; follow any fluid guidance from your healthcare professional.`,
         isHtml: false
       };
+      }
     case "productivity":
       {
         const productivityPattern = behaviorPatterns?.sleepProductivity;
@@ -18172,47 +18157,47 @@ function buildKnowledgeAnswer(input) {
     {
       topic: "sleep",
       triggers: ["sleep", "insomnia", "tired", "fatigue", "bed"],
-      answer: "For better sleep: keep a fixed sleep window, reduce bright light 60 minutes before bed, avoid caffeine after afternoon, and use a short wind-down ritual (breathing + low-stimulation activity)."
+      answer: "For general sleep habits, the CDC suggests keeping a regular schedule, making the room quiet and relaxing, and turning off devices at least 30 minutes before bed. Sleep needs vary by age; if sleep problems keep affecting you, consider talking with a healthcare professional."
     },
     {
       topic: "focus",
       triggers: ["focus", "procrastination", "deep work", "study", "work"],
-      answer: "Use the 25-5 cycle: define one outcome, remove distractions, sprint 25 minutes, then 5-minute reset. Repeat 2-3 rounds before checking messages."
+      answer: "Choose one concrete next step and a stopping point that feels manageable. Take a break when useful and adjust the interval to your needs; there is no single work-and-break schedule that fits everyone."
     },
     {
       topic: "stress",
       triggers: ["stress", "anxiety", "panic", "overwhelmed"],
-      answer: "When stressed, reduce physiological load first: long exhale breathing, hydration, and one very small actionable step. Momentum usually lowers anxiety faster than overthinking."
+      answer: "If it feels comfortable, try slow, unforced breathing for a short time; NCCIH describes breathing exercises as a relaxation technique that may bring on the body's relaxation response. If focusing on breath feels worse, stop and choose another support, such as stepping away or contacting someone you trust."
     },
     {
       topic: "hydration",
       triggers: ["water", "hydration", "dehydrated", "thirsty"],
-      answer: "Hydration works best with timing: one glass after waking, one with each meal, and one before evening wind-down. Small consistent doses beat large late intake."
+      answer: "Fluid needs vary, so Lumevine's water tracker is an optional personal goal, not a medical target. Follow any fluid guidance from your healthcare professional; the app cannot determine how much water is right for you."
     },
     {
       topic: "habits",
       triggers: ["habit", "consistency", "discipline", "routine"],
-      answer: "Build habits with tiny minimums: define a trigger, make the action small, and track daily completion. Consistency compounds faster than intensity."
+      answer: "A routine can make a helpful activity easier to remember, but it should fit your life. Start with one action you actually want to do, keep it flexible, and track it only if tracking helps."
     },
     {
       topic: "decision",
       triggers: ["decide", "decision", "choose", "which is better", "priority"],
-      answer: "Use this decision filter: choose the option you can start in under 10 minutes, has visible progress in 25 minutes, and aligns with your top goal."
+      answer: "Name what matters most right now, decide what can wait, and choose one manageable next step. If you feel overloaded, it is okay to pause before deciding."
     },
     {
       topic: "planning",
       triggers: ["plan", "schedule", "roadmap", "organize", "what should i do"],
-      answer: "Strong plans are sequence-first: one priority task, one health action (water or movement), one closure action (reflection or gratitude). Keep each block time-bound."
+      answer: "Start with your saved routine if you have one. Otherwise, choose one priority that matters to you, make room for a restorative activity or break, and leave some time unplanned; you do not need to fill every block."
     },
     {
       topic: "burnout",
       triggers: ["burnout", "drained", "exhausted", "no energy", "crash"],
-      answer: "For burnout signals, lower pressure first: stabilize with breathing and hydration, then complete one tiny, clear task to restore control before taking on complex work."
+      answer: "This app cannot diagnose burnout. If you feel depleted, consider reducing a non-urgent demand, taking a break, or reaching out to someone supportive. If low energy or distress persists or disrupts daily life, consider speaking with a healthcare professional."
     },
     {
       topic: "exercise",
       triggers: ["exercise", "workout", "movement", "walk", "stretch", "fitness"],
-      answer: "Use movement as a small repeatable dose: take a 5–10 minute walk or do a short mobility routine, then reassess your energy. Consistency and recovery matter more than an intense session you cannot repeat."
+      answer: "WHO guidance says all physical activity counts and any amount is better than none. If movement is comfortable and accessible, choose an amount and type that suit your body; you do not need to hit a target in this moment."
     },
     {
       topic: "nutrition",
@@ -18277,40 +18262,28 @@ function isDirectAiCriticism(input) {
   return /\b(?:you\s+(?:are|r)|you['’]?re)\s+(?:(?:really|very|so|pretty)\s+)?(?:dumb|stupid|bad|terrible|awful|useless|unhelpful)\b|\byou\s+suck\b|\b(?:dumb|stupid|bad|terrible|awful|useless)\s+(?:ai|assistant|bot)\b/.test(text);
 }
 
-function buildActionCoaching(snapshot) {
-  const actions = [];
-  const hydration = buildHydrationPaceInsight(snapshot);
-  if (snapshot.pendingTasks > 0) actions.push("Return to one open task for a short stretch, if it feels manageable.");
-  if (snapshot.waterToday < snapshot.todayGoal) {
-    if (hydration.onTrack) {
-      actions.push(`Your hydration check-ins are taking shape (${hydration.logged}/${hydration.goal} cups). Have some water if it feels helpful.`);
-    } else {
-      actions.push(`${hydration.summary} Have some water if it sounds good.`);
-    }
-  }
-  if (snapshot.sleepToday < 7) actions.push("Make a little room for rest tonight, in whatever way is possible.");
-  if (!snapshot.gratitudeToday) actions.push("Write a gratitude line if something comes to mind.");
-  if (!snapshot.moodToday) actions.push("Check in with how you are feeling whenever you are ready.");
-  while (actions.length < 3) actions.push("Choose one small moment of care, if it feels useful.");
-  return actions.slice(0, 3);
+function buildActionCoaching(snapshot, emotion = "") {
+  const moodMeta = getMoodStateMeta(snapshot?.moodToday);
+  return getEvidenceBasedWellbeingSuggestions({
+    moodLabel: moodMeta.label,
+    moodLogged: moodMeta.logged,
+    emotion,
+    pendingTasks: snapshot?.pendingTasks
+  }).map((item) => item.action);
 }
 
-function buildDeepPlan(snapshot) {
-  const waterLeft = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
+function buildDeepPlan(snapshot, emotion = "") {
+  const moodMeta = getMoodStateMeta(snapshot?.moodToday);
+  const suggestions = getEvidenceBasedWellbeingSuggestions({
+    moodLabel: moodMeta.label,
+    moodLogged: moodMeta.logged,
+    emotion,
+    pendingTasks: snapshot?.pendingTasks
+  }).map((item) => item.action);
   return [
-    snapshot.pendingTasks > 0
-      ? "Pick one task that’s already on your list and spend a little time on it."
-      : "Choose one useful task and get started, even if it’s just for a few minutes.",
-    waterLeft > 0
-      ? `Have a glass of water when you can; you’re about ${Math.max(1, waterLeft)} glass(es) short of your goal.`
-      : "Take a short stretch or walk to give yourself a change of pace.",
-    snapshot.sleepToday < 7
-      ? "When the day winds down, give yourself a little time to get ready for bed."
-      : "If you have the energy, spend a few more minutes on something that matters to you.",
-    snapshot.gratitudeToday
-      ? "Before you wrap up, choose one small thing to make tomorrow easier."
-      : "If you feel like it, jot down one good thing from today and a first step for tomorrow."
-  ];
+    ...suggestions,
+    "Later, notice whether the step helped; keep what works and change what does not."
+  ].slice(0, 4);
 }
 
 function safeAvg(numbers) {
@@ -18517,42 +18490,36 @@ function buildBehaviorPatternMemoryFromLocal(maxDays = 30) {
     const thresholdLabel = Number.isInteger(sleepMood.threshold)
       ? String(sleepMood.threshold)
       : String(sleepMood.threshold).replace(/\.0$/, "");
-    if (sleepMood.diff >= 0) {
-      summaryLines.push(`Mood check-ins were lower on days with less than ${thresholdLabel}h sleep in these entries.`);
-    } else {
-      summaryLines.push(`Mood check-ins were higher on days with less than ${thresholdLabel}h sleep in these entries.`);
-    }
+    summaryLines.push(
+      `In your logs, average mood check-ins were ${sleepMood.lowAvg.toFixed(1)} on days under ${thresholdLabel}h sleep and ${sleepMood.highAvg.toFixed(1)} on days at or above it (${sleepMood.lowCount} and ${sleepMood.highCount} days). This is an observation, not proof of cause.`
+    );
   }
 
   if (waterMood && Math.abs(waterMood.diff) >= 0.1) {
     const thresholdLabel = Number.isInteger(waterMood.threshold)
       ? String(waterMood.threshold)
       : waterMood.threshold.toFixed(1).replace(/\.0$/, "");
-    if (waterMood.diff >= 0) {
-      summaryLines.push(`Mood tends to dip when hydration is below ${thresholdLabel} cups/day.`);
-    } else {
-      summaryLines.push(`Mood tends to improve even below ${thresholdLabel} cups/day; current pattern may be influenced by other factors.`);
-    }
+    summaryLines.push(
+      `In your logs, average mood check-ins were ${waterMood.lowAvg.toFixed(1)} on days with under ${thresholdLabel} cups recorded and ${waterMood.highAvg.toFixed(1)} on days at or above it (${waterMood.lowCount} and ${waterMood.highCount} days). This is a tracking observation, not a hydration target or proof of cause.`
+    );
   }
 
   if (sleepProductivity && Math.abs(sleepProductivity.diff) >= 0.2) {
     const thresholdLabel = Number.isInteger(sleepProductivity.threshold)
       ? String(sleepProductivity.threshold)
       : String(sleepProductivity.threshold).replace(/\.0$/, "");
-    if (sleepProductivity.diff >= 0) {
-      summaryLines.push(`Productivity tends to improve when sleep is at least ${thresholdLabel}h (tasks ${sleepProductivity.highAvg.toFixed(1)} vs ${sleepProductivity.lowAvg.toFixed(1)}).`);
-    } else {
-      summaryLines.push(`Productivity is currently higher below ${thresholdLabel}h sleep; workload timing may be skewing this pattern.`);
-    }
+    summaryLines.push(
+      `In your logs, completed tasks averaged ${sleepProductivity.lowAvg.toFixed(1)} on days under ${thresholdLabel}h sleep and ${sleepProductivity.highAvg.toFixed(1)} on days at or above it (${sleepProductivity.lowCount} and ${sleepProductivity.highCount} days). This is an observation, not proof of cause.`
+    );
   }
 
   if (waterProductivity && Math.abs(waterProductivity.diff) >= 0.15) {
     const thresholdLabel = Number.isInteger(waterProductivity.threshold)
       ? String(waterProductivity.threshold)
       : waterProductivity.threshold.toFixed(1).replace(/\.0$/, "");
-    if (waterProductivity.diff >= 0) {
-      summaryLines.push(`Task completion is stronger on ${thresholdLabel}+ cup hydration days.`);
-    }
+    summaryLines.push(
+      `In your logs, completed tasks averaged ${waterProductivity.lowAvg.toFixed(1)} on days with under ${thresholdLabel} cups recorded and ${waterProductivity.highAvg.toFixed(1)} on days at or above it (${waterProductivity.lowCount} and ${waterProductivity.highCount} days). This is a tracking observation, not a hydration target or proof of cause.`
+    );
   }
 
   if (!summaryLines.length && activeDays > 0) {
@@ -18644,72 +18611,35 @@ function buildTrendSignals() {
   };
 }
 
-function buildPriorityBoard(snapshot, trends) {
-  const waterLeft = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
-  const hydration = buildHydrationPaceInsight(snapshot);
-  const candidates = [
-    {
-      id: "task",
-      action: snapshot.pendingTasks > 0 ? "Return to one open task for a short, focused stretch, if it feels manageable." : "Add one meaningful task if having a clear next step would help.",
-      impact: snapshot.pendingTasks > 0 ? 82 : 62,
-      urgency: snapshot.pendingTasks > 2 ? 22 : 10,
-      trendBoost: trends.taskDelta < 0 ? 10 : 0
-    },
-    {
-      id: "water",
-      action: waterLeft > 0
-        ? (hydration.onTrack
-          ? `You logged ${hydration.logged} cups today. Your goal has ${Math.max(1, Math.ceil(waterLeft))} cup${Math.max(1, Math.ceil(waterLeft)) === 1 ? "" : "s"} to go, if that feels right.`
-          : `${hydration.summary} Have some water if it feels helpful.`)
-        : "Your hydration check-ins are in line with the goal you set.",
-      impact: waterLeft > 0 ? 74 : 44,
-      urgency: waterLeft >= 3 ? 18 : waterLeft > 0 ? 10 : 0,
-      trendBoost: trends.waterDelta < 0 ? 12 : 0
-    },
-    {
-      id: "sleep",
-      action: snapshot.sleepToday < 7 ? "Make a little room for rest tonight, in whatever way is possible." : "Keep a bedtime that feels comfortable for you.",
-      impact: snapshot.sleepToday < 7 ? 79 : 46,
-      urgency: snapshot.sleepToday < 6 ? 22 : snapshot.sleepToday < 7 ? 12 : 0,
-      trendBoost: trends.sleepDelta < 0 ? 11 : 0
-    },
-    {
-      id: "mood",
-      action: !snapshot.moodToday ? "Check in with how you are feeling whenever you are ready." : "Take a brief pause if you would like a moment to reset.",
-      impact: !snapshot.moodToday ? 63 : 50,
-      urgency: !snapshot.moodToday ? 15 : 6,
-      trendBoost: trends.moodDelta < 0 ? 14 : 0
-    },
-    {
-      id: "gratitude",
-      action: !snapshot.gratitudeToday ? "Write a gratitude line if something comes to mind." : "Return to gratitude whenever it feels meaningful.",
-      impact: !snapshot.gratitudeToday ? 55 : 38,
-      urgency: !snapshot.gratitudeToday ? 8 : 3,
-      trendBoost: 0
-    }
-  ];
-
-  return candidates
-    .map((entry) => ({ ...entry, score: entry.impact + entry.urgency + entry.trendBoost }))
-    .sort((a, b) => b.score - a.score);
+function buildPriorityBoard(snapshot, emotion = "") {
+  const moodMeta = getMoodStateMeta(snapshot?.moodToday);
+  return getEvidenceBasedWellbeingSuggestions({
+    moodLabel: moodMeta.label,
+    moodLogged: moodMeta.logged,
+    emotion,
+    pendingTasks: snapshot?.pendingTasks
+  }).map((suggestion, index) => ({
+    id: `wellbeing-${index + 1}`,
+    action: suggestion.action
+  }));
 }
 
 function buildWhySummary(snapshot, trends) {
   const drivers = [];
-  const hydration = buildHydrationPaceInsight(snapshot);
-  if (snapshot.pendingTasks > 2) drivers.push("task load is currently high");
-  if (snapshot.sleepToday < 7) drivers.push("sleep is below recovery zone");
-  if (snapshot.hasWaterGoal && snapshot.waterToday < snapshot.todayGoal) {
-    if (hydration.onTrack) drivers.push("hydration is below target but pace is acceptable for this time");
-    else drivers.push(`hydration pace suggests you may miss goal by ~${hydration.missBy.toFixed(1)} cups`);
-  } else if (!snapshot.hasWaterGoal) {
-    drivers.push("water goal is not set yet");
+  if (Number(snapshot?.pendingTasks) > 2) {
+    drivers.push("you have several open tasks; decide what truly needs attention and what can wait");
   }
-  if (!snapshot.moodToday) drivers.push("mood signal is missing for today");
-  if (trends.taskDelta < 0) drivers.push("recent task completion trend is softening");
-  if (trends.sleepDelta < 0) drivers.push("sleep trend dipped in the last few days");
-  if (trends.waterDelta < 0) drivers.push("hydration trend is dropping");
-  if (!drivers.length) drivers.push("your current inputs are relatively stable");
+  const moodMeta = getMoodStateMeta(snapshot?.moodToday);
+  if (moodMeta.logged && ["Stressed", "Low", "Angry"].includes(moodMeta.label)) {
+    drivers.push(`you logged feeling ${moodMeta.label.toLowerCase()} today`);
+  }
+  if (Number(trends?.sleepDelta) < -0.35) {
+    drivers.push("your recent sleep entries are lower than your earlier entries");
+  }
+  if (Number(trends?.moodDelta) < -0.35) {
+    drivers.push("your recent mood check-ins are lower than your earlier check-ins");
+  }
+  if (!drivers.length) drivers.push("there is no clear concern in the check-ins available today");
   return drivers.slice(0, 4);
 }
 
@@ -20008,6 +19938,16 @@ async function buildSmartAiResponse(input, user) {
       isHtml: true
     };
   }
+  if (isCurrentRoutineQuestion(normalizedInput)) {
+    aiSessionState.lastIntent = "routine-now";
+    aiSessionState.lastAdvice = [];
+    aiSessionState.awaitingCheckIn = false;
+    aiSessionState.lastAssistantQuestion = "";
+    return {
+      response: buildCurrentRoutineSuggestion(),
+      isHtml: false
+    };
+  }
   const checkInAnswer = normalizeLocalIntentText(normalizedInput);
   const checkInContainsAction = /\b(?:add|log|save|set|delete|clear|complete|completed|finish|finished|create|remind|water|task|routine|mood|sleep|gratitude|schedule)\b/.test(checkInAnswer);
   const checkInWords = checkInAnswer
@@ -20026,9 +19966,11 @@ async function buildSmartAiResponse(input, user) {
     /\b(?:bad|rough|awful|terrible|sad|low|stressed|anxious|overwhelmed)\b/.test(checkInAnswer)
     && !/\bnot\s+(?:too\s+)?bad\b/.test(checkInAnswer)
   ) || /\bnot\s+(?:(?:too|so)\s+)?(?:good|great|fine|okay|ok|well|happy)\b/.test(checkInAnswer);
+  const intent = classifyIntent(normalizedInput);
   const previousQuestionInvitesCheckIn = assistantQuestionInvitesCheckIn(aiSessionState.lastAssistantQuestion);
   const asksAboutUserInReturn = /\b(?:how about you|what about you|and you)\b/.test(checkInAnswer);
-  const isCheckInFollowUp = (aiSessionState.awaitingCheckIn || previousQuestionInvitesCheckIn)
+  const isCheckInFollowUp = intent.key !== "bored"
+    && (aiSessionState.awaitingCheckIn || previousQuestionInvitesCheckIn)
     && !isGreetingMessage(normalizedInput)
     && !checkInContainsAction
     && !!checkInAnswer;
@@ -20125,13 +20067,12 @@ async function buildSmartAiResponse(input, user) {
   const mathResult = calculateExpressionFromText(normalizedInput);
   const emotion = detectEmotionFromText(msg);
   const detailedEmotion = detectDetailedEmotionFromText(msg);
-  const intent = classifyIntent(normalizedInput);
   const tone = buildAdaptiveTone(emotion, aiSessionState.turnCount);
   const knowledgeAnswer = buildKnowledgeAnswer(normalizedInput);
   const compareRequest = parseCompareRequest(normalizedInput);
   const modePreset = getAiModePreset();
   const trendSignals = buildTrendSignals();
-  const priorityBoard = buildPriorityBoard(snapshot, trendSignals);
+  const priorityBoard = buildPriorityBoard(snapshot, detailedEmotion);
   const sleepMoodInsight = buildSleepMoodPatternInsight(30);
   const behaviorPatterns = getBehaviorPatternMemory(35);
 
@@ -20233,8 +20174,8 @@ async function buildSmartAiResponse(input, user) {
     };
   }
 
-  const coachingMoves = buildActionCoaching(snapshot);
-  const deepPlan = buildDeepPlan(snapshot);
+  const coachingMoves = buildActionCoaching(snapshot, detailedEmotion);
+  const deepPlan = buildDeepPlan(snapshot, detailedEmotion);
 
   const confirmation = getAssistantQuestionConfirmation(normalizedInput);
   if (confirmation && aiSessionState.lastAssistantQuestion) {
@@ -20320,7 +20261,7 @@ async function buildSmartAiResponse(input, user) {
   }
 
   if (compareRequest) {
-    const comparison = buildComparisonResponse(compareRequest.left, compareRequest.right, snapshot);
+    const comparison = buildComparisonResponse(compareRequest.left, compareRequest.right);
     aiSessionState.lastIntent = "compare";
     aiSessionState.lastAdvice = [comparison.decisionRule];
     return {
@@ -20397,9 +20338,17 @@ async function buildSmartAiResponse(input, user) {
       await saveMood();
     }
     aiSessionState.lastIntent = "emotional-personal";
+    const moodMeta = getMoodStateMeta(snapshot.moodToday);
+    const supportSteps = getEvidenceBasedWellbeingSuggestions({
+      moodLabel: moodMeta.label,
+      moodLogged: moodMeta.logged,
+      emotion: detailedEmotion,
+      pendingTasks: snapshot.pendingTasks
+    }).map((item) => item.action);
+    aiSessionState.lastAdvice = supportSteps;
     return {
-      response: `${moodFromMessage ? "I logged that as Low in your mood tracker. " : ""}Thanks for telling me, ${name}. It sounds like you’re having a low moment. I’m here with you. We can keep things gentle: take a slow breath, get some water, or talk through what’s weighing on you.`,
-      isHtml: true
+      response: `${moodFromMessage ? "I logged that in your mood tracker. " : ""}Thanks for telling me, ${name}. ${buildEmotionSupportResponse(detailedEmotion, supportSteps)}`,
+      isHtml: false
     };
   }
 
@@ -20479,24 +20428,15 @@ async function buildSmartAiResponse(input, user) {
   }
 
   if (intent.key === "analysis") {
-    const waterPct = Math.round((snapshot.waterToday / snapshot.todayGoal) * 100);
     const taskPct = snapshot.totalTasks ? Math.round((snapshot.doneTasks / snapshot.totalTasks) * 100) : 0;
     const moodText = snapshot.moodToday || "Not logged";
-    const hydration = buildHydrationPaceInsight(snapshot);
-
-    let actions = [];
-    if (snapshot.waterToday < snapshot.todayGoal) {
-      const remaining = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
-      actions.push(`${hydration.summary} Log ${Math.max(1, Math.ceil(remaining))} cup${Math.max(1, Math.ceil(remaining)) === 1 ? "" : "s"} soon.`);
-    }
-    if (snapshot.sleepToday < 7) actions.push("Target 7–8 hours sleep tonight.");
-    if (snapshot.pendingTasks > 0) actions.push("Finish 1 pending task in the next 25 minutes.");
-    if (!snapshot.gratitudeToday) actions.push("Add one gratitude line before bed.");
-    if (!snapshot.moodToday) actions.push("Log your mood to improve prediction quality.");
-    while (actions.length < 3) actions.push("Keep momentum with one small healthy action now.");
+    const waterSummary = snapshot.hasWaterGoal
+      ? `${snapshot.waterToday} logged / ${snapshot.todayGoal} glasses in your optional goal`
+      : `${snapshot.waterToday} glasses logged; no goal set`;
+    const actions = priorityBoard.slice(0, 3).map((entry) => entry.action);
 
     aiSessionState.lastIntent = "analysis";
-    aiSessionState.lastAdvice = actions.slice(0, 3);
+    aiSessionState.lastAdvice = actions;
     const patternLines = Array.isArray(behaviorPatterns?.summaryLines)
       ? behaviorPatterns.summaryLines.slice(0, 3)
       : [];
@@ -20504,11 +20444,11 @@ async function buildSmartAiResponse(input, user) {
       ? `<br><br><b>Pattern observed</b><br>• ${escapeHtml(sleepMoodInsight.summary)}`
       : "";
     const behaviorPatternBlock = patternLines.length
-      ? `<br><br><b>Behavior patterns (${escapeHtml(behaviorPatterns?.source || "live")})</b><br>• ${patternLines.map((line) => escapeHtml(line)).join("<br>• ")}`
+      ? `<br><br><b>Observations in your logs (not proof of cause)</b><br>• ${patternLines.map((line) => escapeHtml(line)).join("<br>• ")}`
       : "";
 
     return {
-      response: `📊 <b>Deep Wellness Analysis</b><br>⭐ Score: <b>${snapshot.score}/100</b><br>💧 Water: ${snapshot.waterToday}/${snapshot.todayGoal} (${Math.max(0, waterPct)}%)<br>💧 Pace signal: ${escapeHtml(hydration.summary)}<br>💤 Sleep trend avg: ${trendSignals.sleepAvg.toFixed(1)} hrs<br>🧘 Mood: ${moodText}<br>📌 Tasks done: ${snapshot.doneTasks}/${snapshot.totalTasks} (${taskPct}%)<br>🙏 Gratitude today: ${snapshot.gratitudeToday ? "Yes" : "No"}<br><br><b>Priority ranking (smart order)</b><br>1) ${priorityBoard[0].action}<br>2) ${priorityBoard[1].action}<br>3) ${priorityBoard[2].action}<br><br><b>Best next moves</b><br>1) ${actions[0]}<br>2) ${actions[1]}<br>3) ${actions[2]}${behaviorPatternBlock}${sleepMoodPatternLine}${recentContext ? `<br><br>🧠 Recent context: <i>${escapeHtml(recentContext)}</i>` : ""}`,
+      response: `📊 <b>Check-in snapshot</b><br>Reflection score: <b>${snapshot.score}/100</b> (based on app trackers, not a health assessment)<br>💧 Water: ${escapeHtml(waterSummary)}<br>💤 Sleep logged today: ${snapshot.sleepToday || 0}h; recent average: ${trendSignals.sleepAvg.toFixed(1)}h<br>🧘 Mood: ${escapeHtml(moodText)}<br>📌 Tasks done: ${snapshot.doneTasks}/${snapshot.totalTasks} (${taskPct}%)<br>🙏 Gratitude today: ${snapshot.gratitudeToday ? "Yes" : "No"}<br><br><b>Optional supports</b><br>1) ${escapeHtml(actions[0])}<br>2) ${escapeHtml(actions[1])}<br>3) ${escapeHtml(actions[2])}${behaviorPatternBlock}${sleepMoodPatternLine}${recentContext ? `<br><br>🧠 Recent context: <i>${escapeHtml(recentContext)}</i>` : ""}`,
       isHtml: true
     };
   }
@@ -20517,7 +20457,7 @@ async function buildSmartAiResponse(input, user) {
     aiSessionState.lastIntent = "decision";
     aiSessionState.lastAdvice = priorityBoard.slice(0, 3).map((entry) => entry.action);
     return {
-      response: `🧭 <b>Best decision right now</b><br>Primary move: <b>${priorityBoard[0].action}</b><br><br><b>Why this wins</b><br>• Impact score: ${priorityBoard[0].impact}<br>• Urgency score: ${priorityBoard[0].urgency}<br>• Trend boost: ${priorityBoard[0].trendBoost}<br><br><b>Backup moves</b><br>2) ${priorityBoard[1].action}<br>3) ${priorityBoard[2].action}`,
+      response: `🧭 <b>A supportive option</b><br>${priorityBoard[0].action}<br><br><b>Other options</b><br>• ${priorityBoard[1].action}<br>• ${priorityBoard[2].action}<br><br>Choose what fits, or skip all of them.`,
       isHtml: true
     };
   }
@@ -20533,29 +20473,26 @@ async function buildSmartAiResponse(input, user) {
       ? `<br>• ${escapeHtml(sleepMoodInsight.shortSummary)} (${sleepMoodInsight.pairCount} matched days)`
       : "";
     return {
-      response: `🔍 <b>Why this is your current state</b><br>• ${reasons.join("<br>• ")}<br><br><b>Trend signals</b><br>• Mood delta: ${trendSignals.moodDelta.toFixed(2)}<br>• Water delta: ${trendSignals.waterDelta.toFixed(2)}<br>• Sleep delta: ${trendSignals.sleepDelta.toFixed(2)}h<br>• Task delta: ${trendSignals.taskDelta.toFixed(2)} completed/day${patternLine}${sleepMoodPatternLine}<br><br><b>Most leverage move</b>: ${priorityBoard[0].action}`,
+      response: `🔍 <b>Possible influences in your check-ins</b><br>• ${reasons.map((line) => escapeHtml(line)).join("<br>• ")}<br><br><b>Recent changes in your logs</b><br>• Mood: ${trendSignals.moodDelta.toFixed(2)}<br>• Water: ${trendSignals.waterDelta.toFixed(2)}<br>• Sleep: ${trendSignals.sleepDelta.toFixed(2)}h<br>• Tasks: ${trendSignals.taskDelta.toFixed(2)} completed/day${patternLine}${sleepMoodPatternLine}<br><br><b>Optional next step</b>: ${escapeHtml(priorityBoard[0].action)}`,
       isHtml: true
     };
   }
 
   if (intent.key === "optimize") {
     aiSessionState.lastIntent = "optimize";
-    aiSessionState.lastAdvice = priorityBoard.slice(0, 4).map((entry) => entry.action);
+    aiSessionState.lastAdvice = priorityBoard.slice(0, 3).map((entry) => entry.action);
     return {
-      response: `⚙️ <b>Optimization plan (high leverage)</b><br>1) ${priorityBoard[0].action}<br>2) ${priorityBoard[1].action}<br>3) ${priorityBoard[2].action}<br>4) ${priorityBoard[3].action}<br><br><b>Execution rule</b>: finish step 1 fully before switching context.` ,
+      response: `⚙️ <b>Supportive options</b><br>1) ${priorityBoard[0].action}<br>2) ${priorityBoard[1].action}<br>3) ${priorityBoard[2].action}<br><br>Take whichever fits; you do not need to complete all three.`,
       isHtml: true
     };
   }
 
   if (intent.key === "plan") {
-    const planItems = deepPlan;
+    const planItems = deepPlan.slice(0, 3);
     aiSessionState.lastIntent = "plan";
     aiSessionState.lastAdvice = planItems;
-    const depthNote = modePreset.depth >= 4
-      ? "<br><b>Extra layer</b>: execute step 1 immediately, then re-evaluate after 25 minutes."
-      : "";
     return {
-      response: `🗂️ <b>Your 60-min execution plan</b><br>• ${planItems[0]}<br>• ${planItems[1]}<br>• ${planItems[2]}<br>• ${planItems[3]}${depthNote}<br><br><b>Command mode</b>: say <i>add task ...</i> or <i>remind me to ... in 25 min</i> and I’ll execute instantly.`,
+      response: `🗂️ <b>Flexible options</b><br>1) ${escapeHtml(planItems[0])}<br>2) ${escapeHtml(planItems[1])}<br>3) ${escapeHtml(planItems[2])}<br><br>Choose one that fits, adapt it, or skip the list.`,
       isHtml: true
     };
   }
@@ -20564,18 +20501,14 @@ async function buildSmartAiResponse(input, user) {
     aiSessionState.lastIntent = "followup";
     const advice = aiSessionState.lastAdvice.length ? aiSessionState.lastAdvice : coachingMoves;
     return {
-      response: `Perfect. Next level plan:<br>1) ${advice[0]}<br>2) ${advice[1]}<br>3) ${advice[2]}<br><br><b>If-then guardrail</b>: if you stall for 5+ minutes, switch to this immediate move — ${priorityBoard[0].action}<br><br>If you want execution, use direct commands and I’ll run them immediately.`,
+      response: `If you want to continue, one option is: ${escapeHtml(advice[0] || priorityBoard[0].action)}. You can also ask for a smaller step or choose a different kind of support.`,
       isHtml: true
     };
   }
 
   if (intent.key === "stress") {
     aiSessionState.lastIntent = "stress";
-    aiSessionState.lastAdvice = [
-      "Do 6 rounds of 4-4-6 breathing.",
-      "Drink one glass of water.",
-      "Start one 10-minute micro-task."
-    ];
+    aiSessionState.lastAdvice = coachingMoves.slice(0, 3);
     return {
       response: buildEmotionSupportResponse(detailedEmotion, coachingMoves),
       isHtml: false
@@ -20589,24 +20522,22 @@ async function buildSmartAiResponse(input, user) {
       ? (Number.isInteger(sleepPattern.threshold) ? String(sleepPattern.threshold) : String(sleepPattern.threshold).replace(/\.0$/, ""))
       : "";
     const sleepPatternHint = thresholdLabel
-      ? ` Pattern: mood tends to drop when sleep is below ${thresholdLabel}h.`
-      : (sleepMoodInsight ? ` Your logs suggest mood tends to dip below ${sleepMoodInsight.thresholdLabel}h.` : "");
+      ? ` In your logs, mood scores tended to be lower on days below ${thresholdLabel}h of sleep; this is an observed pattern, not proof of cause.`
+      : (sleepMoodInsight ? ` Your logs show a similar association below ${sleepMoodInsight.thresholdLabel}h; that does not establish cause.` : "");
     return {
-      response: `Sleep analysis: no caffeine after 2 PM, dim lights 60 min pre-bed, and no scrolling in bed.${sleepPatternHint} Recent sleep average is ${trendSignals.sleepAvg.toFixed(1)}h.`,
+      response: `For tonight, choose one sleep habit that fits: keep your usual sleep schedule, make your room quiet and relaxing, or put devices away at least 30 minutes before bed.${sleepPatternHint} If sleep problems keep affecting you, consider talking with a healthcare professional.`,
       isHtml: false
     };
   }
 
   if (intent.key === "water") {
-    const hydration = buildHydrationPaceInsight(snapshot);
-    const left = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
-    const waterPatternHint = behaviorPatterns?.hydration?.summary
-      ? ` ${behaviorPatterns.hydration.summary}`
-      : "";
+    const waterStatus = snapshot.hasWaterGoal
+      ? `You logged ${snapshot.waterToday} toward your optional personal goal of ${snapshot.todayGoal}.`
+      : `You logged ${snapshot.waterToday} today and have not set a personal tracking goal.`;
     aiSessionState.lastIntent = "water";
-    aiSessionState.lastAdvice = [hydration.summary];
+    aiSessionState.lastAdvice = [waterStatus];
     return {
-      response: `Hydration check 💧 ${hydration.summary}${waterPatternHint} You’re at ${snapshot.waterToday}/${snapshot.todayGoal}. Remaining: ${left} cup${left === 1 ? "" : "s"}. Want me to set a reminder right now?`,
+      response: `${waterStatus} The tracker is not a medical target; follow any fluid guidance from your healthcare professional.`,
       isHtml: false
     };
   }
@@ -20653,11 +20584,7 @@ async function buildSmartAiResponse(input, user) {
 
   if (emotion === "low") {
     aiSessionState.lastIntent = "emotional-support";
-    aiSessionState.lastAdvice = [
-      "Slow breathing for 60–90 seconds.",
-      "Hydrate now.",
-      "Start a tiny 10-minute task."
-    ];
+    aiSessionState.lastAdvice = coachingMoves.slice(0, 3);
     return {
       response: buildEmotionSupportResponse(detailedEmotion, coachingMoves),
       isHtml: false
@@ -20769,112 +20696,34 @@ function addRepeatedResponseVariation(text, isHtml = false) {
   };
 }
 
-function buildImmediateBenefitOutcome(snapshot, topAction) {
-  const pendingTasks = Number(snapshot?.pendingTasks) || 0;
-  const waterToday = Number(snapshot?.waterToday) || 0;
-  const waterGoalNow = Number(snapshot?.todayGoal) || 8;
-  const waterGap = Math.max(0, waterGoalNow - waterToday);
-  const sleepNow = Number(snapshot?.sleepToday) || 0;
-
-  if (pendingTasks > 0) {
-    return `You should feel more in control tonight after reducing pending tasks by 1 and finishing one focused sprint.`;
-  }
-  if (waterGap > 0) {
-    return `You should feel calmer tonight by closing at least ${Math.max(1, Math.ceil(waterGap / 2))} cup${Math.max(1, Math.ceil(waterGap / 2)) === 1 ? "" : "s"} of your hydration gap.`;
-  }
-  if (sleepNow < 7) {
-    return "You should feel steadier tomorrow morning by protecting a 7-8 hour sleep window tonight.";
-  }
-  return `You should feel more organized tonight by completing this first: ${topAction}`;
-}
-
-function buildTomorrowCheckpoint(snapshot) {
-  const pendingTasks = Number(snapshot?.pendingTasks) || 0;
-  const waterToday = Number(snapshot?.waterToday) || 0;
-  const waterGoalNow = Number(snapshot?.todayGoal) || 8;
-  const sleepNow = Number(snapshot?.sleepToday) || 0;
-
-  if (pendingTasks >= 2) {
-    return "Tomorrow check: start with one 25-minute task sprint before opening distractions.";
-  }
-  if (waterToday < waterGoalNow) {
-    return "Tomorrow check: drink one glass in the first hour after waking and keep a visible water target.";
-  }
-  if (sleepNow < 7) {
-    return "Tomorrow check: wake at a fixed time and avoid snooze loops to stabilize energy.";
-  }
-  return "Tomorrow check: repeat the same first win within your first hour for consistency.";
-}
-
-function getHealthFirstTopAction(snapshot, trends, priorityBoard = []) {
+function getHealthFirstTopAction(snapshot) {
   const currentIntent = String(aiSessionState?.lastIntent || "").toLowerCase();
-  const lowEmotion = String(aiSessionState?.userEmotion || "").toLowerCase() === "low";
-  const stressIntent = currentIntent === "stress" || currentIntent === "emotional-personal";
-  const moodRisk = Number(trends?.moodDelta) < 0;
-  const sleepLow = (Number(snapshot?.sleepToday) || 0) > 0 && (Number(snapshot?.sleepToday) || 0) < 7;
-  const hydrationGap = Math.max(0, (Number(snapshot?.todayGoal) || 8) - (Number(snapshot?.waterToday) || 0));
-
-  const shouldForceHealthFirst = lowEmotion || stressIntent || moodRisk;
-  if (!shouldForceHealthFirst) {
-    return priorityBoard?.[0]?.action || "Complete one 10-minute focused task now.";
+  const moodMeta = getMoodStateMeta(snapshot?.moodToday);
+  if (currentIntent === "sleep") {
+    return "For tonight, choose one sleep habit that fits: keep your usual sleep schedule, make your room quiet and relaxing, or put devices away at least 30 minutes before bed.";
   }
-
-  if (sleepLow) {
-    return "Do a 2-minute calm-down reset now and protect a 7-8 hour sleep window tonight.";
+  if (currentIntent === "water") {
+    return "Treat your water goal as an optional tracker, not a medical target; follow any fluid guidance from your healthcare professional.";
   }
-
-  if (hydrationGap > 0) {
-    return `Drink ${Math.max(1, Math.ceil(Math.min(2, hydrationGap)))} cup${Math.max(1, Math.ceil(Math.min(2, hydrationGap))) === 1 ? "" : "s"} of water now, then do one 10-minute low-pressure task.`;
+  if (currentIntent === "productivity" && Number(snapshot?.pendingTasks) > 0) {
+    return "Choose one task that matters today, make its first step small, and decide when you will pause.";
   }
-
-  if (!snapshot?.moodToday) {
-    return "Log your mood now, do 6 slow breaths, then complete one 10-minute calming task.";
-  }
-
-  return "Take a 2-minute breathing reset, then complete one small task to regain control.";
+  return getEvidenceBasedWellbeingSuggestions({
+    moodLabel: moodMeta.label,
+    moodLogged: moodMeta.logged,
+    emotion: aiSessionState?.userEmotionDetailed,
+    pendingTasks: snapshot?.pendingTasks
+  })[0].action;
 }
 
-function buildMustDoBenefitBlock(baseText, baseIsHtml, inputText) {
+function buildMustDoBenefitBlock(baseText, baseIsHtml) {
   const snapshot = aiSessionState.lastSnapshot || getWellnessSnapshot();
-  const trends = buildTrendSignals();
-  const priorityBoard = buildPriorityBoard(snapshot, trends);
-  const topAction = getHealthFirstTopAction(snapshot, trends, priorityBoard);
-  const plan = buildDeepPlan(snapshot);
-  const outcomeTonight = buildImmediateBenefitOutcome(snapshot, topAction);
-  const lowEmotion = String(aiSessionState?.userEmotion || "").toLowerCase() === "low";
-  const tomorrowCheckpoint = lowEmotion
-    ? "Tomorrow check: repeat a calm first hour (water + no-rush first task) before high-pressure work."
-    : buildTomorrowCheckpoint(snapshot);
-
-  const opener = pickNonRepeatingVariant(AI_BENEFIT_PLAN_OPENERS, "benefit_plan_openers")
-    || "Direct plan based on your current data:";
-
-  const strategicTpl = pickNonRepeatingVariant(AI_STRATEGIC_RESPONSE_POOL, 'strategic_mustdo') || null;
-  const goalLine = aiSessionState.userFacts.goal ? (baseIsHtml ? `<br>🎯 Goal alignment: <i>${escapeHtml(aiSessionState.userFacts.goal)}</i>` : `\n\n🎯 Goal alignment: ${escapeHtml(aiSessionState.userFacts.goal)}`) : "";
-  if (strategicTpl) {
-    const filled = strategicTpl
-      .replaceAll('{name}', escapeHtml(String(getUserName() || "there")))
-      .replaceAll('{plan0}', escapeHtml(String(topAction || '')))
-      .replaceAll('{plan1}', escapeHtml(String(plan[1] || '')))
-      .replaceAll('{plan2}', escapeHtml(String(plan[2] || '')))
-      .replaceAll('{plan3}', escapeHtml(String(plan[3] || '')))
-      .replaceAll('{topAction}', escapeHtml(String(topAction || '')))
-      .replaceAll('{outcomeTonight}', escapeHtml(String(outcomeTonight || '')))
-      .replaceAll('{tomorrowCheckpoint}', escapeHtml(String(tomorrowCheckpoint || '')))
-      .replaceAll('{goalLine}', goalLine)
-      .replaceAll('{opener}', escapeHtml(opener))
-      .replaceAll('{why}', buildWhySuggestionLine(baseIsHtml, strategicTpl));
-    return filled;
-  }
-
-  // Fallback to original formatting if no strategic template available.
-  if (baseIsHtml) {
-    const safeBase = String(baseText || "").trim();
-    return `${safeBase}<br><br><b>${escapeHtml(opener)}</b><br><b>One gentle step (under 10 min)</b>: ${escapeHtml(topAction)}<br><b>A possible outcome by tonight</b>: ${escapeHtml(outcomeTonight)}<br><b>A thought for tomorrow</b>: ${escapeHtml(tomorrowCheckpoint)}`;
-  }
-
+  const topAction = getHealthFirstTopAction(snapshot);
   const safeBase = String(baseText || "").trim();
-  return `${safeBase}\n\n${opener}\nOne gentle step (under 10 min): ${topAction}\nA possible outcome by tonight: ${outcomeTonight}\nA thought for tomorrow: ${tomorrowCheckpoint}`;
+  const optionalAction = baseIsHtml
+    ? `<br><br><b>If useful, one option:</b> ${escapeHtml(topAction)}`
+    : `\n\nIf useful, one option: ${topAction}`;
+  return `${safeBase}${optionalAction}`;
 }
 
 function enforceAiResponseQuality(inputText, responseText, isHtml = false) {
@@ -20930,10 +20779,7 @@ function enforceAiResponseQuality(inputText, responseText, isHtml = false) {
   const repeated = hasRecentResponseRepetition(nextText, nextIsHtml);
 
   if (shouldEnforceBenefitBlock && (weakGeneric || nonActionable || repeated)) {
-    nextText = buildMustDoBenefitBlock(nextText, nextIsHtml, inputText);
-    nextIsHtml = nextIsHtml || /<[^>]+>/.test(nextText);
-  } else if (shouldEnforceBenefitBlock && !/A possible outcome by tonight|A thought for tomorrow|One gentle step \(under 10 min\)/i.test(String(nextText))) {
-    nextText = buildMustDoBenefitBlock(nextText, nextIsHtml, inputText);
+    nextText = buildMustDoBenefitBlock(nextText, nextIsHtml);
     nextIsHtml = nextIsHtml || /<[^>]+>/.test(nextText);
   }
 
@@ -22561,7 +22407,7 @@ function updateWaterProgress() {
   }
   updateWaterClearButtonState();
   updateInsights();
-  updateDashboardFocus();
+  updateWellnessScore();
 }
 
 function updateWaterClearButtonState() {
@@ -23904,13 +23750,9 @@ function timeTraveller() {
 
   const snapshot = getWellnessSnapshot();
   const lower = goalText.toLowerCase();
-  const actionKey = getTimeMirrorActionKey(lower);
   const timeline = parseTimelineFromInput(goalText);
   const moodMeta = getMoodStateMeta(snapshot.moodToday);
-  const trends = buildTrendSignals();
   const behaviorPatterns = getBehaviorPatternMemory(35);
-  const hydrationInsight = buildHydrationPaceInsight(snapshot);
-  const priorityBoard = buildPriorityBoard(snapshot, trends);
 
   const goalType =
     /study|exam|learn|course|revision|assignment/.test(lower) ? "learning" :
@@ -23920,10 +23762,7 @@ function timeTraveller() {
     /water|hydrate|hydration/.test(lower) ? "hydration" :
     "general";
 
-  const energyState = snapshot.sleepToday >= 7 ? "feeling steady" : "a lower-energy day";
   const focusState = snapshot.pendingTasks <= 2 ? "some room for focus" : "several open tasks";
-  const hydrationLeft = Math.max(0, snapshot.todayGoal - snapshot.waterToday);
-  const hydrationState = hydrationLeft > 0 ? "room for more water, if you want it" : "your water goal is met";
 
   const blockerTag =
     /procrastinat|delay|later|tomorrow/.test(lower) ? "delay" :
@@ -23939,27 +23778,18 @@ function timeTraveller() {
     return "normal";
   })();
 
-  const possibleBenefits = {
-    learning: "A little study time may help the ideas feel more familiar.",
-    fitness: "A little movement may support your energy, if that feels good.",
-    career: "A small step may help make the next part clearer.",
-    recovery: "Making room for rest may help you feel more settled.",
-    hydration: "A drink of water may feel refreshing.",
-    general: "A small step may help you feel more connected to this goal."
-  };
-
   const firstStepBase =
     goalType === "learning" ? "Open your notes and spend a few minutes with one idea." :
     goalType === "fitness" ? "Try a gentle warm-up or a little movement." :
     goalType === "career" ? "Choose one small part of the project to look at." :
     goalType === "recovery" ? "Consider a gentle wind-down when it suits you." :
-    goalType === "hydration" ? "Have some water if it sounds good." :
+    goalType === "hydration" ? "Have a drink if you are thirsty and it is appropriate for you; follow any fluid guidance from your healthcare professional." :
     "Choose one small starting point, if that feels manageable.";
 
   const blockerStep =
     blockerTag === "delay" ? "If it helps, spend a few minutes getting started, then pause and see how you feel." :
     blockerTag === "clarity" ? "Write down what feels unclear; one small part may be enough for now." :
-    blockerTag === "anxiety" ? "You could try a few slow breaths, then choose what feels manageable." :
+    blockerTag === "anxiety" ? "If comfortable, try a few slow, unforced breaths; otherwise, choose another small step or pause." :
     blockerTag === "fatigue" ? "A very small step—or a little rest—may be the kindest place to begin." :
     "";
 
@@ -23968,13 +23798,15 @@ function timeTraveller() {
     urgency === "medium" ? "If useful, set aside a little time today to make the next step clearer." :
     "You can return to this goal in small steps, at a pace that works for you.";
 
-  const actionFirstStep = getTimeMirrorActionLine(actionKey, "nextMoves", firstStepBase, "next");
-  const firstStep = blockerStep || actionFirstStep;
-  const readinessHint = `Today’s check-ins suggest ${energyState} and ${focusState}. Mood: ${moodMeta.label}; ${hydrationState}.`;
+  const firstStep = blockerStep || firstStepBase;
+  const readinessHint = [
+    moodMeta.logged ? `Mood check-in: ${moodMeta.label}` : "",
+    snapshot.pendingTasks > 0 ? `${snapshot.pendingTasks} open task${snapshot.pendingTasks === 1 ? "" : "s"}; ${focusState}` : ""
+  ].filter(Boolean).join(" · ") || "This suggestion is based on the goal you entered, not a health assessment.";
 
   const horizonLabel = timeline?.label || "next 24 hours";
   const moodRiskLine = moodMeta.logged && moodMeta.score <= 1
-    ? "You noted a lower-mood check-in, so it may feel good to take this gently."
+    ? "You logged a lower-mood check-in; choose a pace that feels kind to you."
     : "Choose a pace that feels comfortable for you.";
 
   const followUpPlanBase =
@@ -23982,45 +23814,29 @@ function timeTraveller() {
     goalType === "fitness" ? "You could choose a time for some gentle movement, if it suits you." :
     goalType === "career" ? "Choose another small project step when you feel ready." :
     goalType === "recovery" ? "Make space for a restful evening in a way that works for you." :
-    goalType === "hydration" ? "Keep water nearby and drink when you feel thirsty." :
+    goalType === "hydration" ? "Notice your thirst and follow any fluid guidance from your healthcare professional." :
     "Leave room for another small step whenever you are ready.";
-  const followUpPlan = getTimeMirrorActionLine(actionKey, "plans", followUpPlanBase, "plan");
-
-  const actionWin = getTimeMirrorActionLine(actionKey, "wins", possibleBenefits[goalType], "win");
+  const followUpPlan = followUpPlanBase;
 
   const patternNote = Array.isArray(behaviorPatterns?.summaryLines) && behaviorPatterns.summaryLines.length
     ? behaviorPatterns.summaryLines[0]
     : "Your recent patterns are still taking shape.";
-  const confidenceScore = (() => {
-    let score = 50;
-    if (snapshot.sleepToday >= 7) score += 12;
-    if (snapshot.pendingTasks <= 2) score += 10;
-    if (hydrationInsight.onTrack) score += 10;
-    if (moodMeta.logged && moodMeta.score >= 2) score += 10;
-    if (trends.taskDelta >= 0) score += 4;
-    if (trends.sleepDelta >= 0) score += 4;
-    return Math.max(35, Math.min(96, score));
-  })();
-  const confidenceBand = confidenceScore >= 78 ? "more established" : confidenceScore >= 62 ? "taking shape" : "early";
-  const likelyWin72h = priorityBoard?.[0]?.action || firstStep;
   const riskTrigger = blockerTag === "anxiety"
-    ? "If anxiety rises, you could pause and try a few slow breaths, if comfortable."
+    ? "If anxiety rises, you could pause or try a few slow, unforced breaths if comfortable."
     : blockerTag === "fatigue"
       ? "If energy feels low, try a smaller step or take a rest."
       : blockerTag === "clarity"
         ? "If you feel stuck, write down what feels unclear and come back when you are ready."
         : "If you need a pause, it is okay to return to this goal later.";
-  const trendDirection = `tasks a little ${trends.taskDelta >= 0 ? "higher" : "lower"} (${trends.taskDelta.toFixed(1)}), sleep a little ${trends.sleepDelta >= 0 ? "higher" : "lower"} (${trends.sleepDelta.toFixed(1)}h), mood a little ${trends.moodDelta >= 0 ? "higher" : "lower"} (${trends.moodDelta.toFixed(2)}).`;
-
   timeMirror.innerHTML = `
     <p>✨ <b>A possible direction for "${escapeHtml(goalText)}"</b><br>
-    Over ${escapeHtml(horizonLabel)}: ${escapeHtml(actionWin)} ${moodRiskLine}</p>
+    Over ${escapeHtml(horizonLabel)}, you could start with one small step. ${moodRiskLine}</p>
     <p>⏳ <b>If you pause for now</b><br>
     That is okay—you can return to this goal whenever you feel ready.</p>
     <p>🧭 <b>One small next step, if you want one</b><br>${escapeHtml(firstStep)}<br>${escapeHtml(urgencyStep)}</p>
     <p>📈 <b>Flexible follow-up idea</b><br>${followUpPlan}</p>
-    <p>🗺️ <b>A gentle 72-hour outline</b><br>One possible step: ${escapeHtml(likelyWin72h)}<br>By tonight: make room for rest as well as progress.<br>Over the next few days, small flexible steps may help you notice what works.</p>
-    <p>🧠 <b>How this estimate fits your check-ins</b>: ${confidenceBand} (${confidenceScore}/100)<br><small>Recent patterns: ${escapeHtml(trendDirection)}</small><br><small>Pattern note: ${escapeHtml(patternNote)}</small></p>
+    <p>🗺️ <b>Over the next few days</b><br>Return to this goal only if it still matters to you, and adjust the plan based on how it feels.</p>
+    <p>🧠 <b>Check-in context</b><br><small>${escapeHtml(readinessHint)}</small><br><small>Pattern note: ${escapeHtml(patternNote)}</small></p>
     <p>🛡️ <b>If things feel harder</b><br>${escapeHtml(riskTrigger)}</p>
     <p>📌 <small>${readinessHint}</small></p>
   `;

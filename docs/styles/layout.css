@@ -511,7 +511,7 @@
 }
 
 .dashboard.preload-shell .card{
-  display:none;
+  display:none !important;
 }
 
 .dashboard-loading{
