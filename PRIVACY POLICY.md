@@ -1,4 +1,4 @@
-# Privacy Policy
+# Lumevine Privacy Policy
 **Effective date: November 14, 2026**
 
 This Privacy Policy explains how Lumevine handles information when you use the Lumevine application. We use information to operate the app, sync your account, and provide its features. Please avoid entering information you would not want stored with your account.
