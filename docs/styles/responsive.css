@@ -702,6 +702,12 @@
   }
 }
 
+@media (max-width: 480px) and (pointer: coarse){
+  .dashboard.preload-shell .dashboard-loading{
+    padding-bottom:calc(16px + 50px + env(safe-area-inset-bottom));
+  }
+}
+
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{
     animation:none !important;
