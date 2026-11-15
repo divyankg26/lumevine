@@ -1,71 +1,29 @@
 # Release Notes:
 
-AI Companion and routine guidance
+Wellbeing guidance
 
-- Fixed boredom messages being mistaken for answers to the opening check-in. Messages such as “I’m bored” and “nothing to do” now reach a relevant response.
+- Extended practical, optional wellbeing suggestions beyond Today’s Focus to AI support, routines, weekly recommendations, recovery guidance, quests, and daily challenges.
 
-- Added a one-hour cooldown for water suggestions after a water log. The wellness card refreshes immediately and avoids repeating water prompts during the cooldown.
+- Made suggestions more responsive to context such as mood, task load, sleep, and the kind of support someone is looking for.
 
-- Updated the AI to recognize varied questions about what to do now or what comes next. It checks the saved routine against local time, identifies the current or next activity, and treats unscheduled time as open rather than something that must be filled.
+- Grounded guidance in public resources from NIMH, NCCIH, WHO, and CDC. Source links remain available in supporting areas.
 
-- Added gentle alternatives for schedule gaps and days without a routine, including the option to rest or leave the time unplanned.
+- Replaced rigid or overly prescriptive prompts—including fixed focus sprints and generic “drink more water” suggestions—with flexible options and clearer limits on what the app can recommend.
 
-Wellbeing recommendations
+- Updated nutrition answers to avoid prescribing diets and direct personal questions to qualified professionals.
 
-- Made suggestions responsive to mood and task load, rather than treating missing check-ins or unfinished tracker goals as evidence that something is wrong.
+- New quests and challenges use optional wellbeing suggestions. Pending legacy quests are replaced; completed quests are preserved.
 
-- Reviewed public wellbeing guidance and updated relevant suggestions and FAQ explanations. Recommendations remain optional and are not presented as diagnosis or treatment.
+Today’s Focus
 
-- Revised sleep guidance to avoid arbitrary thresholds and reduced advice that treated tracker goals as health requirements.
+- Removed source links from the Today’s Focus card while keeping its explanatory guidance.
 
-- Removed arbitrary priority scoring, forced follow-up plans, and a fabricated confidence score.
+Loading and scrolling
 
-- Adjusted routine suggestions to avoid overloading the day with tasks, mandatory water breaks, or instructions to finish everything.
+- Replaced the plain loading message with animated leaves, a soft glow, and a moving progress indicator.
 
-Signup, dashboard, friends, and streaks
+- Added a one-way sequence of loading messages with different durations. “Adding the finishing touches” is the final message; the dashboard opens when its data is ready.
 
-- Fixed signup theme selection so previews or delayed profile reads do not override the selected theme.
+- Prevented page scrolling during loading, moved the loader higher, and restored scrolling afterward.
 
-- Corrected friend lookup so an invalid dotted username such as `alex.y` does not match `alexy`.
-
-- Kept dashboard cards hidden until startup data is ready, preventing incomplete cards from appearing before the loading state.
-
-- Made friend-request Accept and Decline actions wait for Firestore operations. Both actions remain disabled while processing; the request stays visible, the Accounts panel remains open, and failed actions can be retried.
-
-- Softened streak messaging and clarified that a reset changes the count, not the user’s recorded check-ins.
-
-Privacy and help information
-
-- Updated the Privacy Policy to explain that the AI Companion uses in-app, rules-based responses rather than an external generative AI provider.
-
-- Clarified that chat history may be stored in Firebase for app features and is not used to train AI models.
-
-- Added a plain-language overview of Firebase access controls without publishing the deployed security rules.
-
-- Explained cloud encryption at rest while distinguishing it from browser storage.
-
-- Stated that the Firebase data region and Lumevine-specific independent audit status are unconfirmed, rather than guessing.
-
-- Expanded help content on wellbeing recommendations, data storage and controls, export and deletion, medical limitations, and support.
-
-Website and app experience
-
-- Created a landing page at `/`; there was no landing page before this work. The app remains at `/app/`, with About and Privacy pages at `/about/` and `/privacy/`.
-
-- Added page descriptions and canonical metadata, and updated navigation to use the new routes.
-
-- Removed fabricated app previews so the landing page does not imply that mockups represent the actual app. Added a contained pastel botanical accent instead.
-
-- Refined the landing page’s pastel styling, feature sections, and closing call to action.
-
-- Fixed local preview styling so the page’s assets load when served from the repository’s `docs` directory.
-
-- Updated site links to open the public website rather than local files.
-
-- Fixed the “See how it works” anchor behavior: clicking it still scrolls to the section, while refreshing returns the page to the top.
-
-- Added a local-time greeting in the app using the AI-preferred name when available, otherwise the display name. The greeting is cursive and left-aligned while the Lumevine title and subtitle remain centered.
-
-- Added a slowly drifting pastel blob beside the plant and a separate, more visible green blob behind the landing-page headline. Both respect reduced-motion settings.
-
-- Removed the legacy `about-us` and `privacy-policy` directories. The canonical `/about/` and `/privacy/` pages remain.
+- Added reduced-motion support for the loading animation.
