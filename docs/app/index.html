@@ -496,7 +496,23 @@
 </div>
 
 <div class="dashboard preload-shell">
-<div class="dashboard-loading" role="status" aria-live="polite"><span id="dashboardLoadingMessage">Loading...</span></div>
+<div class="dashboard-loading" role="status" aria-live="polite" aria-atomic="true">
+  <div class="dashboard-loading-card">
+    <div class="dashboard-loading-art" aria-hidden="true">
+      <span class="dashboard-loading-orbit"></span>
+      <span class="dashboard-loading-leaf dashboard-loading-leaf-one"></span>
+      <span class="dashboard-loading-leaf dashboard-loading-leaf-two"></span>
+      <span class="dashboard-loading-leaf dashboard-loading-leaf-three"></span>
+      <span class="dashboard-loading-glow"></span>
+    </div>
+    <div class="dashboard-loading-copy">
+      <p class="dashboard-loading-eyebrow">A LITTLE SPACE TO SETTLE IN</p>
+      <h2 id="dashboardLoadingMessage">Getting your dashboard ready</h2>
+      <p class="dashboard-loading-caption">Gathering the pieces that make today yours.</p>
+    </div>
+    <div class="dashboard-loading-track" aria-hidden="true"><span></span></div>
+  </div>
+</div>
 
 <!-- Today's Focus -->
 <section class="card dashboard-focus-card" aria-labelledby="todayFocusTitle">

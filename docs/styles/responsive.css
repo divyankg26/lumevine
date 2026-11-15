@@ -609,6 +609,22 @@
     padding:16px 12px 170px;
   }
 
+  .dashboard.preload-shell{
+    padding:0;
+  }
+
+  .dashboard-loading-card{
+    min-height:350px;
+    padding:28px 18px 24px;
+    border-radius:24px;
+  }
+
+  .dashboard-loading-art{
+    width:124px;
+    height:124px;
+    margin-bottom:16px;
+  }
+
   .dashboard-focus-card{
     padding:15px;
   }
@@ -669,10 +685,31 @@
   }
 }
 
+@media (max-height: 600px){
+  .dashboard.preload-shell .dashboard-loading{
+    padding-bottom:calc(16px + 30px + env(safe-area-inset-bottom));
+  }
+
+  .dashboard-loading-card{
+    min-height:320px;
+    padding:18px 18px 20px;
+  }
+
+  .dashboard-loading-art{
+    width:104px;
+    height:104px;
+    margin-bottom:12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{
     animation:none !important;
     transition:none !important;
+  }
+
+  html,body{
+    scroll-behavior:auto !important;
   }
 }
 

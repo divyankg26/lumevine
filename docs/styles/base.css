@@ -39,16 +39,32 @@ html,body{
   color:var(--text);
   line-height:1.35;
   scroll-behavior:smooth;
+  scroll-padding-block:18px;
+  scrollbar-gutter:stable;
   background-color:#ffffff;
   background-image:linear-gradient(0deg,var(--app-bg),var(--app-bg));
   overflow-x:hidden;
   -webkit-tap-highlight-color: transparent;
 }
 
+#accountPanel,
+.ai-profile-editor-fields,
+.guide-shortcut-list,
+.daily-routine-card #dailyRoutineList{
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+
 @media (prefers-color-scheme: dark){
   body{
     background-color:#0d0d0d;
   }
+}
+
+html.dashboard-loading-active,
+html.dashboard-loading-active body{
+  overflow:hidden !important;
+  overscroll-behavior:none;
 }
 
 #appBackGuard{
